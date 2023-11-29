@@ -6,6 +6,8 @@ export type LastFmUserInfoResponse = {
       unixtime: string;
     };
     url: string;
+    playcount: string;
+    track_count: string;
   };
 };
 
@@ -13,4 +15,6 @@ export type LastFmUser = {
   username: string;
   registeredTime: number; // unix time
   url: string;
+  playCount: number;
+  trackCount: number;
 };

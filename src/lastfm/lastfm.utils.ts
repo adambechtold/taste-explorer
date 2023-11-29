@@ -5,5 +5,7 @@ export function createLastFmUser(response: LastFmUserInfoResponse): LastFmUser {
     username: response.user.name,
     registeredTime: parseInt(response.user.registered.unixtime),
     url: response.user.url,
+    playCount: parseInt(response.user.playcount),
+    trackCount: parseInt(response.user.track_count),
   };
 }
