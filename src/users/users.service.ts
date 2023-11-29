@@ -17,7 +17,39 @@ export async function testEndpoint(): Promise<string> {
   return "Users Service is Online";
 }
 
-export async function createUser(lastFmUsername: string) {
+export async function getUserByUsername(lastFmUsername: string): Promise<User> {
+  try {
+    const user = await prisma.user.findFirst({
+      where: { lastFmAccount: { username: lastFmUsername } },
+      include: {
+        lastFmAccount: true,
+      },
+    });
+
+    if (!user) {
+      console.log("Let's create a user");
+      return createUserByUsername(lastFmUsername);
+    }
+
+    return createUserFromPrisma(user, user.lastFmAccount);
+  } catch (e) {
+    console.error(e);
+    throw new Error(
+      `Could not create user for lastfm username: ${lastFmUsername}`
+    );
+  }
+}
+
+async function createUserByUsername(lastFmUsername: string): Promise<User> {
+  if (!lastFmUsername) {
+    throw new Error("Missing LastFM Username");
+  }
+  if (lastFmUsername !== "atomicGravy") {
+    throw new Error(
+      "Can only create users from atomicGravy. Other users not supported."
+    );
+  }
+
   try {
     // get user info from lastfm
     const data = await fs.readFile(EXAMPLE_USER_FILENAME);
@@ -26,13 +58,21 @@ export async function createUser(lastFmUsername: string) {
     );
     const lastFmAccount = createLastFmAccount(lastFmResponse);
 
-    const user = await prisma.user.create({
+    const response = await prisma.user.create({
       data: {
         lastFmAccount: {
           create: lastFmAccount,
         },
       },
     });
+    const user = await prisma.user.findFirst({
+      where: { id: response.id },
+      include: {
+        lastFmAccount: true,
+      },
+    });
+
+    return createUserFromPrisma(response, user?.lastFmAccount);
   } catch (e) {
     console.error(e);
     throw new Error(

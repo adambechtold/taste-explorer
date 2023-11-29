@@ -25,6 +25,7 @@ usersRouter.get("/test", async (req: Request, res: Response) => {
   }
 });
 
+// --- Get All Users ---
 usersRouter.get("/", async (req: Request, res: Response) => {
   try {
     const users: User[] = await UserService.getAllUsers();
@@ -32,7 +33,19 @@ usersRouter.get("/", async (req: Request, res: Response) => {
     res.status(200).send(users);
   } catch (e: any) {
     // TODO: make this type more clear
-    console.log("ERROR!!", e);
+    console.log("Error: ", e);
+    res.status(500).send(e.message);
+  }
+});
+
+// --- Get User By Username ---
+usersRouter.get("/:username", async (req: Request, res: Response) => {
+  try {
+    const user: User = await UserService.getUserByUsername(req.params.username);
+
+    res.status(200).send(user);
+  } catch (e: any) {
+    console.log("Error: ", e);
     res.status(500).send(e.message);
   }
 });
