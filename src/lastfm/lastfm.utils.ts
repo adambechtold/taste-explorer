@@ -1,9 +1,13 @@
-import { LastFmUserInfoResponse, LastFmUser } from "./lastfm.types";
+import { LastFmAccountInfoResponse, LastFmAccount } from "./lastfm.types";
 
-export function createLastFmUser(response: LastFmUserInfoResponse): LastFmUser {
+export function createLastFmAccount(
+  response: LastFmAccountInfoResponse
+): LastFmAccount {
   return {
     username: response.user.name,
-    registeredTime: parseInt(response.user.registered.unixtime),
+    registeredTime: new Date(
+      parseInt(response.user.registered.unixtime) * 1000
+    ),
     url: response.user.url,
     playCount: parseInt(response.user.playcount),
     trackCount: parseInt(response.user.track_count),

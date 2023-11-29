@@ -4,13 +4,12 @@ const prisma = new PrismaClient();
 async function createUser() {
   const user = await prisma.user.create({
     data: {
-      name: "Adam",
       lastFmAccount: {
         create: {
-          username: "adam",
+          username: "max",
           registeredTime: new Date(),
           url: "test url",
-          playCount: 0,
+          playCount: 1000,
           trackCount: 10,
         },
       },
@@ -36,4 +35,4 @@ function runPrismaOperation(fn: () => Promise<void>) {
     });
 }
 
-runPrismaOperation(reset);
+runPrismaOperation(createUser);

@@ -27,9 +27,9 @@ usersRouter.get("/test", async (req: Request, res: Response) => {
 
 usersRouter.get("/", async (req: Request, res: Response) => {
   try {
-    const user: User = await UserService.retrieveUserInfo();
+    const users: User[] = await UserService.getAllUsers();
 
-    res.status(200).send(user);
+    res.status(200).send(users);
   } catch (e: any) {
     // TODO: make this type more clear
     console.log("ERROR!!", e);

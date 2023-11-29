@@ -1,5 +1,5 @@
 // This is only a partial response. See the example response under /data/
-export type LastFmUserInfoResponse = {
+export type LastFmAccountInfoResponse = {
   user: {
     name: string;
     registered: {
@@ -11,9 +11,9 @@ export type LastFmUserInfoResponse = {
   };
 };
 
-export type LastFmUser = {
+export type LastFmAccount = {
   username: string;
-  registeredTime: number; // unix time
+  registeredTime: Date;
   url: string;
   playCount: number;
   trackCount: number;
