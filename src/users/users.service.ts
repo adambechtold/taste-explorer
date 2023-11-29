@@ -1,13 +1,9 @@
 import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
-import { LastFmAccountInfoResponse } from "../lastfm/lastfm.types";
-import { createLastFmAccount } from "../lastfm/lastfm.utils";
+import { getAccountInfo } from "../lastfm/lastfm.service";
 import { User } from "./users.types";
 import { createUser as createUserFromPrisma } from "./users.utils";
-
-import fs from "fs/promises";
-const EXAMPLE_USER_FILENAME = __dirname + "/../data/userinfo-atomicGravy.json";
 
 /*
  * Service Methods
@@ -44,20 +40,16 @@ async function createUserByUsername(lastFmUsername: string): Promise<User> {
   if (!lastFmUsername) {
     throw new Error("Missing LastFM Username");
   }
+
   if (lastFmUsername !== "atomicGravy") {
     throw new Error(
       "Can only create users from atomicGravy. Other users not supported."
     );
   }
 
-  try {
-    // get user info from lastfm
-    const data = await fs.readFile(EXAMPLE_USER_FILENAME);
-    const lastFmResponse: LastFmAccountInfoResponse = JSON.parse(
-      data.toString()
-    );
-    const lastFmAccount = createLastFmAccount(lastFmResponse);
+  const lastFmAccount = await getAccountInfo(lastFmUsername);
 
+  try {
     const response = await prisma.user.create({
       data: {
         lastFmAccount: {
@@ -96,6 +88,37 @@ export async function getAllUsers(): Promise<User[]> {
     );
   } catch (error: any) {
     console.error("we got an error", error);
-    throw new Error("User Not Found");
+    throw new Error("Users could not be retrieved.");
+  }
+}
+
+export async function deleteUserById(userId: number): Promise<User> {
+  try {
+    const user = await prisma.user.findFirst({
+      where: { id: userId },
+      include: {
+        lastFmAccount: true,
+      },
+    });
+    if (!user) {
+      throw new Error(`User with id:${userId} not found.`);
+    }
+    if (user.lastFmAccount) {
+      await prisma.lastFmAccount.delete({
+        where: { id: user.lastFmAccount.id },
+      });
+    }
+
+    await prisma.user.delete({
+      where: { id: userId },
+      include: {
+        lastFmAccount: true,
+      },
+    });
+
+    return createUserFromPrisma(user, user.lastFmAccount);
+  } catch (error: any) {
+    console.error("we got an error", error);
+    throw new Error("User could not be deleted.");
   }
 }

@@ -49,3 +49,17 @@ usersRouter.get("/:username", async (req: Request, res: Response) => {
     res.status(500).send(e.message);
   }
 });
+
+// --- Delete User by ID ---
+usersRouter.delete("/:id", async (req: Request, res: Response) => {
+  try {
+    console.log("req.params", req.params);
+    const userId = parseInt(req.params.id); // TODO Handle bad input
+    const deletedUser: User = await UserService.deleteUserById(userId);
+
+    res.status(200).send(deletedUser);
+  } catch (e: any) {
+    console.log("Error: ", e);
+    res.status(500).send(e.message);
+  }
+});
