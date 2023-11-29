@@ -53,7 +53,6 @@ usersRouter.get("/:username", async (req: Request, res: Response) => {
 // --- Delete User by ID ---
 usersRouter.delete("/:id", async (req: Request, res: Response) => {
   try {
-    console.log("req.params", req.params);
     const userId = parseInt(req.params.id); // TODO Handle bad input
     const deletedUser: User = await UserService.deleteUserById(userId);
 
@@ -63,3 +62,27 @@ usersRouter.delete("/:id", async (req: Request, res: Response) => {
     res.status(500).send(e.message);
   }
 });
+
+// --- Update User's Listen History ---
+usersRouter.put("/:username/listens", async (req: Request, res: Response) => {
+  try {
+    const result = await UserService.updateListenHistory(req.params.username);
+
+    res.status(200).send(result);
+  } catch (e: any) {
+    console.log("Error: ", e);
+    res.status(500).send(e.message);
+  }
+});
+
+// --- Get User's Listens ---
+// usersRouter.get("/:username/listens", async (req: Request, res: Response) => {
+//   try {
+//     const listens = await MusicService.(req.params.username);
+
+//     res.status(200).send(listens);
+//   } catch (e: any) {
+//     console.log("Error: ", e);
+//     res.status(500).send(e.message);
+//   }
+// });

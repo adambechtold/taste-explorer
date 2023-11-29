@@ -6,16 +6,17 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
-  url      = env("DATABASE_URL")
+  provider     = "mysql"
+  url          = env("DATABASE_URL")
   relationMode = "prisma"
 }
 
 model User {
-  id              Int           @id @default(autoincrement())
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-  lastFmAccount   LastFmAccount? 
+  id            Int            @id @default(autoincrement())
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  lastFmAccount LastFmAccount?
+  Listen        Listen[]
 }
 
 model LastFmAccount {
@@ -29,4 +30,48 @@ model LastFmAccount {
   trackCount     Int
   user           User     @relation(fields: [userId], references: [id])
   userId         Int      @unique
+}
+
+model Listen {
+  id         Int      @id @default(autoincrement())
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  track      Track    @relation(fields: [trackId], references: [id])
+  trackId    Int
+  user       User     @relation(fields: [userId], references: [id])
+  userId     Int
+  listenedAt DateTime
+}
+
+model Track {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  name      String
+  mbid      String   @unique
+  lastFmUrl String
+  album     Album    @relation(fields: [albumId], references: [id])
+  albumId   Int
+  artists   Artist[]
+  Listen    Listen[]
+}
+
+model Album {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  name      String
+  mbid      String   @unique
+  tracks    Track[]
+  artists   Artist[]
+}
+
+model Artist {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  name      String
+  mbid      String   @unique
+  albums    Album[]
+  tracks    Track[]
 }

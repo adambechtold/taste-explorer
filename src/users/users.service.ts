@@ -4,6 +4,8 @@ const prisma = new PrismaClient();
 import { getAccountInfo } from "../lastfm/lastfm.service";
 import { User } from "./users.types";
 import { createUser as createUserFromPrisma } from "./users.utils";
+import { ListenHistoryUpdate } from "../music/music.types";
+import * as MusicService from "../music/music.service";
 
 /*
  * Service Methods
@@ -114,4 +116,20 @@ export async function deleteUserById(userId: number): Promise<User> {
     console.error("we got an error", error);
     throw new Error("User could not be deleted.");
   }
+}
+
+export async function updateListenHistory(
+  username: string
+): Promise<ListenHistoryUpdate> {
+  if (!username) {
+    throw new Error("Missing LastFM Username");
+  }
+
+  const newListens = await MusicService.updateListensForUserByUsername(
+    username
+  );
+  return {
+    newListensCount: newListens.length,
+    result: "success",
+  };
 }
