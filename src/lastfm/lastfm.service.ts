@@ -1,8 +1,9 @@
-import fs from "fs/promises";
+// import fs from "fs/promises";
 import { LastFmAccount, LastFmAccountInfoResponse } from "./lastfm.types";
 import { createLastFmAccount } from "./lastfm.utils";
 
-const EXAMPLE_USER_FILENAME = __dirname + "/../data/userinfo-atomicGravy.json";
+const LAST_FM_API_KEY = process.env.LAST_FM_API_KEY;
+const LAST_FM_BASE_URL = "http://ws.audioscrobbler.com/2.0/";
 
 export async function getAccountInfo(
   lastFmUsername: string
@@ -10,18 +11,26 @@ export async function getAccountInfo(
   if (!lastFmUsername) {
     throw new Error("Missing LastFM Username");
   }
-  if (lastFmUsername !== "atomicGravy") {
-    throw new Error(
-      "Can only create users from atomicGravy. Other users not supported."
-    );
-  }
 
   try {
     // get user info from lastfm
-    const data = await fs.readFile(EXAMPLE_USER_FILENAME);
-    const lastFmResponse: LastFmAccountInfoResponse = JSON.parse(
-      data.toString()
+    const response = await fetch(
+      `${LAST_FM_BASE_URL}?method=user.getinfo&user=${lastFmUsername}&api_key=${LAST_FM_API_KEY}&format=json`
     );
+
+    if (response.status !== 200) {
+      console.error(
+        `Response code ${response.status} from lastfm:`,
+        await response.json()
+      );
+      throw new Error(
+        `Could not create user for lastfm username: ${lastFmUsername}`
+      );
+    }
+
+    const data = (await response.json()) as LastFmAccountInfoResponse;
+
+    const lastFmResponse: LastFmAccountInfoResponse = data;
     const lastFmAccount = createLastFmAccount(lastFmResponse);
 
     return lastFmAccount;

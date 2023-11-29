@@ -23,7 +23,6 @@ export async function getUserByUsername(lastFmUsername: string): Promise<User> {
     });
 
     if (!user) {
-      console.log("Let's create a user");
       return createUserByUsername(lastFmUsername);
     }
 
@@ -39,12 +38,6 @@ export async function getUserByUsername(lastFmUsername: string): Promise<User> {
 async function createUserByUsername(lastFmUsername: string): Promise<User> {
   if (!lastFmUsername) {
     throw new Error("Missing LastFM Username");
-  }
-
-  if (lastFmUsername !== "atomicGravy") {
-    throw new Error(
-      "Can only create users from atomicGravy. Other users not supported."
-    );
   }
 
   const lastFmAccount = await getAccountInfo(lastFmUsername);
