@@ -29,8 +29,12 @@ usersRouter.get("/test", async (req: Request, res: Response) => {
 usersRouter.get("/", async (req: Request, res: Response) => {
   try {
     const users: User[] = await UserService.getAllUsers();
+    const response = {
+      count: users.length,
+      users: users,
+    };
 
-    res.status(200).send(users);
+    res.status(200).send(response);
   } catch (e: any) {
     // TODO: make this type more clear
     console.log("Error: ", e);
