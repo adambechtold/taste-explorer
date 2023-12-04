@@ -47,12 +47,27 @@ export async function getUserById(userId: number): Promise<User> {
   }
 }
 
-export async function createUserBylastfmUsername(
+export async function createUserByLastfmUsername(
   lastfmUsername: string
 ): Promise<User> {
   const lastfmAccount = await getAccountInfo(lastfmUsername);
 
   try {
+    // check if user already exists
+    const checkUserResponse = await prisma.user.findFirst({
+      where: { lastfmAccount: { username: lastfmUsername } },
+      include: {
+        lastfmAccount: true,
+      },
+    });
+    if (checkUserResponse) {
+      return createUserFromPrisma(
+        checkUserResponse,
+        checkUserResponse.lastfmAccount
+      );
+    }
+
+    // create user
     const response = await prisma.user.create({
       data: {
         lastfmAccount: {

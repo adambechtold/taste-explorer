@@ -69,7 +69,7 @@ usersRouter.post("/", async (req: Request, res: Response) => {
       throw new TypedError("Missing lastfm Username", 400, "BAD_REQUEST");
     }
 
-    const user: User = await UserService.createUserBylastfmUsername(
+    const user: User = await UserService.createUserByLastfmUsername(
       lastfmUsername
     );
 
