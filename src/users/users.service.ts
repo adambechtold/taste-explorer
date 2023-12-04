@@ -112,37 +112,6 @@ export async function getAllUsers(): Promise<User[]> {
   }
 }
 
-export async function deleteUserById(userId: number): Promise<User> {
-  try {
-    const user = await prisma.user.findFirst({
-      where: { id: userId },
-      include: {
-        lastfmAccount: true,
-      },
-    });
-    if (!user) {
-      throw new Error(`User with id:${userId} not found.`);
-    }
-    if (user.lastfmAccount) {
-      await prisma.lastfmAccount.delete({
-        where: { id: user.lastfmAccount.id },
-      });
-    }
-
-    await prisma.user.delete({
-      where: { id: userId },
-      include: {
-        lastfmAccount: true,
-      },
-    });
-
-    return createUserFromPrisma(user, user.lastfmAccount);
-  } catch (error: any) {
-    console.error("we got an error", error);
-    throw new Error("User could not be deleted.");
-  }
-}
-
 export async function updateListenHistory(
   username: string
 ): Promise<ListenHistoryUpdate> {

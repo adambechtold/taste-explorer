@@ -79,19 +79,6 @@ usersRouter.post("/", async (req: Request, res: Response) => {
   }
 });
 
-// --- Delete User by ID ---
-usersRouter.delete("/:id", async (req: Request, res: Response) => {
-  try {
-    const userId = parseInt(req.params.id); // TODO Handle bad input
-    const deletedUser: User = await UserService.deleteUserById(userId);
-
-    res.status(200).send(deletedUser);
-  } catch (e: any) {
-    console.log("Error: ", e);
-    res.status(500).send(e.message);
-  }
-});
-
 // --- Update User's Listen History ---
 usersRouter.put("/:username/listens", async (req: Request, res: Response) => {
   try {
