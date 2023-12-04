@@ -3,10 +3,7 @@
  */
 
 import * as dotenv from "dotenv";
-import express from "express";
-import cors from "cors";
-import helmet from "helmet";
-import { usersRouter } from "./users/users.router";
+import createServer from "./utils/server";
 
 dotenv.config();
 
@@ -21,16 +18,7 @@ if (!process.env.PORT) {
 
 const PORT: number = parseInt(process.env.PORT as string, 10);
 
-const app = express();
-
-/**
- * App Configuration
- */
-
-app.use(helmet());
-app.use(cors());
-app.use(express.json());
-app.use("/api/users", usersRouter);
+const app = createServer();
 
 /**
  * Server Activation

@@ -48,8 +48,9 @@ usersRouter.get("/:id", async (req: Request, res: Response) => {
   try {
     // if no id, then it's get all users
 
+    // check if id is a number
     if (isNaN(parseInt(req.params.id))) {
-      res.status(400).send("Bad Request: ID must be a number");
+      throw new TypedError("ID must be a number", 400, "BAD_REQUEST");
     }
 
     const user: User = await UserService.getUserById(parseInt(req.params.id));
@@ -66,7 +67,8 @@ usersRouter.post("/", async (req: Request, res: Response) => {
     const lastfmUsername = req.body.lastfmUsername;
 
     if (!lastfmUsername) {
-      throw new TypedError("Missing lastfm Username", 400, "BAD_REQUEST");
+      const message = "Missing lastfmUsername";
+      throw new TypedError(message, 400, "BAD_REQUEST");
     }
 
     const user: User = await UserService.createUserByLastfmUsername(
@@ -82,6 +84,10 @@ usersRouter.post("/", async (req: Request, res: Response) => {
 // --- Update User's Listen History ---
 usersRouter.put("/:username/listens", async (req: Request, res: Response) => {
   try {
+    if (!req.params.username) {
+      throw new TypedError("Missing username", 400, "BAD_REQUEST");
+    }
+
     const result = await UserService.updateListenHistory(req.params.username);
 
     res.status(200).send(result);

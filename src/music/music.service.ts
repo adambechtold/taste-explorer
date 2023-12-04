@@ -3,7 +3,7 @@ const prisma = new PrismaClient();
 
 import * as lastfmService from "../lastfm/lastfm.service";
 import { Listen, Track } from "./music.types";
-import { createListenFromlastfmListen } from "./music.utils";
+import { createListenFromLastfmListen } from "./music.utils";
 import { Artist as PrismaArtist, Album as PrismaAlbum } from "@prisma/client";
 
 export async function getListensByUserId(userId: number) {
@@ -56,7 +56,7 @@ export async function updateListensForUserByUsername(
       from
     );
 
-    const listens = lastfmListens.map(createListenFromlastfmListen);
+    const listens = lastfmListens.map(createListenFromLastfmListen);
 
     // Add listens to db
     // It feels like we should have a way of de-duplicating listens here,

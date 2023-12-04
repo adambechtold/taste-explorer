@@ -1,0 +1,14 @@
+version: "3.9"
+
+services:
+  db:
+    image: mysql
+    restart: always
+    container_name: integration-tests-prisma
+    environment:
+      MYSQL_ROOT_PASSWORD: test
+      MYSQL_USER: prisma
+      MYSQL_PASSWORD: prisma
+      MYSQL_DATABASE: test
+    ports:
+      - "3306:3306"

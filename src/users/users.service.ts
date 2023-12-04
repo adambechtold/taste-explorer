@@ -50,9 +50,8 @@ export async function getUserById(userId: number): Promise<User> {
 export async function createUserByLastfmUsername(
   lastfmUsername: string
 ): Promise<User> {
-  const lastfmAccount = await getAccountInfo(lastfmUsername);
-
   try {
+    const lastfmAccount = await getAccountInfo(lastfmUsername);
     // check if user already exists
     const checkUserResponse = await prisma.user.findFirst({
       where: { lastfmAccount: { username: lastfmUsername } },
@@ -86,7 +85,7 @@ export async function createUserByLastfmUsername(
   } catch (e) {
     console.error(e);
     throw new TypedError(
-      `Could not create user for lastfm username: ${lastfmUsername}`,
+      `Could not create user for lastfm username ${lastfmUsername}`,
       500,
       "INTERNAL_SERVER_ERROR"
     );
@@ -115,10 +114,6 @@ export async function getAllUsers(): Promise<User[]> {
 export async function updateListenHistory(
   username: string
 ): Promise<ListenHistoryUpdate> {
-  if (!username) {
-    throw new Error("Missing lastfm Username");
-  }
-
   const newListens = await MusicService.updateListensForUserByUsername(
     username
   );

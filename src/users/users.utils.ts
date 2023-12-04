@@ -1,24 +1,24 @@
 import {
   User as PrismaUser,
-  lastfmAccount as PrismalastfmAccount,
+  LastfmAccount as PrismaLastfmAccount,
 } from "@prisma/client";
 import { User } from "./users.types";
 
 export function createUser(
   prismaUser: PrismaUser,
-  prismalastfm?: PrismalastfmAccount | null
+  prismaLastfm?: PrismaLastfmAccount | null
 ): User {
   const user: User = {
     id: prismaUser.id,
   };
 
-  if (prismalastfm) {
+  if (prismaLastfm) {
     user.lastfmAccount = {
-      username: prismalastfm.username,
-      registeredAt: prismalastfm.registeredAt,
-      url: prismalastfm.url,
-      playCount: prismalastfm.playCount,
-      trackCount: prismalastfm.trackCount,
+      username: prismaLastfm.username,
+      registeredAt: prismaLastfm.registeredAt,
+      url: prismaLastfm.url,
+      playCount: prismaLastfm.playCount,
+      trackCount: prismaLastfm.trackCount,
     };
   }
 

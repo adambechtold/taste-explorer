@@ -8,3 +8,11 @@
 Right now, I'm just working with data from just my own last.fm account.
 
 ![wireframe](./documentation/assets/wireframe.png)
+
+# Development
+
+## Run Tests
+
+```sh
+npm run test
+```
