@@ -4,7 +4,7 @@ const prisma = new PrismaClient();
 async function createUser() {
   const user = await prisma.user.create({
     data: {
-      lastFmAccount: {
+      lastfmAccount: {
         create: {
           username: "max",
           registeredAt: new Date(),
@@ -19,7 +19,7 @@ async function createUser() {
 }
 
 async function reset() {
-  const deletedFmAccounts = await prisma.lastFmAccount.deleteMany();
+  const deletedFmAccounts = await prisma.lastfmAccount.deleteMany();
   const deletedUsers = await prisma.user.deleteMany();
   console.log("deleted", deletedFmAccounts, deletedUsers);
 }

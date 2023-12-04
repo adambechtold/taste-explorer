@@ -15,11 +15,11 @@ model User {
   id            Int            @id @default(autoincrement())
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
-  lastFmAccount LastFmAccount?
+  lastfmAccount LastfmAccount?
   Listen        Listen[]
 }
 
-model LastFmAccount {
+model LastfmAccount {
   id             Int      @id @default(autoincrement())
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
@@ -49,7 +49,7 @@ model Track {
   updatedAt DateTime @updatedAt
   name      String
   mbid      String   @unique
-  lastFmUrl String
+  lastfmUrl String
   album     Album    @relation(fields: [albumId], references: [id])
   albumId   Int
   artists   Artist[]

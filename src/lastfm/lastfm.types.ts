@@ -1,5 +1,5 @@
 // This is only a partial response. See the example response under /data/
-export type LastFmAccountInfoResponse = {
+export type LastfmAccountInfoResponse = {
   user: {
     name: string;
     registered: {
@@ -11,7 +11,7 @@ export type LastFmAccountInfoResponse = {
   };
 };
 
-export type LastFmAccount = {
+export type LastfmAccount = {
   username: string;
   registeredAt: Date;
   url: string;
@@ -21,13 +21,13 @@ export type LastFmAccount = {
 
 // --- Get Recent Tracks ---
 // - Response Structure
-export type LastFmGetRecentTracksResponse = {
+export type LastfmGetRecentTracksResponse = {
   recenttracks: {
-    track: LastFmRecentTrackResponse[];
+    track: LastfmRecentTrackResponse[];
   };
 };
 
-export type LastFmRecentTrackResponse = {
+export type LastfmRecentTrackResponse = {
   mbid: string;
   name: string;
   url: string;
@@ -44,32 +44,32 @@ export type LastFmRecentTrackResponse = {
     uts: string;
     "#text": string; // date in a human readable format
   };
-  image: LastFmImageResponse[]; // ignore this for now
+  image: LastfmImageResponse[]; // ignore this for now
   "@attr"?: { nowplaying: "true" };
 };
 
-type LastFmImageResponse = {
+type LastfmImageResponse = {
   sizes: "small" | "medium" | "large" | "extralarge";
   "#text": string; // url
 };
 
 // - Intermediate Types -
-type LastFmTrack = Pick<LastFmRecentTrackResponse, "mbid" | "name" | "url"> & {
-  artist: LastFmArtist;
-  album: LastFmAlbum;
+type LastfmTrack = Pick<LastfmRecentTrackResponse, "mbid" | "name" | "url"> & {
+  artist: LastfmArtist;
+  album: LastfmAlbum;
 };
 
-export type LastFmListen = {
-  track: LastFmTrack;
+export type LastfmListen = {
+  track: LastfmTrack;
   date: Date;
 };
 
-type LastFmAlbum = {
+type LastfmAlbum = {
   mbid: string;
   name: string;
 };
 
-type LastFmArtist = {
+type LastfmArtist = {
   mbid: string;
   name: string;
 };

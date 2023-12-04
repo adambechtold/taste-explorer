@@ -1,9 +1,9 @@
 import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
-import * as LastFmService from "../lastfm/lastfm.service";
+import * as lastfmService from "../lastfm/lastfm.service";
 import { Listen, Track } from "./music.types";
-import { createListenFromLastFmListen } from "./music.utils";
+import { createListenFromlastfmListen } from "./music.utils";
 import { Artist as PrismaArtist, Album as PrismaAlbum } from "@prisma/client";
 
 export async function getListensByUserId(userId: number) {
@@ -28,16 +28,16 @@ export async function updateListensForUserByUsername(
   try {
     // get user
     const user = await prisma.user.findFirst({
-      where: { lastFmAccount: { username } },
+      where: { lastfmAccount: { username } },
       include: {
-        lastFmAccount: true,
+        lastfmAccount: true,
       },
     });
 
     if (!user) {
       throw new Error(`User: ${username} not found.`);
     }
-    if (!user.lastFmAccount) {
+    if (!user.lastfmAccount) {
       throw new Error(`User ${username} does not have a lastfm account.`);
     }
 
@@ -49,14 +49,14 @@ export async function updateListensForUserByUsername(
 
     // get one page of listens from last listen
     const from = lastListen ? lastListen.listenedAt : undefined;
-    const lastFmUsername = user.lastFmAccount.username;
+    const lastfmUsername = user.lastfmAccount.username;
 
-    const lastFmListens = await LastFmService.getRecentTracks(
-      lastFmUsername,
+    const lastfmListens = await lastfmService.getRecentTracks(
+      lastfmUsername,
       from
     );
 
-    const listens = lastFmListens.map(createListenFromLastFmListen);
+    const listens = lastfmListens.map(createListenFromlastfmListen);
 
     // Add listens to db
     // It feels like we should have a way of de-duplicating listens here,
@@ -140,7 +140,7 @@ export async function updateListensForUserByUsername(
           create: {
             name: track.name,
             mbid: trackMbid,
-            lastFmUrl: track.url,
+            lastfmUrl: track.url,
             album: {
               connect: {
                 id: albumId,

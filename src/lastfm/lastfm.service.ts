@@ -1,55 +1,69 @@
 // import fs from "fs/promises";
 import {
-  LastFmAccount,
-  LastFmAccountInfoResponse,
-  LastFmListen,
-  LastFmGetRecentTracksResponse,
+  LastfmAccount,
+  LastfmAccountInfoResponse,
+  LastfmListen,
+  LastfmGetRecentTracksResponse,
 } from "./lastfm.types";
+import { TypedError } from "../errors/errors.types";
 import {
-  createLastFmAccount,
-  createLastFmListensFromRecentTracks,
+  createLastfmAccount,
+  createLastfmListensFromRecentTracks,
 } from "./lastfm.utils";
 import { dateToUnixTimestamp } from "../utils/date.utils";
 
-const LAST_FM_API_KEY = process.env.LAST_FM_API_KEY || "";
-if (!LAST_FM_API_KEY) {
-  console.warn("Missing LAST_FM_API_KEY. Many features will not be available.");
+const LASTFM_API_KEY = process.env.LASTFM_API_KEY || "";
+if (!LASTFM_API_KEY) {
+  console.warn("Missing LASTFM_API_KEY. Many features will not be available.");
 }
 
-const LAST_FM_BASE_URL = "http://ws.audioscrobbler.com/2.0/";
+const LAST_FM_BASE_URL = "https://ws.audioscrobbler.com/2.0/";
 
 export async function getAccountInfo(
-  lastFmUsername: string
-): Promise<LastFmAccount> {
-  if (!lastFmUsername) {
-    throw new Error("Missing LastFM Username");
-  }
-
+  lastfmUsername: string
+): Promise<LastfmAccount> {
   try {
     // get user info from lastfm
-    // TODO: Update this to use the URLSearchParams structure
-    const response = await fetch(
-      `${LAST_FM_BASE_URL}?method=user.getinfo&user=${lastFmUsername}&api_key=${LAST_FM_API_KEY}&format=json`
-    );
+    const params = new URLSearchParams({
+      method: "user.getinfo",
+      user: lastfmUsername,
+      api_key: LASTFM_API_KEY,
+      format: "json",
+    });
+
+    const url = new URL(LAST_FM_BASE_URL);
+    url.search = params.toString();
+
+    const response = await fetch(url.toString());
+
+    if (response.status === 404) {
+      throw new TypedError(
+        `User: ${lastfmUsername} not found in last.fm.`,
+        404,
+        "NOT_FOUND"
+      );
+    }
 
     if (response.status !== 200) {
       console.error(
         `Response code ${response.status} from lastfm:`,
         await response.json()
       );
-      throw new Error(
-        `Could not create user for lastfm username: ${lastFmUsername}`
+      throw new TypedError(
+        `Could not get account info for user: ${lastfmUsername}`,
+        500,
+        "INTERNAL_SERVER_ERROR"
       );
     }
 
-    const lastFmResponse = (await response.json()) as LastFmAccountInfoResponse;
-    const lastFmAccount = createLastFmAccount(lastFmResponse);
+    const lastfmResponse = (await response.json()) as LastfmAccountInfoResponse;
+    const lastfmAccount = createLastfmAccount(lastfmResponse);
 
-    return lastFmAccount;
+    return lastfmAccount;
   } catch (e) {
     console.error(e);
     throw new Error(
-      `Could not create user for lastfm username: ${lastFmUsername}`
+      `Could not create user for lastfm username: ${lastfmUsername}`
     );
   }
 }
@@ -60,7 +74,7 @@ export async function getRecentTracks(
   to?: Date,
   limit?: number,
   page?: number
-): Promise<LastFmListen[]> {
+): Promise<LastfmListen[]> {
   if (process.env.VERBOSE) {
     console.log("getting recent tracks from lastfm");
     console.log("username: ", username);
@@ -74,7 +88,7 @@ export async function getRecentTracks(
   const params = new URLSearchParams({
     method: "user.getrecenttracks",
     user: username,
-    api_key: LAST_FM_API_KEY,
+    api_key: LASTFM_API_KEY,
     format: "json",
     page: page?.toString() || "1",
     limit: limit?.toString() || "30",
@@ -104,15 +118,15 @@ export async function getRecentTracks(
       throw new Error(`Could not get recent tracks for user: ${username}`);
     }
 
-    const data = (await response.json()) as LastFmGetRecentTracksResponse;
+    const data = (await response.json()) as LastfmGetRecentTracksResponse;
 
     if (process.env.VERBOSE) {
       console.log("\n\nresponse from last.fm\n\n");
       console.dir(data, { depth: null });
     }
 
-    const lastFmListens = createLastFmListensFromRecentTracks(data);
-    return lastFmListens;
+    const lastfmListens = createLastfmListensFromRecentTracks(data);
+    return lastfmListens;
   } catch (e) {
     console.error(e);
     throw new Error(`Could not get recent tracks for user: ${username}`);

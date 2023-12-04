@@ -60,6 +60,25 @@ usersRouter.get("/:id", async (req: Request, res: Response) => {
   }
 });
 
+// --- Create User by lastfm Username ---
+usersRouter.post("/", async (req: Request, res: Response) => {
+  try {
+    const lastfmUsername = req.body.lastfmUsername;
+
+    if (!lastfmUsername) {
+      throw new TypedError("Missing lastfm Username", 400, "BAD_REQUEST");
+    }
+
+    const user: User = await UserService.createUserBylastfmUsername(
+      lastfmUsername
+    );
+
+    res.status(200).send(user);
+  } catch (e: any) {
+    handleErrorResponse(e, res);
+  }
+});
+
 // --- Delete User by ID ---
 usersRouter.delete("/:id", async (req: Request, res: Response) => {
   try {

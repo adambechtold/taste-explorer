@@ -1,15 +1,15 @@
 import {
-  LastFmAccountInfoResponse,
-  LastFmAccount,
-  LastFmGetRecentTracksResponse,
-  LastFmListen,
-  LastFmRecentTrackResponse,
+  lastfmAccountInfoResponse,
+  lastfmAccount,
+  lastfmGetRecentTracksResponse,
+  lastfmListen,
+  lastfmRecentTrackResponse,
 } from "./lastfm.types";
 import { unixTimestampToDate } from "../utils/date.utils";
 
-export function createLastFmAccount(
-  response: LastFmAccountInfoResponse
-): LastFmAccount {
+export function createLastfmAccount(
+  response: lastfmAccountInfoResponse
+): lastfmAccount {
   return {
     username: response.user.name,
     registeredAt: new Date(parseInt(response.user.registered.unixtime) * 1000),
@@ -19,9 +19,9 @@ export function createLastFmAccount(
   };
 }
 
-export function createLastFmListensFromRecentTracks(
-  response: LastFmGetRecentTracksResponse
-): LastFmListen[] {
+export function createLastfmListensFromRecentTracks(
+  response: lastfmGetRecentTracksResponse
+): lastfmListen[] {
   const tracks = response.recenttracks.track;
 
   // remove now playing tracks and tracks without dates

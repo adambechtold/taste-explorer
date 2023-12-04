@@ -1,22 +1,22 @@
-import { LastFmListen } from "../lastfm/lastfm.types";
+import { LastfmListen } from "../lastfm/lastfm.types";
 import { Listen } from "./music.types";
 
-export function createListenFromLastFmListen(
-  lastFmListen: LastFmListen
+export function createListenFromLastfmListen(
+  lastfmListen: LastfmListen
 ): Listen {
   return {
-    date: lastFmListen.date,
+    date: lastfmListen.date,
     track: {
-      name: lastFmListen.track.name,
-      mbid: lastFmListen.track.mbid,
-      url: lastFmListen.track.url,
+      name: lastfmListen.track.name,
+      mbid: lastfmListen.track.mbid,
+      url: lastfmListen.track.url,
       artist: {
-        name: lastFmListen.track.artist.name,
-        mbid: lastFmListen.track.artist.mbid,
+        name: lastfmListen.track.artist.name,
+        mbid: lastfmListen.track.artist.mbid,
       },
       album: {
-        name: lastFmListen.track.album.name,
-        mbid: lastFmListen.track.album.mbid,
+        name: lastfmListen.track.album.name,
+        mbid: lastfmListen.track.album.mbid,
       },
     },
   };

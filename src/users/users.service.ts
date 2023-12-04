@@ -21,7 +21,7 @@ export async function getUserById(userId: number): Promise<User> {
     const user = await prisma.user.findFirst({
       where: { id: userId },
       include: {
-        lastFmAccount: true,
+        lastfmAccount: true,
       },
     });
 
@@ -33,7 +33,7 @@ export async function getUserById(userId: number): Promise<User> {
       );
     }
 
-    return createUserFromPrisma(user, user.lastFmAccount);
+    return createUserFromPrisma(user, user.lastfmAccount);
   } catch (e: any) {
     console.error(e);
     if (e instanceof TypedError) {
@@ -47,33 +47,33 @@ export async function getUserById(userId: number): Promise<User> {
   }
 }
 
-async function createUserByUsername(lastFmUsername: string): Promise<User> {
-  if (!lastFmUsername) {
-    throw new Error("Missing LastFM Username");
-  }
-
-  const lastFmAccount = await getAccountInfo(lastFmUsername);
+export async function createUserBylastfmUsername(
+  lastfmUsername: string
+): Promise<User> {
+  const lastfmAccount = await getAccountInfo(lastfmUsername);
 
   try {
     const response = await prisma.user.create({
       data: {
-        lastFmAccount: {
-          create: lastFmAccount,
+        lastfmAccount: {
+          create: lastfmAccount,
         },
       },
     });
     const user = await prisma.user.findFirst({
       where: { id: response.id },
       include: {
-        lastFmAccount: true,
+        lastfmAccount: true,
       },
     });
 
-    return createUserFromPrisma(response, user?.lastFmAccount);
+    return createUserFromPrisma(response, user?.lastfmAccount);
   } catch (e) {
     console.error(e);
-    throw new Error(
-      `Could not create user for lastfm username: ${lastFmUsername}`
+    throw new TypedError(
+      `Could not create user for lastfm username: ${lastfmUsername}`,
+      500,
+      "INTERNAL_SERVER_ERROR"
     );
   }
 }
@@ -83,13 +83,13 @@ export async function getAllUsers(): Promise<User[]> {
     // get user info from database
     const users = await prisma.user.findMany({
       include: {
-        lastFmAccount: true,
+        lastfmAccount: true,
       },
     });
 
     // convert to User type
     return users.map((prismaUser) =>
-      createUserFromPrisma(prismaUser, prismaUser.lastFmAccount)
+      createUserFromPrisma(prismaUser, prismaUser.lastfmAccount)
     );
   } catch (error: any) {
     console.error("we got an error", error);
@@ -102,26 +102,26 @@ export async function deleteUserById(userId: number): Promise<User> {
     const user = await prisma.user.findFirst({
       where: { id: userId },
       include: {
-        lastFmAccount: true,
+        lastfmAccount: true,
       },
     });
     if (!user) {
       throw new Error(`User with id:${userId} not found.`);
     }
-    if (user.lastFmAccount) {
-      await prisma.lastFmAccount.delete({
-        where: { id: user.lastFmAccount.id },
+    if (user.lastfmAccount) {
+      await prisma.lastfmAccount.delete({
+        where: { id: user.lastfmAccount.id },
       });
     }
 
     await prisma.user.delete({
       where: { id: userId },
       include: {
-        lastFmAccount: true,
+        lastfmAccount: true,
       },
     });
 
-    return createUserFromPrisma(user, user.lastFmAccount);
+    return createUserFromPrisma(user, user.lastfmAccount);
   } catch (error: any) {
     console.error("we got an error", error);
     throw new Error("User could not be deleted.");
@@ -132,7 +132,7 @@ export async function updateListenHistory(
   username: string
 ): Promise<ListenHistoryUpdate> {
   if (!username) {
-    throw new Error("Missing LastFM Username");
+    throw new Error("Missing lastfm Username");
   }
 
   const newListens = await MusicService.updateListensForUserByUsername(

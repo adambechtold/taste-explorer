@@ -1,6 +1,6 @@
-import { LastFmAccount } from "../lastfm/lastfm.types";
+import { lastfmAccount } from "../lastfm/lastfm.types";
 
 export type User = {
   id: number;
-  lastFmAccount?: LastFmAccount;
+  lastfmAccount?: lastfmAccount;
 };
