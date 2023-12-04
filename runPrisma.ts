@@ -7,7 +7,7 @@ async function createUser() {
       lastFmAccount: {
         create: {
           username: "max",
-          registeredTime: new Date(),
+          registeredAt: new Date(),
           url: "test url",
           playCount: 1000,
           trackCount: 10,

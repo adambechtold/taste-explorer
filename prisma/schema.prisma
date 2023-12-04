@@ -24,7 +24,7 @@ model LastFmAccount {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
   username       String   @unique
-  registeredTime DateTime
+  registeredAt   DateTime
   url            String
   playCount      Int
   trackCount     Int

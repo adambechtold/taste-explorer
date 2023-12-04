@@ -13,7 +13,7 @@ export type LastFmAccountInfoResponse = {
 
 export type LastFmAccount = {
   username: string;
-  registeredTime: Date;
+  registeredAt: Date;
   url: string;
   playCount: number;
   trackCount: number;

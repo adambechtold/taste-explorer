@@ -15,7 +15,7 @@ export function createUser(
   if (prismaLastFm) {
     user.lastFmAccount = {
       username: prismaLastFm.username,
-      registeredTime: prismaLastFm.registeredTime,
+      registeredAt: prismaLastFm.registeredAt,
       url: prismaLastFm.url,
       playCount: prismaLastFm.playCount,
       trackCount: prismaLastFm.trackCount,
