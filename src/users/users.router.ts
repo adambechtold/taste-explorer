@@ -6,6 +6,9 @@ import express, { Request, Response } from "express";
 import * as UserService from "./users.service";
 import { User } from "./users.types";
 
+import { TypedError } from "../errors/errors.types";
+import { handleErrorResponse } from "../utils/response.utils";
+
 /**
  * Router Definition
  */
@@ -36,21 +39,24 @@ usersRouter.get("/", async (req: Request, res: Response) => {
 
     res.status(200).send(response);
   } catch (e: any) {
-    // TODO: make this type more clear
-    console.log("Error: ", e);
-    res.status(500).send(e.message);
+    handleErrorResponse(e, res);
   }
 });
 
-// --- Get User By Username ---
-usersRouter.get("/:username", async (req: Request, res: Response) => {
+// --- Get User By ID ---
+usersRouter.get("/:id", async (req: Request, res: Response) => {
   try {
-    const user: User = await UserService.getUserByUsername(req.params.username);
+    // if no id, then it's get all users
+
+    if (isNaN(parseInt(req.params.id))) {
+      res.status(400).send("Bad Request: ID must be a number");
+    }
+
+    const user: User = await UserService.getUserById(parseInt(req.params.id));
 
     res.status(200).send(user);
   } catch (e: any) {
-    console.log("Error: ", e);
-    res.status(500).send(e.message);
+    handleErrorResponse(e, res);
   }
 });
 

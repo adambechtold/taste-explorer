@@ -1,5 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
+import { TypedError } from "../errors/errors.types";
 
 import { getAccountInfo } from "../lastfm/lastfm.service";
 import { User } from "./users.types";
@@ -15,24 +16,33 @@ export async function testEndpoint(): Promise<string> {
   return "Users Service is Online";
 }
 
-export async function getUserByUsername(lastFmUsername: string): Promise<User> {
+export async function getUserById(userId: number): Promise<User> {
   try {
     const user = await prisma.user.findFirst({
-      where: { lastFmAccount: { username: lastFmUsername } },
+      where: { id: userId },
       include: {
         lastFmAccount: true,
       },
     });
 
     if (!user) {
-      return createUserByUsername(lastFmUsername);
+      throw new TypedError(
+        `User with id:${userId} not found.`,
+        404,
+        "NOT_FOUND"
+      );
     }
 
     return createUserFromPrisma(user, user.lastFmAccount);
-  } catch (e) {
+  } catch (e: any) {
     console.error(e);
-    throw new Error(
-      `Could not create user for lastfm username: ${lastFmUsername}`
+    if (e instanceof TypedError) {
+      throw e;
+    }
+    throw new TypedError(
+      `Could not find user with id:${userId}`,
+      500,
+      "INTERNAL_SERVER_ERROR"
     );
   }
 }
