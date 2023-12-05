@@ -2,7 +2,6 @@
 import {
   LastfmAccount,
   LastfmAccountInfoResponse,
-  LastfmListen,
   LastfmGetRecentTracksResponse,
 } from "./lastfm.types";
 import { TypedError } from "../errors/errors.types";
@@ -10,7 +9,7 @@ import {
   createLastfmAccount,
   createLastfmListensFromRecentTracks,
 } from "./lastfm.utils";
-import { dateToUnixTimestamp } from "../utils/date.utils";
+import { LastfmListensEventEmitter } from "../lastfm/lastfm.types";
 
 const LASTFM_API_KEY = process.env.LASTFM_API_KEY || "";
 if (!LASTFM_API_KEY) {
@@ -68,18 +67,14 @@ export async function getAccountInfo(
 
 export async function getRecentTracks(
   username: string,
-  from?: Date,
-  to?: Date,
-  limit?: number,
-  page?: number
-): Promise<LastfmListen[]> {
-  if (process.env.VERBOSE) {
+  pageNumber: number = 1,
+  limit: number = 200
+  // from?: Date
+): Promise<LastfmGetRecentTracksResponse> {
+  if (process.env.VERBOSE === "true") {
     console.log("getting recent tracks from lastfm");
     console.log("username: ", username);
-    console.log("from: ", from);
-    console.log("to: ", to);
-    console.log("limit: ", limit);
-    console.log("page: ", page);
+    //    console.log("from: ", from);
   }
 
   // Create Params
@@ -88,21 +83,18 @@ export async function getRecentTracks(
     user: username,
     api_key: LASTFM_API_KEY,
     format: "json",
-    page: page?.toString() || "1",
-    limit: limit?.toString() || "30",
+    page: pageNumber.toString(),
+    limit: limit.toString(),
   });
-  if (from) {
-    params.append("from", dateToUnixTimestamp(from).toString());
-  }
-  if (to) {
-    params.append("to", dateToUnixTimestamp(to).toString());
-  }
+  //  if (from) {
+  //    params.append("from", dateToUnixTimestamp(from).toString());
+  //  }
 
   const url = new URL(LAST_FM_BASE_URL);
   url.search = params.toString();
 
   try {
-    if (process.env.VERBOSE) {
+    if (process.env.VERBOSE === "true") {
       console.log("\n\ngetting recent tracks from lastfm");
       console.log("url: ", url.toString());
     }
@@ -121,15 +113,60 @@ export async function getRecentTracks(
 
     const data = (await response.json()) as LastfmGetRecentTracksResponse;
 
-    if (process.env.VERBOSE) {
+    if (process.env.VERBOSE === "true") {
       console.log("\n\nresponse from last.fm\n\n");
       console.dir(data, { depth: null });
     }
+    return data;
 
-    const lastfmListens = createLastfmListensFromRecentTracks(data);
-    return lastfmListens;
+    //    const lastfmListens = createLastfmListensFromRecentTracks(data);
+    //    return lastfmListens;
   } catch (e) {
     console.error(e);
     throw new Error(`Could not get recent tracks for user: ${username}`);
   }
+}
+
+export async function getAllListens(
+  lastfmUsername: string,
+  updateTracker: LastfmListensEventEmitter
+): Promise<boolean> {
+  let pageNumber = 1;
+  const pageSize = 200; // TODO: Make this larger
+
+  // get one page of listens
+  const response = await getRecentTracks(lastfmUsername, pageNumber, pageSize);
+  updateTracker.emitStart();
+
+  const totalNumberOfPages = parseInt(
+    response.recenttracks["@attr"].totalPages
+  );
+  const currentPage = response.recenttracks["@attr"].page;
+  const numberOfListens = response.recenttracks["@attr"].total;
+  console.log("Starting import:");
+  console.dir({
+    totalNumberOfPages,
+    currentPage,
+    numberOfListens,
+  });
+
+  const lastfmListens = createLastfmListensFromRecentTracks(response);
+  updateTracker.emitListens(lastfmListens);
+
+  const MAX_PAGES = 1; // TODO: Remove this limit and make it the totalNumberOfPages
+  for (let i = pageNumber + 1; i <= MAX_PAGES; i++) {
+    const response = await getRecentTracks(
+      lastfmUsername,
+      pageNumber,
+      pageSize
+    );
+    const lastfmListens = createLastfmListensFromRecentTracks(response);
+    pageNumber = i + 1;
+
+    updateTracker.emitListens(lastfmListens);
+  }
+
+  updateTracker.emitEnd();
+
+  return true;
 }

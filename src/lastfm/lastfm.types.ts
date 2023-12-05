@@ -1,3 +1,5 @@
+import { EventEmitter } from "events";
+
 // This is only a partial response. See the example response under /data/
 export type LastfmAccountInfoResponse = {
   user: {
@@ -24,27 +26,34 @@ export type LastfmAccount = {
 export type LastfmGetRecentTracksResponse = {
   recenttracks: {
     track: LastfmRecentTrackResponse[];
+    "@attr": {
+      user: string; // lastfm Username
+      page: string; // Page Number
+      perPage: string; // Number of songs per page
+      total: string; // Total number of songs
+      totalPages: string; // Total number of pages
+    };
   };
 };
 
 export type LastfmRecentTrackResponse = {
-  mbid: string;
+  mbid?: string;
   name: string;
   url: string;
   artist: {
     mbid: string;
     "#text": string; // name of artist
   };
-  streamable: "0" | "1"; // ignore this for now
+  // streamable: "0" | "1"; // ignore this for now
   album: {
     mbid: string;
     "#text": string; // name of album
   };
-  date: {
+  date?: {
     uts: string;
     "#text": string; // date in a human readable format
   };
-  image: LastfmImageResponse[]; // ignore this for now
+  // image: LastfmImageResponse[]; // ignore this for now
   "@attr"?: { nowplaying: "true" };
 };
 
@@ -73,3 +82,41 @@ type LastfmArtist = {
   mbid: string;
   name: string;
 };
+
+export class LastfmListensEventEmitter extends EventEmitter {
+  constructor() {
+    super();
+  }
+
+  emitListens(listens: LastfmListen[]) {
+    this.emit("listens", listens);
+  }
+
+  emitStart() {
+    this.emit("start");
+  }
+
+  emitEnd() {
+    this.emit("end");
+  }
+
+  emitError(error: Error) {
+    this.emit("error", error);
+  }
+
+  onListens(callback: (listens: LastfmListen[]) => void) {
+    this.on("listens", callback);
+  }
+
+  onStart(callback: () => void) {
+    this.on("start", callback);
+  }
+
+  onEnd(callback: () => void) {
+    this.on("end", callback);
+  }
+
+  onError(callback: (error: Error) => void) {
+    this.on("error", callback);
+  }
+}

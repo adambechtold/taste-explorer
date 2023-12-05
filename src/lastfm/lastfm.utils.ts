@@ -18,27 +18,24 @@ export function createLastfmAccount(
   };
 }
 
+/**
+ * Transforms the response from the Last.fm API's "get recent tracks" endpoint into an array of LastfmListen objects.
+ * It filters out tracks that are currently playing and tracks without dates.
+ *
+ * @param {LastfmGetRecentTracksResponse} response
+ * @returns {LastfmListen[]}
+ */
 export function createLastfmListensFromRecentTracks(
   response: LastfmGetRecentTracksResponse
 ): LastfmListen[] {
   const tracks = response.recenttracks.track;
 
-  // remove now playing tracks and tracks without dates
-  const filteredTracks = tracks.filter((track) => {
-    const hasRequiredFields =
-      track.date && track.mbid && track.artist.mbid && track.mbid;
-    if (!hasRequiredFields) {
-      console.warn(
-        "Removing track because it does not have required fields",
-        track
-      );
-    }
-    return hasRequiredFields;
-  });
-
-  return filteredTracks.map((track) => {
-    return {
-      date: unixTimestampToDate(parseInt(track.date.uts)),
+  return tracks
+    .filter((track) => track.date?.uts && track.mbid)
+    .map((track) => ({
+      date: track.date?.uts
+        ? unixTimestampToDate(parseInt(track.date.uts))
+        : new Date(0),
       track: {
         mbid: track.mbid,
         name: track.name,
@@ -52,6 +49,5 @@ export function createLastfmListensFromRecentTracks(
           name: track.album["#text"],
         },
       },
-    };
-  });
+    }));
 }
