@@ -2,6 +2,7 @@ import createServer from "../../utils/server";
 import { PrismaClient } from "@prisma/client";
 import supertest from "supertest";
 import { createUserByLastfmUsername } from "../users.service";
+import { clearEntireDatabase } from "../../utils/test.utils";
 
 const app = createServer();
 const prisma = new PrismaClient();
@@ -24,26 +25,25 @@ const prisma = new PrismaClient();
   
   * Update User Listening History
   * - [ ] Can Update User Listening History of existing user
-  * - [ ] Cannot Update User Listening History of non-existing user
+  * - [X] Cannot Update User Listening History of non-existing user
+  * - [X] Error message for missing user id
+  * - [X] Error message for invalid user id
 */
 
 describe("User Routes", () => {
   let consoleError = jest
     .spyOn(global.console, "error")
     .mockImplementation(() => {});
+
   beforeAll(async () => {
-    // clear all users
-    await prisma.lastfmAccount.deleteMany();
-    await prisma.user.deleteMany();
+    await clearEntireDatabase();
   });
 
   afterAll(async () => {
     // restore console.error
     consoleError.mockRestore();
 
-    // clear all users
-    await prisma.lastfmAccount.deleteMany();
-    await prisma.user.deleteMany();
+    await clearEntireDatabase();
   });
 
   afterEach(() => {
@@ -102,6 +102,54 @@ describe("User Routes", () => {
         await supertest(app).post(`/api/users/invalidId/listens`).expect(400);
         expect(consoleError).not.toHaveBeenCalled();
       });
+
+      it("it should raise an error if no user is provided", async () => {
+        await supertest(app).post(`/api/users/listens`).expect(404);
+        expect(consoleError).not.toHaveBeenCalled();
+      });
+
+      /*
+      describe("Given: the user has no listening history", () => {
+        it("it should update listening history if provided a valid id", async () => {
+          const user = await prisma.user.findFirst({
+            where: { lastfmAccount: { username: "atomicGravy" } },
+          });
+
+          const getListenCount = async () =>
+            await prisma.listen.count({
+              where: { userId: user?.id },
+            });
+          expect(await getListenCount()).toEqual(0);
+
+          await supertest(app)
+            .post(`/api/users/${user?.id}/listens`)
+            .expect(200)
+            .expect("Content-Type", /json/)
+            .expect((res) => {
+              expect(res.body).toEqual(
+                expect.objectContaining({
+                  status: "started",
+                })
+              );
+            });
+
+          const maximumPolls = 5;
+          let polls = 0;
+          while (polls < maximumPolls) {
+            const listens = await getListenCount();
+            if (listens > 0) {
+              break;
+            }
+
+            // wait before polling again
+            await new Promise((resolve) => setTimeout(resolve, 300));
+            polls++;
+          }
+
+          expect(await getListenCount()).toBeGreaterThan(0);
+        });
+      });
+      */
     });
   });
 });

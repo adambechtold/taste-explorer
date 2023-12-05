@@ -5,6 +5,7 @@ import {
   getUserById,
 } from "../users.service";
 import { TypedError } from "../../errors/errors.types";
+import { clearEntireDatabase } from "../../utils/test.utils";
 
 const prisma = new PrismaClient();
 
@@ -27,8 +28,7 @@ describe("User Service", () => {
 
   beforeAll(async () => {
     // clear all users
-    await prisma.lastfmAccount.deleteMany();
-    await prisma.user.deleteMany();
+    await clearEntireDatabase();
   });
 
   afterAll(async () => {
@@ -36,8 +36,7 @@ describe("User Service", () => {
     consoleError.mockRestore();
 
     // clear all users
-    await prisma.lastfmAccount.deleteMany();
-    await prisma.user.deleteMany();
+    await clearEntireDatabase();
   });
 
   afterEach(() => {

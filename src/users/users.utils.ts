@@ -2,13 +2,13 @@ import {
   User as PrismaUser,
   LastfmAccount as PrismaLastfmAccount,
 } from "@prisma/client";
-import { User } from "./users.types";
+import { UserWithId } from "./users.types";
 
 export function createUser(
   prismaUser: PrismaUser,
   prismaLastfm?: PrismaLastfmAccount | null
-): User {
-  const user: User = {
+): UserWithId {
+  const user: UserWithId = {
     id: prismaUser.id,
   };
 

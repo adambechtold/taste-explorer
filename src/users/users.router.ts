@@ -82,7 +82,7 @@ usersRouter.post("/", async (req: Request, res: Response) => {
 });
 
 // --- Update User's Listen History ---
-usersRouter.put("/:username/listens", async (req: Request, res: Response) => {
+usersRouter.post("/:id/listens", async (req: Request, res: Response) => {
   try {
     if (!req.params.id) {
       throw new TypedError("Missing username", 400);
@@ -91,7 +91,9 @@ usersRouter.put("/:username/listens", async (req: Request, res: Response) => {
       throw new TypedError("ID must be a number", 400);
     }
 
-    const result = await UserService.updateListenHistory(req.params.username);
+    const result = await UserService.triggerUpdateListenHistoryByUserId(
+      parseInt(req.params.id)
+    );
 
     res.status(200).send(result);
   } catch (e: any) {
