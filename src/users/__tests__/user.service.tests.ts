@@ -3,8 +3,8 @@ import {
   createUserByLastfmUsername,
   getAllUsers,
   getUserById,
-} from "../src/users/users.service";
-import { TypedError } from "../src/errors/errors.types";
+} from "../users.service";
+import { TypedError } from "../../errors/errors.types";
 
 const prisma = new PrismaClient();
 

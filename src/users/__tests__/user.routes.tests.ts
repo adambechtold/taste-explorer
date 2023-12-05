@@ -1,6 +1,7 @@
-import createServer from "../src/utils/server";
+import createServer from "../../utils/server";
 import { PrismaClient } from "@prisma/client";
 import supertest from "supertest";
+import { createUserByLastfmUsername } from "../users.service";
 
 const app = createServer();
 const prisma = new PrismaClient();
@@ -17,7 +18,13 @@ const prisma = new PrismaClient();
   * - [ ] Can Get User by Id
   * - [X] Cannot Get a User that doesn't exist
   * - [X] Provide invalid id argument (is a string)
-  * 
+
+  * Get All Users
+  * - [ ] Can Get All Users
+  
+  * Update User Listening History
+  * - [ ] Can Update User Listening History of existing user
+  * - [ ] Cannot Update User Listening History of non-existing user
 */
 
 describe("User Routes", () => {
@@ -75,6 +82,24 @@ describe("User Routes", () => {
           .post(`/api/users`)
           .send({ lastfm: { username: "test" } })
           .expect(400);
+        expect(consoleError).not.toHaveBeenCalled();
+      });
+    });
+  });
+
+  describe("Update User Listening Routes", () => {
+    describe("Given: there is a user in the database", () => {
+      beforeAll(async () => {
+        await createUserByLastfmUsername("atomicGravy");
+      });
+
+      it("it should raise an error if it provides the id of a user that doesn't exist", async () => {
+        await supertest(app).post(`/api/users/9999999/listens`).expect(404);
+        expect(consoleError).toHaveBeenCalled();
+      });
+
+      it("it should raise an error if it provides an invalid id (string)", async () => {
+        await supertest(app).post(`/api/users/invalidId/listens`).expect(400);
         expect(consoleError).not.toHaveBeenCalled();
       });
     });
