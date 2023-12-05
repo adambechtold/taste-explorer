@@ -1,10 +1,12 @@
-import { PrismaClient } from "@prisma/client";
+import { Prisma, PrismaClient, Track as PrismaTrack } from "@prisma/client";
 const prisma = new PrismaClient();
 
-import * as lastfmService from "../lastfm/lastfm.service";
-import { Listen, Track } from "./music.types";
+import { Listen, Track, Artist, Album } from "./music.types";
+import { UserWithId } from "../users/users.types";
+import { TypedError } from "../errors/errors.types";
+import { LastfmListensEventEmitter } from "../lastfm/lastfm.types";
 import { createListenFromLastfmListen } from "./music.utils";
-import { Artist as PrismaArtist, Album as PrismaAlbum } from "@prisma/client";
+import * as LastfmService from "../lastfm/lastfm.service";
 
 export async function getListensByUserId(userId: number) {
   try {
@@ -22,172 +24,200 @@ export async function getListensByUserId(userId: number) {
   }
 }
 
-export async function updateListensForUserByUsername(
-  username: string
-): Promise<Listen[]> {
-  try {
-    // get user
-    const user = await prisma.user.findFirst({
-      where: { lastfmAccount: { username } },
-      include: {
-        lastfmAccount: true,
-      },
-    });
+export async function triggerUpdateListensForUser(
+  user: UserWithId
+): Promise<LastfmListensEventEmitter> {
+  // TODO: replace this with a kind of generic event emitter
 
-    if (!user) {
-      throw new Error(`User: ${username} not found.`);
-    }
+  try {
     if (!user.lastfmAccount) {
-      throw new Error(`User ${username} does not have a lastfm account.`);
+      throw new TypedError("User does not have a lastfm account", 400);
     }
 
     // find last listen
-    const lastListen = await prisma.listen.findFirst({
-      where: { userId: user.id },
-      orderBy: { listenedAt: "desc" },
-    });
+    //    const lastListen = await prisma.listen.findFirst({
+    //      where: { userId: user.id },
+    //      orderBy: { listenedAt: "desc" },
+    //    });
 
     // get one page of listens from last listen
-    const from = lastListen ? lastListen.listenedAt : undefined;
+    //    const from = lastListen ? lastListen.listenedAt : undefined;
     const lastfmUsername = user.lastfmAccount.username;
 
-    const lastfmListens = await lastfmService.getRecentTracks(
-      lastfmUsername,
-      from
-    );
+    // ---- CONFIGURE EVENT EMITTER ----
+    const updateTracker = new LastfmListensEventEmitter();
 
-    const listens = lastfmListens.map(createListenFromLastfmListen);
-
-    // Add listens to db
-    // It feels like we should have a way of de-duplicating listens here,
-    // but last.fm doesn't provide a unique identifier for the listens.
-
-    // - Artists and Albums
-    const distinctArtists = new Map<string, string>(
-      listens.map((l) => [l.track.artist.mbid, l.track.artist.name])
-    );
-    const distinctAlbumsMbids = new Map<string, string>(
-      listens.map((l) => [l.track.album.mbid, l.track.album.name])
-    );
-
-    const newPrismaArtists = [];
-    for (const [key, value] of distinctArtists) {
-      newPrismaArtists.push({ mbid: key, name: value });
-    }
-    const newPrismaAlbums = [];
-    for (const [key, value] of distinctAlbumsMbids) {
-      newPrismaAlbums.push({ mbid: key, name: value });
-    }
-
-    if (process.env.VERBOSE) {
-      console.log("\n\nartists to add");
-      console.dir(newPrismaArtists, { depth: null });
-      console.log("\n\nalbums to add");
-      console.dir(newPrismaAlbums, { depth: null });
-    }
-
-    const artistDbPromise = prisma.artist.createMany({
-      data: newPrismaArtists,
-      skipDuplicates: true,
-    });
-    const albumDbPromise = prisma.album.createMany({
-      data: newPrismaAlbums,
-      skipDuplicates: true,
-    });
-    const [artistDbResponse, albumDbResponse] = await Promise.all([
-      artistDbPromise,
-      albumDbPromise,
-    ]);
-
-    // - New Tracks
-    const distinctTracksByMbid = new Map<string, Track>(
-      listens.map((l) => [l.track.mbid, l.track])
-    );
-
-    // get the artists and albums we'll need to save tracks
-    const [artistsForTracks, albumsForTracks] = await Promise.all([
-      prisma.artist.findMany({
-        where: {
-          OR: newPrismaArtists.map((a) => ({ mbid: a.mbid })),
-        },
-      }),
-      prisma.album.findMany({
-        where: {
-          OR: newPrismaAlbums.map((a) => ({ mbid: a.mbid })),
-        },
-      }),
-    ]);
-    const artistByMbid = new Map<string, PrismaArtist>(
-      artistsForTracks.map((a) => [a.mbid, a])
-    );
-    const albumByMbid = new Map<string, PrismaAlbum>(
-      albumsForTracks.map((a) => [a.mbid, a])
-    );
-
-    const newTrackPromises = [];
-
-    for (const [trackMbid, track] of distinctTracksByMbid) {
-      const albumId = albumByMbid.get(track.album.mbid)?.id;
-      const artistId = artistByMbid.get(track.artist.mbid)?.id;
-
-      if (albumId && artistId) {
-        const trackPromise = prisma.track.upsert({
-          // I'm using "upsert" to do a kind of "create if not exists"
-          where: { mbid: trackMbid },
-          update: {
-            name: track.name,
-          },
-          create: {
-            name: track.name,
-            mbid: trackMbid,
-            lastfmUrl: track.url,
-            album: {
-              connect: {
-                id: albumId,
-              },
-            },
-            artists: {
-              connect: {
-                id: artistId,
-              },
-            },
-          },
-        });
-
-        newTrackPromises.push(trackPromise);
-      }
-    }
-
-    const newTracks = await Promise.all(newTrackPromises);
-    // I don't know how many tracks were created...
-
-    // - Listens
-    const newListensRequests = [];
-    const createdListens = [];
-    for (const listen of listens) {
-      const trackId = newTracks.find((t) => t.mbid === listen.track.mbid)?.id;
-      if (trackId) {
-        createdListens.push(listen);
-        newListensRequests.push({
-          listenedAt: listen.date,
-          trackId: trackId,
-          userId: user.id,
-        });
-      }
-    }
-    await prisma.listen.createMany({
-      data: newListensRequests,
+    updateTracker.onListens((lastfmListens) => {
+      console.log(
+        `Got ${lastfmListens.length} listens for user: ${lastfmUsername}`
+      );
+      const listens = lastfmListens.map((l) =>
+        createListenFromLastfmListen(l, user)
+      );
+      const a = storeListens(listens);
     });
 
-    if (process.env.VERBOSE) {
-      console.log("\n\nlistens created");
-      console.dir(createdListens, { depth: null });
-    }
+    updateTracker.onEnd(() => {
+      console.log(`Finished updating listens for user: ${lastfmUsername}`);
+    });
 
-    // return new listens
-    return createdListens;
-  } catch (e) {
+    updateTracker.onError((e) => {
+      console.error(e);
+      throw new TypedError(
+        `Could not update listens for user: ${lastfmUsername}`,
+        500
+      );
+    });
+
+    // ---- TRIGGER UPDATE ----
+    LastfmService.getAllListens(lastfmUsername, updateTracker);
+
+    return updateTracker;
+  } catch (e: any) {
     console.error(e);
-    throw new Error(`Could not update listens for user: ${username}`);
+    console.log(e);
+    throw new TypedError(`Could not update listens for user: ${user.id}`, 500);
   }
+}
+
+export async function storeListens(listens: Listen[]): Promise<{
+  artist: Prisma.BatchPayload;
+  album: Prisma.BatchPayload;
+  track: Prisma.BatchPayload;
+  listen: Prisma.BatchPayload;
+}> {
+  const artistResult = await storeArtists(
+    listens.map((l) => l.track.artists[0])
+  );
+  const albumResult = await storeAlbums(listens.map((l) => l.track.album));
+  const tracksResult = await storeTracks(listens.map((l) => l.track));
+
+  // store listens
+  const listenPromises = listens.map(async (l) => {
+    const matchingListen = await prisma.listen.findFirst({
+      where: {
+        userId: l.user.id,
+        track: { mbid: l.track.mbid },
+        listenedAt: l.listenedAt,
+      },
+    });
+
+    if (matchingListen) {
+      return;
+    }
+
+    return prisma.listen.create({
+      data: {
+        listenedAt: l.listenedAt,
+        track: {
+          connect: { mbid: l.track.mbid },
+        },
+        user: {
+          connect: { id: l.user.id },
+        },
+      },
+    });
+  });
+
+  const listenResults = await Promise.all(listenPromises);
+  const listenResultCount: Prisma.BatchPayload = {
+    count: listenResults.length,
+  };
+
+  return {
+    track: tracksResult,
+    artist: artistResult,
+    album: albumResult,
+    listen: listenResultCount,
+  };
+}
+
+async function storeAlbums(albums: Album[]): Promise<Prisma.BatchPayload> {
+  const albumsByMbid = new Map<string, Album>(albums.map((a) => [a.mbid, a]));
+  const albumResults = Array.from(albumsByMbid).map((a) => {
+    const artists = a[1].artists;
+    const artistMbids = artists.map((a) => a.mbid);
+
+    return prisma.album.upsert({
+      where: { mbid: a[0] },
+      update: {
+        artists: {
+          connect: artistMbids.map((m) => ({ mbid: m })),
+        },
+      },
+      create: {
+        mbid: a[0],
+        name: a[1].name,
+        artists: {
+          connect: artistMbids.map((m) => ({ mbid: m })),
+        },
+      },
+    });
+  });
+  const albumResult = await Promise.all(albumResults);
+  const albumResultCount: Prisma.BatchPayload = {
+    count: albumResult.length,
+  };
+
+  return albumResultCount;
+}
+
+async function storeArtists(artists: Artist[]): Promise<Prisma.BatchPayload> {
+  const artistsByMbid = new Map<string, Artist>(
+    artists.map((a) => [a.mbid, a])
+  );
+
+  const artistResult = await prisma.artist.createMany({
+    data: Array.from(artistsByMbid).map((a) => ({
+      mbid: a[0],
+      name: a[1].name,
+    })),
+    skipDuplicates: true,
+  });
+
+  return artistResult;
+}
+
+async function storeTracks(tracks: Track[]): Promise<Prisma.BatchPayload> {
+  const tracksByMbid = new Map<string, Track>(
+    tracks.filter((t) => t.mbid).map((t) => [t.mbid, t])
+  );
+
+  const trackPromises = [] as Prisma.Prisma__TrackClient<PrismaTrack>[];
+
+  Array.from(tracksByMbid).forEach((t) => {
+    const albumMbid = t[1].album.mbid;
+    const artistMbids = t[1].artists.map((a) => a.mbid);
+
+    if (albumMbid && artistMbids.length > 0) {
+      const trackPromise = prisma.track.upsert({
+        // upsert is required because we can't do joins in the where clause of createMany unless we have the ID
+        where: { mbid: t[0] },
+        update: {
+          name: t[1].name,
+        },
+        create: {
+          name: t[1].name,
+          mbid: t[0],
+          lastfmUrl: t[1].url,
+          album: {
+            connect: {
+              mbid: albumMbid,
+            },
+          },
+          artists: {
+            connect: artistMbids.map((m) => ({ mbid: m })),
+          },
+        },
+      });
+
+      trackPromises.push(trackPromise);
+    }
+  });
+
+  const trackResults = await Promise.all(trackPromises);
+  const trackResultCount: Prisma.BatchPayload = {
+    count: trackResults.length,
+  };
+  return trackResultCount;
 }

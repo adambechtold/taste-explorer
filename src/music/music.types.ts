@@ -1,6 +1,9 @@
+import { UserWithId } from "../users/users.types";
+
 export type Listen = {
   track: Track;
-  date: Date; // UTS
+  user: UserWithId;
+  listenedAt: Date;
 };
 
 export type Track = {
@@ -8,7 +11,7 @@ export type Track = {
   mbid: string;
   url: string;
   album: Album;
-  artist: Artist;
+  artists: Artist[];
   // streamable: "0" | "1"; // lastfm provides this but I don't understand it yet
   // images: Image[]; // lastfm provides this but I don't want to track it yet
 };
@@ -16,6 +19,7 @@ export type Track = {
 export type Album = {
   name: string;
   mbid: string;
+  artists: Artist[];
 };
 
 export type Artist = {
@@ -24,8 +28,7 @@ export type Artist = {
 };
 
 export type ListenHistoryUpdate = {
-  result: "success" | "error";
-  newListensCount: number;
+  status: "started" | "failed";
 };
 
 /*
