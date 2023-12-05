@@ -39,8 +39,7 @@ export async function getAccountInfo(
     if (response.status === 404) {
       throw new TypedError(
         `User: ${lastfmUsername} not found in last.fm.`,
-        404,
-        "NOT_FOUND"
+        404
       );
     }
 
@@ -51,8 +50,7 @@ export async function getAccountInfo(
       );
       throw new TypedError(
         `Could not get account info for user: ${lastfmUsername}`,
-        500,
-        "INTERNAL_SERVER_ERROR"
+        500
       );
     }
 
@@ -115,7 +113,10 @@ export async function getRecentTracks(
         `Response code ${response.status} from lastfm:`,
         await response.json()
       );
-      throw new Error(`Could not get recent tracks for user: ${username}`);
+      throw new TypedError(
+        `Could not get recent tracks for user: ${username}`,
+        500
+      );
     }
 
     const data = (await response.json()) as LastfmGetRecentTracksResponse;

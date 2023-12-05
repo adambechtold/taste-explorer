@@ -26,11 +26,7 @@ export async function getUserById(userId: number): Promise<User> {
     });
 
     if (!user) {
-      throw new TypedError(
-        `User with id:${userId} not found.`,
-        404,
-        "NOT_FOUND"
-      );
+      throw new TypedError(`User with id:${userId} not found.`, 404);
     }
 
     return createUserFromPrisma(user, user.lastfmAccount);
@@ -39,11 +35,7 @@ export async function getUserById(userId: number): Promise<User> {
     if (e instanceof TypedError) {
       throw e;
     }
-    throw new TypedError(
-      `Could not find user with id:${userId}`,
-      500,
-      "INTERNAL_SERVER_ERROR"
-    );
+    throw new TypedError(`Could not find user with id:${userId}`, 500);
   }
 }
 
@@ -84,11 +76,7 @@ export async function createUserByLastfmUsername(
     return createUserFromPrisma(response, user?.lastfmAccount);
   } catch (e) {
     console.error(e);
-    throw new TypedError(
-      `Could not create user for lastfm username ${lastfmUsername}`,
-      500,
-      "INTERNAL_SERVER_ERROR"
-    );
+    throw new TypedError(`Could not store user: ${user}`, 500);
   }
 }
 

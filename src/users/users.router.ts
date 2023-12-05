@@ -50,7 +50,7 @@ usersRouter.get("/:id", async (req: Request, res: Response) => {
 
     // check if id is a number
     if (isNaN(parseInt(req.params.id))) {
-      throw new TypedError("ID must be a number", 400, "BAD_REQUEST");
+      throw new TypedError("ID must be a number", 400);
     }
 
     const user: User = await UserService.getUserById(parseInt(req.params.id));
@@ -68,7 +68,7 @@ usersRouter.post("/", async (req: Request, res: Response) => {
 
     if (!lastfmUsername) {
       const message = "Missing lastfmUsername";
-      throw new TypedError(message, 400, "BAD_REQUEST");
+      throw new TypedError(message, 400);
     }
 
     const user: User = await UserService.createUserByLastfmUsername(
@@ -84,16 +84,18 @@ usersRouter.post("/", async (req: Request, res: Response) => {
 // --- Update User's Listen History ---
 usersRouter.put("/:username/listens", async (req: Request, res: Response) => {
   try {
-    if (!req.params.username) {
-      throw new TypedError("Missing username", 400, "BAD_REQUEST");
+    if (!req.params.id) {
+      throw new TypedError("Missing username", 400);
+    }
+    if (isNaN(parseInt(req.params.id))) {
+      throw new TypedError("ID must be a number", 400);
     }
 
     const result = await UserService.updateListenHistory(req.params.username);
 
     res.status(200).send(result);
   } catch (e: any) {
-    console.log("Error: ", e);
-    res.status(500).send(e.message);
+    handleErrorResponse(e, res);
   }
 });
 
