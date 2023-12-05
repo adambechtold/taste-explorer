@@ -35,4 +35,22 @@ function runPrismaOperation(fn: () => Promise<void>) {
     });
 }
 
-runPrismaOperation(createUser);
+async function createArtists() {
+  const artistResult = await prisma.artist.createMany({
+    data: [
+      {
+        mbid: "f0410667-a245-494b-887b-a81ba45d783d",
+        name: "Chris James",
+      },
+      {
+        mbid: "6925db17-f35e-42f3-a4eb-84ee6bf5d4b0",
+        name: "Olivia Rodrigo",
+      },
+    ],
+    skipDuplicates: true,
+  });
+  console.log("artistResult", artistResult);
+}
+
+runPrismaOperation(createArtists);
+// npx ts-node src/runPrisma.ts
