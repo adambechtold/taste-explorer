@@ -65,6 +65,52 @@ export async function getAccountInfo(
   }
 }
 
+export async function getAllListens(
+  lastfmUsername: string,
+  updateTracker: LastfmListensEventEmitter
+): Promise<boolean> {
+  let pageNumber = 1;
+  const pageSize = 1000; // TODO: Make this larger
+
+  // get one page of listens
+  const response = await getRecentTracks(lastfmUsername, pageNumber, pageSize);
+  updateTracker.emitStart();
+
+  const totalNumberOfPages = parseInt(
+    response.recenttracks["@attr"].totalPages
+  );
+  const currentPage = response.recenttracks["@attr"].page;
+  const numberOfListens = response.recenttracks["@attr"].total;
+  console.log("Starting import:");
+  console.dir({
+    totalNumberOfPages,
+    currentPage,
+    numberOfListens,
+  });
+
+  const lastfmListens = createLastfmListensFromRecentTracks(response);
+  updateTracker.emitListens(lastfmListens);
+
+  const MAX_PAGES = totalNumberOfPages; // TODO: Remove this limit and make it the totalNumberOfPages
+  for (let i = pageNumber + 1; i <= MAX_PAGES; i++) {
+    const response = await getRecentTracks(
+      lastfmUsername,
+      pageNumber,
+      pageSize
+    );
+    const lastfmListens = createLastfmListensFromRecentTracks(response);
+    pageNumber = i + 1;
+
+    updateTracker.emitListens(lastfmListens);
+    //await new Promise((resolve) => setTimeout(resolve, 4000));
+  }
+
+  updateTracker.emitEnd();
+  console.log("import complete");
+
+  return true;
+}
+
 export async function getRecentTracks(
   username: string,
   pageNumber: number = 1,
@@ -125,48 +171,4 @@ export async function getRecentTracks(
     console.error(e);
     throw new Error(`Could not get recent tracks for user: ${username}`);
   }
-}
-
-export async function getAllListens(
-  lastfmUsername: string,
-  updateTracker: LastfmListensEventEmitter
-): Promise<boolean> {
-  let pageNumber = 1;
-  const pageSize = 200; // TODO: Make this larger
-
-  // get one page of listens
-  const response = await getRecentTracks(lastfmUsername, pageNumber, pageSize);
-  updateTracker.emitStart();
-
-  const totalNumberOfPages = parseInt(
-    response.recenttracks["@attr"].totalPages
-  );
-  const currentPage = response.recenttracks["@attr"].page;
-  const numberOfListens = response.recenttracks["@attr"].total;
-  console.log("Starting import:");
-  console.dir({
-    totalNumberOfPages,
-    currentPage,
-    numberOfListens,
-  });
-
-  const lastfmListens = createLastfmListensFromRecentTracks(response);
-  updateTracker.emitListens(lastfmListens);
-
-  const MAX_PAGES = 1; // TODO: Remove this limit and make it the totalNumberOfPages
-  for (let i = pageNumber + 1; i <= MAX_PAGES; i++) {
-    const response = await getRecentTracks(
-      lastfmUsername,
-      pageNumber,
-      pageSize
-    );
-    const lastfmListens = createLastfmListensFromRecentTracks(response);
-    pageNumber = i + 1;
-
-    updateTracker.emitListens(lastfmListens);
-  }
-
-  updateTracker.emitEnd();
-
-  return true;
 }

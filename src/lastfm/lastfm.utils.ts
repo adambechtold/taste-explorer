@@ -30,24 +30,32 @@ export function createLastfmListensFromRecentTracks(
 ): LastfmListen[] {
   const tracks = response.recenttracks.track;
 
-  return tracks
-    .filter((track) => track.date?.uts && track.mbid)
-    .map((track) => ({
-      date: track.date?.uts
-        ? unixTimestampToDate(parseInt(track.date.uts))
-        : new Date(0),
-      track: {
-        mbid: track.mbid,
-        name: track.name,
-        url: track.url,
-        artist: {
-          mbid: track.artist.mbid,
-          name: track.artist["#text"],
-        },
-        album: {
-          mbid: track.album.mbid,
-          name: track.album["#text"],
-        },
+  const filteredTracks = tracks.filter(
+    (track) =>
+      track.date?.uts && track.mbid && track.artist.mbid && track.album.mbid
+  ); // TODO: include this in tests
+  console.warn(
+    "Removed tracks for incomplete data.",
+    tracks.length - filteredTracks.length,
+    "tracks removed."
+  );
+
+  return filteredTracks.map((track) => ({
+    date: track.date?.uts
+      ? unixTimestampToDate(parseInt(track.date.uts))
+      : new Date(0),
+    track: {
+      mbid: track.mbid,
+      name: track.name,
+      url: track.url,
+      artist: {
+        mbid: track.artist.mbid,
+        name: track.artist["#text"],
       },
-    }));
+      album: {
+        mbid: track.album.mbid,
+        name: track.album["#text"],
+      },
+    },
+  }));
 }
