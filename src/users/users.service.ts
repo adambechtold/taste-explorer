@@ -5,7 +5,6 @@ import { TypedError } from "../errors/errors.types";
 import { getAccountInfo } from "../lastfm/lastfm.service";
 import { User, UserWithId } from "./users.types";
 import { createUser as createUserFromPrisma } from "./users.utils";
-import { ListenHistoryUpdate } from "../music/music.types";
 import * as MusicService from "../music/music.service";
 
 /*
@@ -51,6 +50,7 @@ export async function createUserByLastfmUsername(
         lastfmAccount: true,
       },
     });
+
     if (checkUserResponse) {
       return createUserFromPrisma(
         checkUserResponse,
@@ -120,24 +120,20 @@ export async function getAllUsers(): Promise<User[]> {
   }
 }
 
-export async function triggerUpdateListenHistoryByUserId(
-  userId: number
-): Promise<ListenHistoryUpdate> {
+export async function triggerUpdateListenHistoryByUserId(userId: number) {
   const user = await getUserById(userId);
 
-  if (!user.lastfmAccount) {
-    throw new TypedError(
-      `User with id:${userId} does not have a lastfm account. Right now, only users with lastfm accounts can update their listening history.`,
-      500
-    );
+  if (!user) {
+    throw new TypedError(`User with id:${userId} not found.`, 404);
   }
 
   // trigger music service to update listens in the background
   // TODO: use the event emitter to send updates to the client
-  await MusicService.triggerUpdateListensForUser(user);
+  const importSize = await MusicService.triggerUpdateListensForUser(user);
 
   // return status as started so long as an error is not thrown
   return {
     status: "started",
+    listensToImport: importSize.numberOfNewListensToImport,
   };
 }

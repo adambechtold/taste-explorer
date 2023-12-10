@@ -35,22 +35,14 @@ function runPrismaOperation(fn: () => Promise<void>) {
     });
 }
 
-async function createArtists() {
-  const artistResult = await prisma.artist.createMany({
-    data: [
-      {
-        mbid: "f0410667-a245-494b-887b-a81ba45d783d",
-        name: "Chris James",
-      },
-      {
-        mbid: "6925db17-f35e-42f3-a4eb-84ee6bf5d4b0",
-        name: "Olivia Rodrigo",
-      },
-    ],
-    skipDuplicates: true,
+async function deleteAllLastfmListensForUser(userId: number) {
+  const deleted = await prisma.lastfmListen.deleteMany({
+    where: {
+      userId,
+    },
   });
-  console.log("artistResult", artistResult);
+  console.log("deleted all LastfmListens", deleted);
 }
 
-runPrismaOperation(createArtists);
+// runPrismaOperation(...);
 // npx ts-node src/runPrisma.ts
