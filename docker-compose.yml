@@ -1,7 +1,7 @@
 version: "3.9"
 
 services:
-  db:
+  test-db:
     image: mysql
     restart: always
     container_name: integration-tests-prisma
@@ -12,3 +12,14 @@ services:
       MYSQL_DATABASE: test
     ports:
       - "3306:3306"
+  dev-db:
+    image: mysql
+    restart: always
+    container_name: development
+    environment:
+      MYSQL_ROOT_PASSWORD: dev
+      MYSQL_USER: developer
+      MYSQL_PASSWORD: dev
+      MYSQL_DATABASE: taste-explorer
+    ports:
+      - "3307:3306"
