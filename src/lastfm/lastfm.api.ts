@@ -1,4 +1,5 @@
 import { TypedError } from "../errors/errors.types";
+import { dateToUnixTimestamp } from "../utils/date.utils";
 import {
   LastfmAccountInfoResponse,
   LastfmGetRecentTracksResponse,
@@ -69,13 +70,13 @@ export async function getAccountInfo(
 export async function getRecentTracks(
   username: string,
   pageNumber: number = 1,
-  limit: number = 200
-  // from?: Date
+  limit: number = 200,
+  from?: Date
 ): Promise<LastfmGetRecentTracksResponse> {
   if (process.env.VERBOSE === "true") {
     console.log("getting recent tracks from lastfm");
     console.log("username: ", username);
-    //    console.log("from: ", from);
+    console.log("from: ", from);
   }
 
   // Create Params
@@ -87,12 +88,17 @@ export async function getRecentTracks(
     page: pageNumber.toString(),
     limit: limit.toString(),
   });
-  //  if (from) {
-  //    params.append("from", dateToUnixTimestamp(from).toString());
-  //  }
+
+  if (from) {
+    params.append("from", dateToUnixTimestamp(from).toString());
+  }
 
   const url = new URL(LAST_FM_BASE_URL);
   url.search = params.toString();
+
+  if (process.env.VERBOSE === "true") {
+    console.log("url: ", url.toString());
+  }
 
   try {
     if (process.env.VERBOSE === "true") {
@@ -102,6 +108,8 @@ export async function getRecentTracks(
     const response = await fetch(url.toString());
 
     if (response.status !== 200) {
+      console.error(`Response code ${response.status} from lastfm:`);
+      console.dir(await response.json(), { depth: null });
       throw new Error(
         `Response code ${response.status} from lastfm: ${await response.json()}`
       );

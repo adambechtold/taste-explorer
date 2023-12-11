@@ -44,5 +44,5 @@ async function deleteAllLastfmListensForUser(userId: number) {
   console.log("deleted all LastfmListens", deleted);
 }
 
-// runPrismaOperation(...);
+runPrismaOperation(deleteAllLastfmListensForUser.bind(null, 285));
 // npx ts-node src/runPrisma.ts

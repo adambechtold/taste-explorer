@@ -10,6 +10,10 @@ import {
 } from "./lastfm.utils";
 import { LastfmListensEventEmitter } from "../lastfm/lastfm.types";
 import { storeListenBatch } from "./lastfm.storage";
+import { dateToUnixTimestamp, unixTimestampToDate } from "../utils/date.utils";
+
+import { PrismaClient } from "@prisma/client";
+const prisma = new PrismaClient();
 
 export async function getAccountInfo(
   lastfmUsername: string
@@ -27,9 +31,9 @@ export async function getAccountInfo(
   }
 }
 
-export function updateUserListeningHistory(
+export async function updateUserListeningHistory(
   user: UserWithId
-): LastfmListensEventEmitter {
+): Promise<LastfmListensEventEmitter> {
   if (!user.lastfmAccount) {
     throw new TypedError(
       `Cannot trigger update listens for user without lastfm account.`,
@@ -39,9 +43,28 @@ export function updateUserListeningHistory(
 
   const updateTracker = new LastfmListensEventEmitter();
   updateTracker.onListens((listens) => {
-    console.log(`store ${listens.length} listens`);
+    console.log(`......store ${listens.length} listens`);
     storeListenBatch(listens, user);
   });
+
+  // get most recent listen
+  const lastListen = await prisma.lastfmListen.findFirst({
+    where: {
+      userId: user.id,
+    },
+    orderBy: {
+      listenedAt: "desc",
+    },
+  });
+
+  if (lastListen) {
+    console.log("last listen was at", lastListen.listenedAt);
+    const findTracksFrom = unixTimestampToDate(
+      dateToUnixTimestamp(lastListen.listenedAt) + 1
+    );
+    getAllListens(user.lastfmAccount, updateTracker, findTracksFrom);
+    return updateTracker;
+  }
 
   getAllListens(user.lastfmAccount, updateTracker);
   return updateTracker;
@@ -49,10 +72,10 @@ export function updateUserListeningHistory(
 
 export async function getAllListens(
   lastfmAccount: LastfmAccount,
-  updateTracker: LastfmListensEventEmitter
+  updateTracker: LastfmListensEventEmitter,
+  from?: Date
 ) {
-  let pageNumber = 1;
-  const pageSize = 1000; // TODO: Make this larger (1000)
+  const pageSize = 200;
 
   // TODO: Implement error handling
 
@@ -60,8 +83,9 @@ export async function getAllListens(
   // Use information from the first response to determine how many pages to get
   const response = await LastfmApi.getRecentTracks(
     lastfmAccount.username,
-    pageNumber,
-    pageSize
+    1,
+    pageSize,
+    from
   );
 
   const totalNumberOfPages = parseInt(
@@ -69,35 +93,34 @@ export async function getAllListens(
   );
 
   // indicate that the service has started
-  console.log("I'm going to emit start");
   updateTracker.emitStart({
     numberOfNewListensToImport: parseInt(response.recenttracks["@attr"].total),
   });
 
-  // Return the first set of listens we captured
-  const lastfmListens = createLastfmListensFromRecentTracks(
-    response,
-    lastfmAccount
-  );
-  updateTracker.emitListens(lastfmListens);
+  const maximumNumberOfPagesToFetch = Infinity;
+  const firstPageNumber = totalNumberOfPages;
+  const lastPageNumber =
+    totalNumberOfPages - (maximumNumberOfPagesToFetch - 1) > 1
+      ? totalNumberOfPages - (maximumNumberOfPagesToFetch - 1)
+      : 1;
+  console.log("we'll fetch pages " + lastPageNumber + " to " + firstPageNumber);
 
-  //const MAX_PAGES = 1;
-  const MAX_PAGES = totalNumberOfPages;
-  for (let i = pageNumber + 1; i <= MAX_PAGES; i++) {
-    console.log("find more listens");
+  for (let i = firstPageNumber; i >= lastPageNumber; i--) {
+    console.log("...retrieving page " + i + " of " + totalNumberOfPages);
+
     const response = await LastfmApi.getRecentTracks(
       lastfmAccount.username,
       i,
-      pageSize
+      pageSize,
+      from
     );
+    console.log("......got ", response.recenttracks.track.length, " listens");
     const lastfmListens = createLastfmListensFromRecentTracks(
       response,
       lastfmAccount
     );
-    pageNumber = i + 1;
 
     updateTracker.emitListens(lastfmListens);
-    //await new Promise((resolve) => setTimeout(resolve, 4000));
   }
 
   updateTracker.emitEnd();

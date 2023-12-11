@@ -15,12 +15,12 @@ export async function triggerUpdateListensForUser(
   }
 
   // trigger LastfmService to fetch all listens for user
-  const lastfmUpdateTracker = LastfmService.updateUserListeningHistory(user);
+  const lastfmUpdateTracker = await LastfmService.updateUserListeningHistory(
+    user
+  );
 
   return new Promise((resolve, reject) => {
-    console.log("create promise");
     lastfmUpdateTracker.onStart((size) => {
-      console.log("on start!");
       resolve(size);
     });
   });
