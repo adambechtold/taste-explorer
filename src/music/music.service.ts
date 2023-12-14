@@ -1,5 +1,5 @@
 import { TypedError } from "../errors/errors.types";
-import { UserWithId } from "../users/users.types";
+import { UserWithId, UserWithLastfmAccountAndId } from "../users/users.types";
 import { LastfmListenBatchImportSize } from "../lastfm/lastfm.types";
 
 import * as LastfmService from "../lastfm/lastfm.service";
@@ -13,10 +13,11 @@ export async function triggerUpdateListensForUser(
       400
     );
   }
+  const userWithLastfmAccount = user as UserWithLastfmAccountAndId;
 
   // trigger LastfmService to fetch all listens for user
   const lastfmUpdateTracker = await LastfmService.updateUserListeningHistory(
-    user
+    userWithLastfmAccount
   );
 
   return new Promise((resolve, reject) => {

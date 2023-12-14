@@ -1,6 +1,4 @@
-// import fs from "fs/promises";
-import { TypedError } from "../errors/errors.types";
-import { UserWithId } from "../users/users.types";
+import { UserWithLastfmAccountAndId } from "../users/users.types";
 
 import { LastfmAccount } from "./lastfm.types";
 import * as LastfmApi from "./lastfm.api";
@@ -32,18 +30,13 @@ export async function getAccountInfo(
 }
 
 export async function updateUserListeningHistory(
-  user: UserWithId
+  user: UserWithLastfmAccountAndId
 ): Promise<LastfmListensEventEmitter> {
-  if (!user.lastfmAccount) {
-    throw new TypedError(
-      `Cannot trigger update listens for user without lastfm account.`,
-      400
-    );
-  }
-
   const updateTracker = new LastfmListensEventEmitter();
   updateTracker.onListens((listens) => {
-    console.log(`......store ${listens.length} listens`);
+    if (process.env.VERBOSE === "true") {
+      console.log(`......store ${listens.length} listens`);
+    }
     storeListenBatch(listens, user);
   });
 
@@ -58,7 +51,9 @@ export async function updateUserListeningHistory(
   });
 
   if (lastListen) {
-    console.log("last listen was at", lastListen.listenedAt);
+    if (process.env.VERBOSE === "true") {
+      console.log("last listen was at", lastListen.listenedAt);
+    }
     const findTracksFrom = unixTimestampToDate(
       dateToUnixTimestamp(lastListen.listenedAt) + 1
     );
@@ -103,10 +98,16 @@ export async function getAllListens(
     totalNumberOfPages - (maximumNumberOfPagesToFetch - 1) > 1
       ? totalNumberOfPages - (maximumNumberOfPagesToFetch - 1)
       : 1;
-  console.log("we'll fetch pages " + lastPageNumber + " to " + firstPageNumber);
+  if (process.env.VERBOSE === "true") {
+    console.log(
+      "we'll fetch pages " + lastPageNumber + " to " + firstPageNumber
+    );
+  }
 
   for (let i = firstPageNumber; i >= lastPageNumber; i--) {
-    console.log("...retrieving page " + i + " of " + totalNumberOfPages);
+    if (process.env.VERBOSE === "true") {
+      console.log("...retrieving page " + i + " of " + totalNumberOfPages);
+    }
 
     const response = await LastfmApi.getRecentTracks(
       lastfmAccount.username,
@@ -114,7 +115,10 @@ export async function getAllListens(
       pageSize,
       from
     );
-    console.log("......got ", response.recenttracks.track.length, " listens");
+
+    if (process.env.VERBOSE === "true") {
+      console.log("......got ", response.recenttracks.track.length, " listens");
+    }
     const lastfmListens = createLastfmListensFromRecentTracks(
       response,
       lastfmAccount
@@ -124,5 +128,7 @@ export async function getAllListens(
   }
 
   updateTracker.emitEnd();
-  console.log("done getting listens");
+  if (process.env.VERBOSE === "true") {
+    console.log("done getting listens");
+  }
 }

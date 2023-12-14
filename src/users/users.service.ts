@@ -128,7 +128,6 @@ export async function triggerUpdateListenHistoryByUserId(userId: number) {
   }
 
   // trigger music service to update listens in the background
-  // TODO: use the event emitter to send updates to the client
   const importSize = await MusicService.triggerUpdateListensForUser(user);
 
   // return status as started so long as an error is not thrown

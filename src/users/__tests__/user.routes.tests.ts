@@ -107,49 +107,6 @@ describe("User Routes", () => {
         await supertest(app).post(`/api/users/listens`).expect(404);
         expect(consoleError).not.toHaveBeenCalled();
       });
-
-      /*
-      describe("Given: the user has no listening history", () => {
-        it("it should update listening history if provided a valid id", async () => {
-          const user = await prisma.user.findFirst({
-            where: { lastfmAccount: { username: "atomicGravy" } },
-          });
-
-          const getListenCount = async () =>
-            await prisma.listen.count({
-              where: { userId: user?.id },
-            });
-          expect(await getListenCount()).toEqual(0);
-
-          await supertest(app)
-            .post(`/api/users/${user?.id}/listens`)
-            .expect(200)
-            .expect("Content-Type", /json/)
-            .expect((res) => {
-              expect(res.body).toEqual(
-                expect.objectContaining({
-                  status: "started",
-                })
-              );
-            });
-
-          const maximumPolls = 5;
-          let polls = 0;
-          while (polls < maximumPolls) {
-            const listens = await getListenCount();
-            if (listens > 0) {
-              break;
-            }
-
-            // wait before polling again
-            await new Promise((resolve) => setTimeout(resolve, 300));
-            polls++;
-          }
-
-          expect(await getListenCount()).toBeGreaterThan(0);
-        });
-      });
-      */
     });
   });
 });
