@@ -1,11 +1,9 @@
 import createServer from "../../utils/server";
-import { PrismaClient } from "@prisma/client";
 import supertest from "supertest";
 import { createUserByLastfmUsername } from "../users.service";
 import { clearEntireDatabase } from "../../utils/test.utils";
 
 const app = createServer();
-const prisma = new PrismaClient();
 
 /* Test User Routes
   * Create User Route 
