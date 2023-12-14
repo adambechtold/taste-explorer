@@ -7,5 +7,7 @@ export const isValidPreferenceType = (type: string): type is PreferenceType => {
 };
 
 export type Playlist = {
-  tracks: Track[];
+  tracks: {
+    items: Track[];
+  };
 };

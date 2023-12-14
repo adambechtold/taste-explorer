@@ -31,7 +31,7 @@ export async function getPlaylist(
   });
 
   return {
-    tracks: likedTracks,
+    tracks: { items: likedTracks },
   };
 }
 
