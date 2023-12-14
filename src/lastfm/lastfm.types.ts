@@ -26,14 +26,16 @@ export type LastfmAccount = {
 export type LastfmGetRecentTracksResponse = {
   recenttracks: {
     track: LastfmRecentTrackResponse[];
-    "@attr": {
-      user: string; // lastfm Username
-      page: string; // Page Number
-      perPage: string; // Number of songs per page
-      total: string; // Total number of songs
-      totalPages: string; // Total number of pages
-    };
+    "@attr": LastfmAttrResponse;
   };
+};
+
+type LastfmAttrResponse = {
+  user: string; // lastfm Username
+  page: string; // Page Number
+  perPage: string; // Number of songs per page
+  total: string; // Total number of songs
+  totalPages: string; // Total number of pages
 };
 
 export type LastfmRecentTrackResponse = {
@@ -41,79 +43,89 @@ export type LastfmRecentTrackResponse = {
   name: string;
   url: string;
   artist: {
-    mbid: string;
+    mbid?: string;
     "#text": string; // name of artist
   };
   // streamable: "0" | "1"; // ignore this for now
   album: {
-    mbid: string;
+    mbid?: string;
     "#text": string; // name of album
   };
   date?: {
     uts: string;
     "#text": string; // date in a human readable format
   };
-  // image: LastfmImageResponse[]; // ignore this for now
   "@attr"?: { nowplaying: "true" };
-};
-
-type LastfmImageResponse = {
-  sizes: "small" | "medium" | "large" | "extralarge";
-  "#text": string; // url
+  // image: LastfmImageResponse[]; // ignore this
 };
 
 // - Intermediate Types -
-type LastfmTrack = Pick<LastfmRecentTrackResponse, "mbid" | "name" | "url"> & {
+export type LastfmListen = {
+  track: LastfmTrack;
+  date?: Date;
+  isNowPlaying: boolean;
+  lastfmAccount: LastfmAccount;
+};
+
+type LastfmTrack = {
+  mbid?: string;
+  name: string;
+  url: string;
   artist: LastfmArtist;
   album: LastfmAlbum;
 };
 
-export type LastfmListen = {
-  track: LastfmTrack;
-  date: Date;
-};
-
 type LastfmAlbum = {
-  mbid: string;
+  mbid?: string;
   name: string;
 };
 
 type LastfmArtist = {
-  mbid: string;
+  mbid?: string;
   name: string;
 };
 
+export type LastfmListenBatchImportSize = {
+  numberOfNewListensToImport: number;
+};
+
+// - Custom Event Emitters -
+// ❓ Question - Is this the best place to organize this?
 export class LastfmListensEventEmitter extends EventEmitter {
   constructor() {
     super();
   }
 
+  // --- Start ---
+  emitStart(size: LastfmListenBatchImportSize) {
+    this.emit("start", size);
+  }
+
+  onStart(callback: (size: LastfmListenBatchImportSize) => void) {
+    this.on("start", callback);
+  }
+
+  // --- New Listens ---
   emitListens(listens: LastfmListen[]) {
     this.emit("listens", listens);
-  }
-
-  emitStart() {
-    this.emit("start");
-  }
-
-  emitEnd() {
-    this.emit("end");
-  }
-
-  emitError(error: Error) {
-    this.emit("error", error);
   }
 
   onListens(callback: (listens: LastfmListen[]) => void) {
     this.on("listens", callback);
   }
 
-  onStart(callback: () => void) {
-    this.on("start", callback);
+  // --- End ---
+  emitEnd() {
+    this.emit("end");
   }
 
   onEnd(callback: () => void) {
     this.on("end", callback);
+  }
+
+  // --- Error ---
+  emitError(error: Error) {
+    this.emit("error", error);
   }
 
   onError(callback: (error: Error) => void) {

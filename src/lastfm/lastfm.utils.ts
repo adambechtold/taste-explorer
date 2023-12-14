@@ -26,24 +26,16 @@ export function createLastfmAccount(
  * @returns {LastfmListen[]}
  */
 export function createLastfmListensFromRecentTracks(
-  response: LastfmGetRecentTracksResponse
+  response: LastfmGetRecentTracksResponse,
+  lastFmAccount: LastfmAccount
 ): LastfmListen[] {
   const tracks = response.recenttracks.track;
 
-  const filteredTracks = tracks.filter(
-    (track) =>
-      track.date?.uts && track.mbid && track.artist.mbid && track.album.mbid
-  ); // TODO: include this in tests
-  console.warn(
-    "Removed tracks for incomplete data.",
-    tracks.length - filteredTracks.length,
-    "tracks removed."
-  );
-
-  return filteredTracks.map((track) => ({
-    date: track.date?.uts
+  return tracks.map((track) => ({
+    date: track.date
       ? unixTimestampToDate(parseInt(track.date.uts))
-      : new Date(0),
+      : undefined,
+    isNowPlaying: track["@attr"]?.nowplaying === "true",
     track: {
       mbid: track.mbid,
       name: track.name,
@@ -57,5 +49,6 @@ export function createLastfmListensFromRecentTracks(
         name: track.album["#text"],
       },
     },
+    lastfmAccount: lastFmAccount,
   }));
 }

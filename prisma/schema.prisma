@@ -16,62 +16,30 @@ model User {
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
   lastfmAccount LastfmAccount?
-  Listen        Listen[]
+  LastfmListen  LastfmListen[]
 }
 
 model LastfmAccount {
-  id             Int      @id @default(autoincrement())
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-  username       String   @unique
-  registeredAt   DateTime
-  url            String
-  playCount      Int
-  trackCount     Int
-  user           User     @relation(fields: [userId], references: [id])
-  userId         Int      @unique
+  id           Int      @id @default(autoincrement())
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  username     String   @unique
+  registeredAt DateTime
+  url          String
+  playCount    Int
+  trackCount   Int
+  user         User     @relation(fields: [userId], references: [id])
+  userId       Int      @unique
 }
 
-model Listen {
+model LastfmListen {
   id         Int      @id @default(autoincrement())
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
-  track      Track    @relation(fields: [trackId], references: [id])
-  trackId    Int
-  user       User     @relation(fields: [userId], references: [id])
+  User       User     @relation(fields: [userId], references: [id])
   userId     Int
   listenedAt DateTime
-}
 
-model Track {
-  id        Int      @id @default(autoincrement())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  name      String
-  mbid      String   @unique
-  lastfmUrl String
-  album     Album    @relation(fields: [albumId], references: [id])
-  albumId   Int
-  artists   Artist[]
-  Listen    Listen[]
-}
-
-model Album {
-  id        Int      @id @default(autoincrement())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  name      String
-  mbid      String   @unique
-  tracks    Track[]
-  artists   Artist[]
-}
-
-model Artist {
-  id        Int      @id @default(autoincrement())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  name      String
-  mbid      String   @unique
-  albums    Album[]
-  tracks    Track[]
+  // Track
+  trackData Json
 }

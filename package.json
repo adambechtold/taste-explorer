@@ -6,7 +6,9 @@
   "scripts": {
     "docker:up": "docker-compose up -d",
     "docker:down": "docker-compose down",
-    "test": "npm run docker:up && npx dotenv -e .env.test.local -- npx prisma migrate dev && npx dotenv -e .env.test.local -- jest -i",
+    "docker:up:test": "docker-compose up -d test-db",
+    "docker:up:dev": "docker-compose up -d dev-db",
+    "test": "npm run docker:up:test && npx dotenv -e .env.test.local -- npx prisma migrate dev && npx dotenv -e .env.test.local -- jest -i",
     "dev": "ts-node-dev --respawn --pretty --transpile-only src/index.ts",
     "build": "rimraf ./build && tsc",
     "start": "npm run build && node build/index.js"
