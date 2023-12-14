@@ -55,6 +55,29 @@ paths:
       operationId: getPlaylist
       tags:
         - playlists
+      parameters:
+        - name: userId1
+          in: query
+          description: The id of the first user
+          required: true
+          schema:
+            type: integer
+        - name: userId2
+          in: query
+          description: The id of the second user
+          required: true
+          schema:
+            type: integer
+        - name: preferenceType
+          in: query
+          description: The type of preference to use when creating the playlist
+          required: true
+          schema:
+            type: string
+            enum:
+              - "USER1-ONLY"
+              - "USER2-ONLY"
+              - "USER1-AND-USER2"
       responses:
         "200":
           description: A list of tracks
