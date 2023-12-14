@@ -1,5 +1,4 @@
 import * as LastfmUtils from "../lastfm.utils";
-import * as ResponseExamples from "../assets/lastfm.response.examples";
 
 describe("lastfm Utils", () => {
   let consoleError = jest

@@ -100,15 +100,3 @@ usersRouter.post("/:id/listens", async (req: Request, res: Response) => {
     handleErrorResponse(e, res);
   }
 });
-
-// --- Get User's Listens ---
-// usersRouter.get("/:username/listens", async (req: Request, res: Response) => {
-//   try {
-//     const listens = await MusicService.(req.params.username);
-
-//     res.status(200).send(listens);
-//   } catch (e: any) {
-//     console.log("Error: ", e);
-//     res.status(500).send(e.message);
-//   }
-// });

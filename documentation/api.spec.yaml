@@ -1,0 +1,148 @@
+openapi: "3.0.0"
+info:
+  version: 1.0.0
+  title: Music Taste Explorer
+  description: >-
+    "Create playlists to explore users's musical taste differences and similarities."
+  termsOfService: adambechtold.xyz
+  contact:
+    name: Adam Bechtold
+servers:
+  - url: http://localhost:4000
+tags:
+  - name: users
+    description: Operations related to users.
+  - name: playlists
+    description: Operations related creating and modifying playlists.
+paths:
+  /api/users/{userId}:
+    get:
+      summary: Get User by Id
+      description: Get a user by their id
+      operationId: getUserById
+      tags:
+        - users
+      parameters:
+        - name: userId
+          in: path
+          description: The id of the user to retrieve
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: A user object
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "400":
+          description: Invalid ID supplied
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /api/music/playlists:
+    get:
+      summary: Get Playlist
+      description: Get a playlist based on the users and the preference type
+      operationId: getPlaylist
+      tags:
+        - playlists
+      parameters:
+        - name: userId1
+          in: query
+          description: The id of the first user
+          required: true
+          schema:
+            $ref: "#/components/schemas/UserId"
+        - name: userId2
+          in: query
+          description: The id of the second user
+          required: true
+          schema:
+            $ref: "#/components/schemas/UserId"
+        - name: preferenceType
+          in: query
+          description: The type of preference to use when creating the playlist
+          required: true
+          schema:
+            type: string
+            enum:
+              - "USER1-ONLY"
+              - "USER2-ONLY"
+              - "BOTH"
+      responses:
+        "200":
+          description: A list of tracks
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Playlist"
+components:
+  schemas:
+    User:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          type: integer
+        lastfmAccount:
+          $ref: "#/components/schemas/LastfmAccount"
+    LastfmAccount:
+      type: object
+      required:
+        - username
+        - registeredAt
+        - url
+        - playCount
+        - trackCount
+      properties:
+        username:
+          type: string
+        registeredAt:
+          type: string
+          format: date-time
+        url:
+          type: string
+          format: uri
+        playCount:
+          type: integer
+        trackCount:
+          type: integer
+    Playlist:
+      type: object
+      required:
+        - tracks
+      properties:
+        tracks:
+          type: array
+          items:
+            $ref: "#/components/schemas/Track"
+    Track:
+      type: object
+      required:
+        - name
+        - artist
+      properties:
+        name:
+          type: string
+        artist:
+          type: string
+    UserId:
+      type: integer
+      minimum: 1
+    Error:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
