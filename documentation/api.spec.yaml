@@ -48,7 +48,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
-  /api/playlists:
+  /api/music/playlists:
     get:
       summary: Get Playlist
       description: Get a playlist based on the users and the preference type
@@ -61,13 +61,13 @@ paths:
           description: The id of the first user
           required: true
           schema:
-            type: integer
+            $ref: "#/components/schemas/UserId"
         - name: userId2
           in: query
           description: The id of the second user
           required: true
           schema:
-            type: integer
+            $ref: "#/components/schemas/UserId"
         - name: preferenceType
           in: query
           description: The type of preference to use when creating the playlist
@@ -77,7 +77,7 @@ paths:
             enum:
               - "USER1-ONLY"
               - "USER2-ONLY"
-              - "USER1-AND-USER2"
+              - "BOTH"
       responses:
         "200":
           description: A list of tracks
@@ -136,6 +136,9 @@ components:
           type: string
         artist:
           type: string
+    UserId:
+      type: integer
+      minimum: 1
     Error:
       type: object
       required:
