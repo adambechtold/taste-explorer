@@ -59,7 +59,7 @@ const queryTracks = async (
     FROM (
       SELECT
         userId,
-        concat(JSON_EXTRACT(trackData, '$.name'), ' | by | ', JSON_EXTRACT(trackData, '$.artist.name')) AS songNameAndArtist,
+        concat(trackData->>'$.name', ' | by | ', trackData->>'$.artist.name') AS songNameAndArtist,
         count(userId) AS listenCount
       FROM
         LastfmListen
@@ -87,7 +87,7 @@ const queryTracks = async (
     FROM (
       SELECT
         userId,
-        concat(JSON_EXTRACT(trackData, '$.name'), ' | by | ', JSON_EXTRACT(trackData, '$.artist.name')) AS songNameAndArtist,
+        concat(trackData->>'$.name', ' | by | ', trackData->>'$.artist.name') AS songNameAndArtist,
         count(userId) AS listenCount
       FROM
         LastfmListen
@@ -115,7 +115,7 @@ const queryTracks = async (
     FROM (
       SELECT
         userId,
-        concat(JSON_EXTRACT(trackData, '$.name'), ' | by | ', JSON_EXTRACT(trackData, '$.artist.name')) AS songNameAndArtist,
+        concat(trackData->>'$.name', ' | by | ', trackData->>'$.artist.name') AS songNameAndArtist,
         count(userId) AS listenCount
       FROM
         LastfmListen
