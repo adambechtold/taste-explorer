@@ -4,12 +4,12 @@ SELECT
 		listenCount
 	ELSE
 		0
-	END) AS atomicgravyCount,
+	END) AS user1Count,
 	sum(CASE WHEN userId = 2 THEN
 		listenCount
 	ELSE
 		0
-	END) AS mathwhoCount
+	END) AS user2Count
 FROM (
 	SELECT
 		userId,
@@ -24,4 +24,4 @@ FROM (
 		userId,
 		songAndArtist) AS songCounts
 GROUP by songAndArtist
-having atomicgravyCount > 3 and mathwhoCount > 5;
+HAVING user1Count > 3 AND user2Count > 3;
