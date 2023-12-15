@@ -1,3 +1,4 @@
+import { Request } from "express";
 import { PrismaClient } from "@prisma/client";
 import { UserWithId } from "../users/users.types";
 import { AccessToken } from "./auth.types";
@@ -40,7 +41,7 @@ export async function storeSpotifyAccessToken(
 
 export async function getSpotifyAccessToken(
   user: UserWithId
-): Promise<AccessToken> {
+): Promise<AccessToken | null> {
   const userIdService = getUserIdService(user);
 
   const accessToken = await prisma.accessToken.findUnique({
@@ -48,7 +49,7 @@ export async function getSpotifyAccessToken(
   });
 
   if (!accessToken) {
-    throw new Error("Missing access token");
+    return null;
   }
 
   return {
@@ -57,4 +58,8 @@ export async function getSpotifyAccessToken(
     expiresAt: accessToken.expiresAt,
     service: "SPOTIFY",
   };
+}
+
+export function getCurrentUser(req: Request): UserWithId | null {
+  return { id: 1 };
 }

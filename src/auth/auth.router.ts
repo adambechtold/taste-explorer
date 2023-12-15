@@ -86,5 +86,5 @@ authRouter.get(callbackEndpoint, async (req: Request, res: Response) => {
     new Date(Date.now() + authTokenJson.expires_in * 1000)
   );
 
-  res.send("got it");
+  res.redirect("/");
 });
