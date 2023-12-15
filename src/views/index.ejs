@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%= title %></title>
+    <link rel="stylesheet" href="/stylesheets/style.css" />
+  </head>
+  <body>
+    <div class="content-container">
+      <h1><%= title %></h1>
+      <p>Welcome to <%= title %></p>
+      <% if (!spotify.isAuthorized) { %>
+      <div class="configuration-container">
+        <a href="auth/login/spotify">Add Spotify</a>
+      </div>
+      <% } %>
+    </div>
+  </body>
+</html>

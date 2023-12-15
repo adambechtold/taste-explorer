@@ -12,7 +12,7 @@ a {
   text-decoration: none;
 }
 
-.body-container {
+.content-container {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -20,7 +20,7 @@ a {
   height: 100vh;
 }
 
-.content-container {
+.configuration-container {
   display: flex;
   flex-direction: column;
   align-items: center;
