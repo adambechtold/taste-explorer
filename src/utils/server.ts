@@ -1,6 +1,7 @@
 import express, { Express } from "express";
 import cors from "cors";
 import helmet from "helmet";
+import path from "path";
 import { usersRouter } from "../users/users.router";
 import { musicRouter } from "../music/music.router";
 
@@ -12,6 +13,9 @@ function createServer(): Express {
   app.use(express.json());
   app.use("/api/users", usersRouter);
   app.use("/api/music", musicRouter);
+
+  // serve static files from the 'public' folder
+  app.use(express.static(path.join(__dirname, "../../public")));
 
   return app;
 }
