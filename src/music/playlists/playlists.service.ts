@@ -24,9 +24,11 @@ export async function getPlaylist(
   const likedTracks: Track[] = result.map((track) => {
     return {
       name: track.songNameAndArtist.split(" | by | ")[0],
-      artist: {
-        name: track.songNameAndArtist.split(" | by | ")[1],
-      },
+      artists: [
+        {
+          name: track.songNameAndArtist.split(" | by | ")[1],
+        },
+      ],
     };
   });
 
