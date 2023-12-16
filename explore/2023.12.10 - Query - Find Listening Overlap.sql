@@ -24,5 +24,5 @@ SELECT
       userId,
       songNameAndArtist) AS songCounts
   GROUP by songNameAndArtist
-  HAVING user1Count < 3 AND user2Count >= 3;
+  HAVING user1Count >= 3 AND user2Count >= 3;
 
