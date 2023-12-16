@@ -16,6 +16,9 @@ indexRouter.get("/", async (req: Request, res: Response) => {
 
   res.render("index", {
     title: "Music Taste Explorer",
-    spotify: { isAuthorized: isSpotifyAuthorized },
+    spotify: {
+      isAuthorized: isSpotifyAuthorized,
+      accessToken: spotifyAccessToken?.token,
+    },
   });
 });

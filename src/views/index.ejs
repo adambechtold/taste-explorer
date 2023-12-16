@@ -7,11 +7,14 @@
   <body>
     <div class="content-container">
       <h1><%= title %></h1>
-      <% if (!spotify.isAuthorized) { %>
       <div class="configuration-container">
+        <% if (!spotify.isAuthorized) { %>
         <a href="auth/login/spotify">Add Spotify</a>
+        <% } else { %>
+        <p>Current Auth Token</p>
+        <p id="token"><%= spotify.accessToken %></p>
+        <% } %>
       </div>
-      <% } %>
     </div>
   </body>
 </html>
