@@ -33,3 +33,19 @@ function createServer(): Express {
 }
 
 export default createServer;
+
+function listAllRoutes(app: express.Application) {
+  app._router.stack.forEach((middleware: any) => {
+    if (middleware.route) {
+      // routes registered directly on the app
+      console.log(middleware.route.path, middleware.route.methods);
+    } else if (middleware.name === "router") {
+      // router middleware
+      middleware.handle.stack.forEach((handler: any) => {
+        if (handler.route) {
+          console.log(handler.route.path, handler.route.methods);
+        }
+      });
+    }
+  });
+}
