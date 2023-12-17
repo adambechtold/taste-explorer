@@ -9,7 +9,7 @@
     "docker:up:test": "docker-compose up -d test-db",
     "docker:up:dev": "docker-compose up -d dev-db",
     "test": "npm run docker:up:test && npx dotenv -e .env.test.local -- npx prisma migrate dev && npx dotenv -e .env.test.local -- jest -i",
-    "dev": "ts-node-dev --respawn --pretty --transpile-only src/index.ts",
+    "dev": "npm run docker:up:dev && ts-node-dev --respawn --pretty --transpile-only src/index.ts",
     "build": "rimraf ./build && tsc",
     "start": "npm run build && node build/index.js"
   },
@@ -38,6 +38,7 @@
     "@prisma/client": "^5.7.0",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
+    "ejs": "^3.1.9",
     "express": "^4.18.2",
     "helmet": "^7.1.0"
   }

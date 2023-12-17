@@ -128,8 +128,12 @@ describe("Music Routes", () => {
 
         expect(response.status).toBe(200);
         expect(response.body).toHaveProperty("tracks");
-        expect(response.body.tracks.length).toBe(1);
-        expect(response.body.tracks[0]).toHaveProperty("name", "Both Like");
+        expect(response.body.tracks).toHaveProperty("items");
+        expect(response.body.tracks.items.length).toBe(1);
+        expect(response.body.tracks.items[0]).toHaveProperty(
+          "name",
+          "Both Like"
+        );
       });
 
       it('it should return 200 and a playlist that only user 1 likes if preference type is "USER1-ONLY"', async () => {
@@ -143,8 +147,12 @@ describe("Music Routes", () => {
 
         expect(response.status).toBe(200);
         expect(response.body).toHaveProperty("tracks");
-        expect(response.body.tracks.length).toBe(1);
-        expect(response.body.tracks[0]).toHaveProperty("name", "User 1 Only");
+        expect(response.body.tracks).toHaveProperty("items");
+        expect(response.body.tracks.items.length).toBe(1);
+        expect(response.body.tracks.items[0]).toHaveProperty(
+          "name",
+          "User 1 Only"
+        );
       });
 
       it('it should return 200 and a playlist that only user 2 likes if preference type is "USER2-ONLY"', async () => {
@@ -158,8 +166,15 @@ describe("Music Routes", () => {
 
         expect(response.status).toBe(200);
         expect(response.body).toHaveProperty("tracks");
-        expect(response.body.tracks.length).toBe(1);
-        expect(response.body.tracks[0]).toHaveProperty("name", "User 2 Only");
+        expect(response.body.tracks).toHaveProperty("items");
+        expect(response.body.tracks.items.length).toBe(1);
+        expect(response.body.tracks.items[0]).toHaveProperty(
+          "name",
+          "User 2 Only"
+        );
+        expect(response.body.tracks.items[0]).toHaveProperty("artists", [
+          { name: "Artist1" },
+        ]);
       });
     });
   });

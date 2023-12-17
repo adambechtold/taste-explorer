@@ -123,9 +123,12 @@ components:
         - tracks
       properties:
         tracks:
-          type: array
-          items:
-            $ref: "#/components/schemas/Track"
+          type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/Track"
     Track:
       type: object
       required:
@@ -135,7 +138,10 @@ components:
         name:
           type: string
         artist:
-          type: string
+          type: object
+          properties:
+            name:
+              type: string
     UserId:
       type: integer
       minimum: 1

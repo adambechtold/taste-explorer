@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%= title %></title>
+    <link rel="stylesheet" href="/stylesheets/style.css" />
+  </head>
+  <body>
+    <div class="content-container">
+      <h1><%= title %></h1>
+      <div class="configuration-container">
+        <% if (user) { %>
+        <h2>Logged in a user: <%= user.id %></h2>
+        <% } else { %>
+        <h2>Not logged in</h2>
+        <% } %>
+
+        <!-- Spotify Access Token -->
+        <% if (!spotify.isAuthorized) { %>
+        <a href="auth/login/spotify">Add Spotify</a>
+        <% } else { %>
+        <h3>Current Spotify Access Token</h3>
+        <p id="token"><%= spotify.accessToken %></p>
+        <% } %>
+      </div>
+    </div>
+  </body>
+</html>
