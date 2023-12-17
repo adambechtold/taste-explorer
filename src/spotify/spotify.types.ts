@@ -12,12 +12,23 @@ export type SpotifySearchResults = {
     items: {
       album: {
         name: string;
+        images: {
+          url: string;
+          height: number;
+          width: number;
+        }[];
       };
       artists: {
         name: string;
       }[];
       id: string;
       name: string;
+      external_ids: {
+        isrc?: string; // International Standard Recording Code
+        ean?: string; // International Article Number
+        upc?: string; // Universal Product Code
+      };
+      popularity: number; // 0-100
     }[];
   };
 };

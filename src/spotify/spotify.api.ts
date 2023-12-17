@@ -220,10 +220,14 @@ async function searchSpotifyTracks(
 
   const tracks: Track[] = searchJson.tracks.items.map((track) => ({
     name: track.name,
+    spotifyId: track.id,
+    internationalArticleNumber: track.external_ids.ean,
+    internationalRecordingCode: track.external_ids.isrc,
+    universalProductCode: track.external_ids.upc,
     artists: track.artists.map((a) => ({
       name: a.name,
     })),
-    spotifyId: track.id,
+    imageUrl: track.album.images[0].url,
   }));
 
   return tracks;
