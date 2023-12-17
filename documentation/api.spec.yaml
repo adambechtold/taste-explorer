@@ -12,8 +12,8 @@ servers:
 tags:
   - name: users
     description: Operations related to users.
-  - name: playlists
-    description: Operations related creating and modifying playlists.
+  - name: music
+    description: Operations related to music.
 paths:
   /api/users/{userId}:
     get:
@@ -54,7 +54,7 @@ paths:
       description: Get a playlist based on the users and the preference type
       operationId: getPlaylist
       tags:
-        - playlists
+        - music
       parameters:
         - name: userId1
           in: query
@@ -85,6 +85,39 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Playlist"
+  /api/music/lastfm-listens/{id}/spotify-track:
+    get:
+      summary: Get Spotify Track from last.fm Listen
+      description: Get the spotify track information for the track in a last.fm listen
+      operationId: getSpotifyTrackFromLastfmListen
+      tags:
+        - music
+      parameters:
+        - name: Id
+          in: path
+          description: The id of the last.fm listen
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: A track object
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Track"
+        "400":
+          description: Invalid ID supplied
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: last.fm Listen not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
 components:
   schemas:
     User:
@@ -133,15 +166,19 @@ components:
       type: object
       required:
         - name
-        - artist
+        - artists
       properties:
         name:
           type: string
-        artist:
-          type: object
-          properties:
-            name:
-              type: string
+        artists:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+        spotifyId:
+          type: string
     UserId:
       type: integer
       minimum: 1

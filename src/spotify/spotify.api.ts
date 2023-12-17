@@ -1,28 +1,32 @@
 import querystring from "querystring";
 import { generateRandomString } from "../utils/string.utils";
 
-import { AccessToken } from "../auth/auth.types";
-import { SpotifyAccessTokenResponse } from "./spotify.types";
+import { SpotifyAccessToken } from "../auth/auth.types";
+import {
+  SpotifyAccessTokenResponse,
+  SpotifySearchResults,
+} from "./spotify.types";
+import { Track } from "../music/music.types";
 
 /**
  * A wrapper around spotify's api
  */
 export default class SpotifyApi {
-  private accessToken: AccessToken | undefined;
+  private accessToken: SpotifyAccessToken | undefined;
   private clientId: string;
   private clientSecret: string;
 
-  constructor(accessToken?: AccessToken) {
+  constructor(accessToken?: SpotifyAccessToken) {
     this.clientId = getClientId();
     this.clientSecret = getClientSecret();
     this.accessToken = accessToken;
   }
 
-  setAccessToken(accessToken: AccessToken) {
+  setAccessToken(accessToken: SpotifyAccessToken) {
     this.accessToken = accessToken;
   }
 
-  async refreshAccessToken(): Promise<AccessToken> {
+  async refreshAccessToken(): Promise<SpotifyAccessToken> {
     if (!this.accessToken) {
       throw new Error("No access token set");
     }
@@ -62,7 +66,9 @@ export default class SpotifyApi {
    * @returns {Promise<AccessToken>} A promise that resolves to an object containing the new access token, the refresh token, the expiration date, and the service name ("SPOTIFY").
    * @throws {Error} Will throw an error if the request to the Spotify API fails.
    */
-  async getAccessTokenFromCode(code: string | null): Promise<AccessToken> {
+  async getAccessTokenFromCode(
+    code: string | null
+  ): Promise<SpotifyAccessToken> {
     const authOptions = {
       url: "https://accounts.spotify.com/api/token",
       form: {
@@ -97,6 +103,21 @@ export default class SpotifyApi {
       service: "SPOTIFY",
     };
   }
+
+  /**
+   * Searches for a track on Spotify using the track name and artist name.
+   *
+   * @param {string} trackName - The name of the track to search for.
+   * @param {string} artistName - The name of the artist of the track to search for.
+   * @returns {Promise<Track[]>} A promise that resolves to an array of tracks that match the search criteria.
+   * @throws {Error} Will throw an error if no access token is set.
+   */
+  async searchTracks(trackName: string, artistName: string): Promise<Track[]> {
+    if (!this.accessToken) {
+      throw new Error("No access token set");
+    }
+    return searchSpotifyTracks(trackName, artistName, this.accessToken.token);
+  }
 }
 
 /**
@@ -108,8 +129,8 @@ export default class SpotifyApi {
  * @throws {Error} Will throw an error if the request to the Spotify API fails, or if storing the new access token in the database fails.
  */
 async function refreshSpotifyToken(
-  accessToken: AccessToken
-): Promise<AccessToken> {
+  accessToken: SpotifyAccessToken
+): Promise<SpotifyAccessToken> {
   const response = await fetch("https://accounts.spotify.com/api/token", {
     method: "POST",
     headers: {
@@ -159,4 +180,51 @@ function getClientSecret(): string {
     throw new Error("Missing SPOTIFY_CLIENT_SECRET");
   }
   return clientSecret;
+}
+
+/**
+ * Searches for tracks on Spotify using the track name and artist name.
+ *
+ * @param {string} trackName - The name of the track to search for.
+ * @param {string} artistName - The name of the artist of the track to search for.
+ * @returns {Promise<Track[]>} A promise that resolves to an array of tracks that match the search criteria. Each track object includes the track name, the artists, and the Spotify ID of the track.
+ * @throws {Error} Will throw an error if the request to the Spotify API fails.
+ */
+async function searchSpotifyTracks(
+  trackName: string,
+  artistName: string,
+  token: string
+): Promise<Track[]> {
+  const searchOptions = {
+    url: "https://api.spotify.com/v1/search",
+    qs: {
+      q: "track:" + trackName + " artist:" + artistName,
+      type: "track",
+      limit: 1,
+    },
+    headers: {
+      Authorization: "Bearer " + token,
+    },
+    json: true,
+  };
+
+  const searchResponse = await fetch(
+    searchOptions.url + "?" + querystring.stringify(searchOptions.qs),
+    {
+      method: "GET",
+      headers: searchOptions.headers,
+    }
+  );
+
+  const searchJson = (await searchResponse.json()) as SpotifySearchResults;
+
+  const tracks: Track[] = searchJson.tracks.items.map((track) => ({
+    name: track.name,
+    artists: track.artists.map((a) => ({
+      name: a.name,
+    })),
+    spotifyId: track.id,
+  }));
+
+  return tracks;
 }

@@ -1,14 +1,18 @@
 import express, { Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
+import { TypedError } from "../errors/errors.types";
+import { handleErrorResponse } from "../utils/response.utils";
 
 import * as PlaylistService from "./playlists/playlists.service";
+import * as SpotifyService from "../spotify/spotify.service";
+import * as LastfmStorage from "../lastfm/lastfm.storage";
+
+import { getCurrentUser } from "../auth/auth.utils";
 
 import {
   PreferenceType,
   isValidPreferenceType,
 } from "./playlists/playlists.types";
-import { TypedError } from "../errors/errors.types";
-import { handleErrorResponse } from "../utils/response.utils";
 
 const prisma = new PrismaClient();
 
@@ -73,3 +77,56 @@ musicRouter.get("/playlists/", async (req: Request, res: Response) => {
     handleErrorResponse(e, res);
   }
 });
+
+// -- Identify Track from LastfmListen ---
+musicRouter.get(
+  "/lastfm-listens/:id/spotify-track",
+  async (req: Request, res: Response) => {
+    try {
+      const listenIdParam = req.params.id;
+
+      if (!listenIdParam) {
+        throw new TypedError("Listen ID is required", 400);
+      }
+
+      const listenId = parseInt(listenIdParam);
+
+      if (isNaN(listenId)) {
+        throw new TypedError("Listen ID must be a number", 400);
+      }
+
+      const lastfmListen = await prisma.lastfmListen.findUnique({
+        where: {
+          id: listenId,
+        },
+      });
+
+      if (!lastfmListen) {
+        throw new TypedError("Listen not found", 404);
+      }
+
+      const listen = await LastfmStorage.getLastfmListenById(listenId);
+
+      const user = getCurrentUser(req);
+
+      if (!user) {
+        throw new TypedError("No sure found", 404);
+      }
+
+      const accessToken = await SpotifyService.getAccessToken(user);
+
+      if (!accessToken) {
+        throw new TypedError("No access token found for user", 404);
+      }
+
+      const track = await SpotifyService.getTrackFromLastfmListen(
+        accessToken,
+        listen
+      );
+
+      res.status(200).send(track);
+    } catch (e: any) {
+      handleErrorResponse(e, res);
+    }
+  }
+);

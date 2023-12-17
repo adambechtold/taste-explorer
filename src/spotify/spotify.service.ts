@@ -1,10 +1,11 @@
-import { Response } from "express";
-
-import { AccessToken } from "../auth/auth.types";
+import { SpotifyAccessToken } from "../auth/auth.types";
 import { UserWithId } from "../users/users.types";
+import { TypedError } from "../errors/errors.types";
 
 import * as SpotifyUtils from "./spotify.utils";
 import SpotifyApi from "./spotify.api";
+import { Track } from "../music/music.types";
+import { LastfmListen } from "../lastfm/lastfm.types";
 
 /**
  * Handles the callback from the Spotify login process, exchanging the authorization code for an access token.
@@ -16,7 +17,7 @@ import SpotifyApi from "./spotify.api";
 export async function handleLoginCallback(
   code: string | null,
   user: UserWithId
-): Promise<AccessToken> {
+): Promise<SpotifyAccessToken> {
   const spotifyApi = new SpotifyApi();
   const accessToken = await spotifyApi.getAccessTokenFromCode(code);
 
@@ -38,7 +39,7 @@ export async function handleLoginCallback(
  */
 export async function getAccessToken(
   user: UserWithId
-): Promise<AccessToken | null> {
+): Promise<SpotifyAccessToken | null> {
   return SpotifyUtils.getSpotifyAccessTokenForUser(user);
 }
 
@@ -51,9 +52,9 @@ export async function getAccessToken(
  * @throws {Error} Will throw an error if the request to the Spotify API fails, or if storing the refreshed access token in the database fails.
  */
 export async function refreshAccessToken(
-  accessToken: AccessToken,
+  accessToken: SpotifyAccessToken,
   user: UserWithId
-): Promise<AccessToken> {
+): Promise<SpotifyAccessToken> {
   const spotifyApi = new SpotifyApi(accessToken);
   const newAccessToken = await spotifyApi.refreshAccessToken();
   return SpotifyUtils.storeSpotifyAccessTokenForUser(
@@ -62,4 +63,22 @@ export async function refreshAccessToken(
     newAccessToken.refreshToken,
     newAccessToken.expiresAt
   );
+}
+
+export async function getTrackFromLastfmListen(
+  accessToken: SpotifyAccessToken,
+  lastfmListen: LastfmListen
+): Promise<Track> {
+  const spotifyApi = new SpotifyApi(accessToken);
+
+  const tracks = await spotifyApi.searchTracks(
+    lastfmListen.track.name,
+    lastfmListen.track.artist.name
+  );
+
+  if (!tracks.length) {
+    throw new TypedError("No tracks found for this listen.", 404);
+  }
+
+  return tracks[0];
 }
