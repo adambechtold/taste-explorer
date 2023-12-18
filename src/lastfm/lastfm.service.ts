@@ -1,6 +1,6 @@
 import { UserWithLastfmAccountAndId } from "../users/users.types";
 
-import { LastfmAccount, LastfmListen } from "./lastfm.types";
+import { LastfmAccount } from "./lastfm.types";
 import * as LastfmApi from "./lastfm.api";
 import {
   createLastfmAccount,
@@ -131,18 +131,4 @@ export async function getAllListens(
   if (process.env.VERBOSE === "true") {
     console.log("done getting listens");
   }
-}
-
-export async function linkTrackToLastfmListen(
-  trackId: number,
-  lastfmListenId: number
-): Promise<LastfmListen> {
-  const prismaListen = prisma.lastfmListen.update({
-    where: {
-      id: lastfmListenId,
-    },
-    data: {
-      trackId,
-    },
-  });
 }
