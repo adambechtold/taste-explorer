@@ -1,8 +1,12 @@
+import { LastfmListen } from "@prisma/client";
+import { User } from "../users/users.types";
+
 export type Track = {
   name: string;
   artists: Artist[];
   spotifyId: string;
-  features?: TrackFeatures;
+  features?: Partial<TrackFeatures>;
+  mbid?: string;
   internationalRecordingCode?: string;
   internationalArticleNumber?: string;
   universalProductCode?: string;
@@ -119,4 +123,11 @@ export type Artist = {
   name: string;
   spotifyId: string;
   imageUrl?: string;
+};
+
+export type Listen = {
+  date: Date;
+  track: Track;
+  user: User;
+  lastfmListen?: LastfmListen;
 };

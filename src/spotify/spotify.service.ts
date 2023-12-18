@@ -3,10 +3,8 @@ import { UserWithId } from "../users/users.types";
 import { TypedError } from "../errors/errors.types";
 
 import * as SpotifyUtils from "./spotify.utils";
-import * as MusicStorage from "../music/music.storage";
 import SpotifyApi from "./spotify.api";
 import { Track } from "../music/music.types";
-import { LastfmListen } from "../lastfm/lastfm.types";
 
 /**
  * Handles the callback from the Spotify login process, exchanging the authorization code for an access token.
@@ -66,16 +64,14 @@ export async function refreshAccessToken(
   );
 }
 
-export async function getTrackFromLastfmListen(
+export async function getTrackFromTrackAndArtist(
   accessToken: SpotifyAccessToken,
-  lastfmListen: LastfmListen
+  trackName: string,
+  artistName: string
 ): Promise<Track> {
   const spotifyApi = new SpotifyApi(accessToken);
 
-  const tracks = await spotifyApi.searchTracks(
-    lastfmListen.track.name,
-    lastfmListen.track.artist.name
-  );
+  const tracks = await spotifyApi.searchTracks(trackName, artistName);
 
   if (!tracks.length) {
     throw new TypedError("No tracks found for this listen.", 404);
@@ -92,8 +88,6 @@ export async function getTrackFromLastfmListen(
     SpotifyUtils.convertSpotifyTrackFeaturesResponseToTrackFeatures(
       selectedTrackFeatures
     );
-
-  await MusicStorage.upsertTrack(selectedTrack);
 
   return selectedTrack;
 }

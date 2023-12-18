@@ -59,9 +59,6 @@ export async function getLastfmListenById(id: number): Promise<LastfmListen> {
     where: {
       id,
     },
-    include: {
-      User: true,
-    },
   });
 
   if (!prismaListen) {

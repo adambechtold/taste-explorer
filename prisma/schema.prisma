@@ -14,6 +14,7 @@ model User {
   updatedAt     DateTime       @updatedAt
   lastfmAccount LastfmAccount?
   LastfmListen  LastfmListen[]
+  Listen        Listen[]
 }
 
 model AccessToken {
@@ -48,9 +49,30 @@ model LastfmListen {
   userId     Int
   listenedAt DateTime
   trackData  Json
-  User       User     @relation(fields: [userId], references: [id])
+
+  User   User    @relation(fields: [userId], references: [id])
+  Listen Listen?
 
   @@index([userId], map: "LastfmListen_userId")
+}
+
+model Listen {
+  id         Int      @id @default(autoincrement())
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  listenedAt DateTime
+
+  userId         Int
+  trackId        Int
+  lastfmListenId Int? @unique
+
+  User         User          @relation(fields: [userId], references: [id])
+  Track        Track         @relation(fields: [trackId], references: [id])
+  LastfmListen LastfmListen? @relation(fields: [lastfmListenId], references: [id])
+
+  @@index([userId], map: "Listen_userId")
+  @@index([trackId], map: "Listen_trackId")
+  @@index([lastfmListenId], map: "Listen_lastfmListenId")
 }
 
 model Track {
@@ -60,13 +82,14 @@ model Track {
   name      String
   spotifyId String   @unique
   artists   Artist[]
-  imageUrl String?
+  imageUrl  String?
+  listens   Listen[]
 
   // External Ids
-  mbid                      String? @unique
+  mbid                       String? @unique
   internationalRecordingCode String? @unique
   internationalArticleNumber String? @unique
-  universalProductCode      String? @unique
+  universalProductCode       String? @unique
 
   // Track Features
   acousticness     Float? // 0.0 to 1.0

@@ -5,7 +5,8 @@ import { handleErrorResponse } from "../utils/response.utils";
 
 import * as PlaylistService from "./playlists/playlists.service";
 import * as SpotifyService from "../spotify/spotify.service";
-import * as LastfmStorage from "../lastfm/lastfm.storage";
+import * as MusicUtils from "./music.utils";
+import * as MusicStorage from "./music.storage";
 
 import { getCurrentUser } from "../auth/auth.utils";
 
@@ -14,7 +15,7 @@ import {
   isValidPreferenceType,
 } from "./playlists/playlists.types";
 
-const prisma = new PrismaClient();
+const prisma = new PrismaClient({ log: ["query"] });
 
 /**
  * Router Definition
@@ -83,48 +84,113 @@ musicRouter.get(
   "/lastfm-listens/:id/spotify-track",
   async (req: Request, res: Response) => {
     try {
-      const listenIdParam = req.params.id;
+      const lastfmListenIdParam = req.params.id;
 
-      if (!listenIdParam) {
+      if (!lastfmListenIdParam) {
         throw new TypedError("Listen ID is required", 400);
       }
 
-      const listenId = parseInt(listenIdParam);
+      const lastfmListenId = parseInt(lastfmListenIdParam);
 
-      if (isNaN(listenId)) {
+      if (isNaN(lastfmListenId)) {
         throw new TypedError("Listen ID must be a number", 400);
       }
 
-      const lastfmListen = await prisma.lastfmListen.findUnique({
+      const listen = await prisma.listen.findUnique({
         where: {
-          id: listenId,
+          lastfmListenId: lastfmListenId,
         },
       });
 
-      if (!lastfmListen) {
-        throw new TypedError("Listen not found", 404);
+      if (listen) {
+        console.log("found listen!");
+        const track = await prisma.track.findUnique({
+          where: {
+            id: listen.trackId,
+          },
+          include: {
+            artists: true,
+          },
+        });
+
+        if (!track) {
+          throw new TypedError("Track not found", 404);
+        }
+
+        const convertedTrack = MusicUtils.convertPrismaTrackAndArtistsToTrack(
+          track,
+          track.artists
+        );
+
+        res.status(200).send(convertedTrack);
+      } else {
+        // No track found. Try to get it from Spotify.
+
+        const lastfmListen = (await prisma.$queryRaw`
+          SELECT 
+            trackData->>'$.name' as trackName, 
+            trackData->>'$.artist.name' as artistName
+          FROM LastfmListen
+          WHERE id = ${lastfmListenId}
+          LIMIT 1`) as
+          | {
+              trackName: string;
+              artistName: string;
+            }[]
+          | null;
+
+        if (!lastfmListen || lastfmListen.length === 0) {
+          throw new TypedError("Listen not found", 404);
+        }
+
+        // get current user so we can use their access token
+        const user = getCurrentUser(req);
+
+        if (!user) {
+          throw new TypedError(
+            "No user found. Login with Spotify to continue.",
+            400
+          );
+        }
+
+        const accessToken = await SpotifyService.getAccessToken(user);
+
+        if (!accessToken) {
+          throw new TypedError(
+            "No access token found for user. Login with spotify to continue.",
+            400
+          );
+        }
+
+        const track = await SpotifyService.getTrackFromTrackAndArtist(
+          accessToken,
+          lastfmListen[0].trackName,
+          lastfmListen[0].artistName
+        );
+
+        const savedTrack = await MusicStorage.upsertTrack(track);
+
+        if (!savedTrack) {
+          throw new TypedError("Could not save track", 500);
+        }
+
+        // store track in a listen
+        await MusicStorage.createListen(
+          savedTrack.id,
+          user.id,
+          new Date(),
+          lastfmListenId
+        );
+
+        res
+          .status(200)
+          .send(
+            MusicUtils.convertPrismaTrackAndArtistsToTrack(
+              savedTrack,
+              savedTrack.artists || []
+            )
+          );
       }
-
-      const listen = await LastfmStorage.getLastfmListenById(listenId);
-
-      const user = getCurrentUser(req);
-
-      if (!user) {
-        throw new TypedError("No sure found", 404);
-      }
-
-      const accessToken = await SpotifyService.getAccessToken(user);
-
-      if (!accessToken) {
-        throw new TypedError("No access token found for user", 404);
-      }
-
-      const track = await SpotifyService.getTrackFromLastfmListen(
-        accessToken,
-        listen
-      );
-
-      res.status(200).send(track);
     } catch (e: any) {
       handleErrorResponse(e, res);
     }
