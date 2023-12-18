@@ -29,6 +29,7 @@ export async function getPlaylist(
           name: track.songNameAndArtist.split(" | by | ")[1],
         },
       ],
+      spotifyId: "test", // TODO: Replace this with the actual spotify id
     };
   });
 
