@@ -3,6 +3,7 @@ import { UserWithId } from "../users/users.types";
 import { TypedError } from "../errors/errors.types";
 
 import * as SpotifyUtils from "./spotify.utils";
+import * as MusicStorage from "../music/music.storage";
 import SpotifyApi from "./spotify.api";
 import { Track } from "../music/music.types";
 import { LastfmListen } from "../lastfm/lastfm.types";
@@ -91,6 +92,8 @@ export async function getTrackFromLastfmListen(
     SpotifyUtils.convertSpotifyTrackFeaturesResponseToTrackFeatures(
       selectedTrackFeatures
     );
+
+  await MusicStorage.upsertTrack(selectedTrack);
 
   return selectedTrack;
 }

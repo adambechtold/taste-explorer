@@ -26,7 +26,7 @@ export type TrackFeatures = {
    */
   danceability: number;
 
-  duration: number; // ms
+  durationMs: number; // ms
 
   /**
    * Energy: Perceptual measure of intensity and activity
@@ -113,7 +113,7 @@ export type TrackFeatures = {
  * 1 == Major
  * 0 == Minor
  */
-type Mode = "MAJOR" | "MINOR";
+type Mode = "Major" | "Minor";
 
 export type Artist = {
   name: string;
