@@ -1,6 +1,8 @@
 import { PrismaClient } from "@prisma/client";
 import { UserWithId } from "../users/users.types";
 import { SpotifyAccessToken } from "../auth/auth.types";
+import { SpotifyAudioFeaturesResponse } from "./spotify.types";
+import { TrackFeatures } from "../music/music.types";
 
 const prisma = new PrismaClient();
 
@@ -74,4 +76,24 @@ export async function getSpotifyAccessTokenForUser(
 
 function getUserIdService(user: UserWithId): string {
   return `${user.id}-SPOTIFY`;
+}
+
+export function convertSpotifyTrackFeaturesResponseToTrackFeatures(
+  response: SpotifyAudioFeaturesResponse
+): TrackFeatures {
+  return {
+    acousticness: response.acousticness,
+    danceability: response.danceability,
+    duration: response.duration_ms,
+    energy: response.energy,
+    instrumentalness: response.instrumentalness,
+    key: response.key,
+    liveness: response.liveness,
+    loudness: response.loudness,
+    mode: response.mode === 1 ? "MAJOR" : "MINOR",
+    speechiness: response.speechiness,
+    tempo: response.tempo,
+    timeSignature: response.time_signature,
+    valence: response.valence,
+  };
 }

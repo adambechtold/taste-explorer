@@ -1,7 +1,7 @@
 export type Track = {
   name: string;
   artists: Artist[];
-  spotifyId?: string;
+  spotifyId: string;
   features?: TrackFeatures;
   internationalRecordingCode?: string;
   internationalArticleNumber?: string;
@@ -9,7 +9,7 @@ export type Track = {
   imageUrl?: string;
 };
 
-type TrackFeatures = {
+export type TrackFeatures = {
   /**
    * Acousticness: Confidence measure of whether the track is acoustic
    * - Range: 0.0 - 1.0
@@ -26,7 +26,7 @@ type TrackFeatures = {
    */
   danceability: number;
 
-  duration_ms: number;
+  duration: number; // ms
 
   /**
    * Energy: Perceptual measure of intensity and activity
@@ -95,7 +95,7 @@ type TrackFeatures = {
    * - Example - 7 would be a 7/4 time signature
    * - Range - 3-7
    */
-  time_signature: number; // number over 4. E.g. 7 would be a 7/4 time signature. Range 3-7
+  timeSignature: number; // number over 4. E.g. 7 would be a 7/4 time signature. Range 3-7
 
   /**
    * Valence: Measure of Positivity

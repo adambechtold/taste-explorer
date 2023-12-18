@@ -80,5 +80,17 @@ export async function getTrackFromLastfmListen(
     throw new TypedError("No tracks found for this listen.", 404);
   }
 
-  return tracks[0];
+  const selectedTrack = tracks[0];
+
+  const trackFeaturesResponse = await spotifyApi.getTracksFeatures([
+    selectedTrack.spotifyId,
+  ]);
+  const selectedTrackFeatures = trackFeaturesResponse.audio_features[0];
+
+  selectedTrack.features =
+    SpotifyUtils.convertSpotifyTrackFeaturesResponseToTrackFeatures(
+      selectedTrackFeatures
+    );
+
+  return selectedTrack;
 }
