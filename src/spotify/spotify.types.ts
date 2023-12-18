@@ -20,6 +20,7 @@ export type SpotifySearchResults = {
       };
       artists: {
         name: string;
+        id: string; // spotify id
       }[];
       id: string;
       name: string;

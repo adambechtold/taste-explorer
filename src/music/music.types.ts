@@ -117,6 +117,6 @@ type Mode = "MAJOR" | "MINOR";
 
 export type Artist = {
   name: string;
-  spotifyId?: string;
+  spotifyId: string;
   imageUrl?: string;
 };

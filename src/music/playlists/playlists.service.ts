@@ -27,6 +27,7 @@ export async function getPlaylist(
       artists: [
         {
           name: track.songNameAndArtist.split(" | by | ")[1],
+          spotifyId: "test",
         },
       ],
       spotifyId: "test", // TODO: Replace this with the actual spotify id

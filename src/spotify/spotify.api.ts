@@ -250,6 +250,7 @@ async function searchSpotifyTracks(
     universalProductCode: track.external_ids.upc,
     artists: track.artists.map((a) => ({
       name: a.name,
+      spotifyId: a.id,
     })),
     imageUrl: track.album.images[0].url,
   }));
