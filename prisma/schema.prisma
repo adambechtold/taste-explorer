@@ -43,12 +43,13 @@ model LastfmAccount {
 }
 
 model LastfmListen {
-  id         Int      @id @default(autoincrement())
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id         Int       @id @default(autoincrement())
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
   userId     Int
   listenedAt DateTime
   trackData  Json
+  analyzedAt DateTime?
 
   User   User    @relation(fields: [userId], references: [id])
   Listen Listen?
@@ -86,7 +87,7 @@ model Track {
   listens   Listen[]
 
   // External Ids
-  mbid                       String? @unique
+  mbid                       String? // @unique
   internationalRecordingCode String? @unique
   internationalArticleNumber String? @unique
   universalProductCode       String? @unique
