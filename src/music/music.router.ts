@@ -15,7 +15,7 @@ import {
   isValidPreferenceType,
 } from "./playlists/playlists.types";
 
-const prisma = new PrismaClient({ log: ["query"] });
+const prisma = new PrismaClient();
 
 /**
  * Router Definition
@@ -81,7 +81,7 @@ musicRouter.get("/playlists/", async (req: Request, res: Response) => {
 
 // -- Identify Track from LastfmListen ---
 musicRouter.get(
-  "/lastfm-listens/:id/spotify-track",
+  "/lastfm-listens/:id/track",
   async (req: Request, res: Response) => {
     try {
       const lastfmListenIdParam = req.params.id;
@@ -103,7 +103,6 @@ musicRouter.get(
       });
 
       if (listen) {
-        console.log("found listen!");
         const track = await prisma.track.findUnique({
           where: {
             id: listen.trackId,
@@ -124,22 +123,25 @@ musicRouter.get(
 
         res.status(200).send(convertedTrack);
       } else {
-        // No track found. Try to get it from Spotify.
+        // TODO: Implement attempt to find it from existing tracks
 
-        const lastfmListen = (await prisma.$queryRaw`
+        // No listen found. Try to get it from Spotify.
+        const lastfmListens = (await prisma.$queryRaw`
           SELECT 
             trackData->>'$.name' as trackName, 
-            trackData->>'$.artist.name' as artistName
+            trackData->>'$.artist.name' as artistName,
+            trackData->>'$.mbid' as mbid
           FROM LastfmListen
           WHERE id = ${lastfmListenId}
           LIMIT 1`) as
           | {
+              mbid: string;
               trackName: string;
               artistName: string;
             }[]
           | null;
 
-        if (!lastfmListen || lastfmListen.length === 0) {
+        if (!lastfmListens || lastfmListens.length === 0) {
           throw new TypedError("Listen not found", 404);
         }
 
@@ -162,11 +164,47 @@ musicRouter.get(
           );
         }
 
+        // get all listens with this track name and artist name
+        const unlinkedLastfmListensWithSameTrack = (await prisma.$queryRaw`
+          SELECT
+            LastfmListen.id as lastfmListenId,
+            concat(trackData->>'$.name', '|', trackData->>'$.artist.name') as track,
+            LastfmListen.listenedAt as listenedAt,
+            LastfmListen.analyzedAt as analyzedAt
+          FROM LastfmListen
+            LEFT JOIN Listen ON Listen.lastfmListenId = LastfmListen.id
+          WHERE 
+            concat(trackData->>'$.name', '|' ,trackData->>'$.artist.name') = ${
+              lastfmListens[0].trackName + "|" + lastfmListens[0].artistName
+            }
+            AND 
+            Listen.id IS NULL
+        `) as {
+          lastfmListenId: number;
+          track: string;
+          listenedAt: Date;
+          analyzedAt: Date;
+        }[];
+
+        const updatedLastfmListens = await prisma.lastfmListen.updateMany({
+          where: {
+            id: {
+              in: unlinkedLastfmListensWithSameTrack.map(
+                (listen) => listen.lastfmListenId
+              ),
+            },
+          },
+          data: {
+            analyzedAt: new Date(),
+          },
+        });
+
         const track = await SpotifyService.getTrackFromTrackAndArtist(
           accessToken,
-          lastfmListen[0].trackName,
-          lastfmListen[0].artistName
+          lastfmListens[0].trackName,
+          lastfmListens[0].artistName
         );
+        track.mbid = lastfmListens[0].mbid;
 
         const savedTrack = await MusicStorage.upsertTrack(track);
 
@@ -174,12 +212,23 @@ musicRouter.get(
           throw new TypedError("Could not save track", 500);
         }
 
-        // store track in a listen
-        await MusicStorage.createListen(
-          savedTrack.id,
-          user.id,
-          new Date(),
-          lastfmListenId
+        const newListens = await prisma.listen.createMany({
+          data: unlinkedLastfmListensWithSameTrack.map((listen) => ({
+            trackId: savedTrack.id,
+            userId: user.id,
+            listenedAt: listen.listenedAt,
+            lastfmListenId: listen.lastfmListenId,
+          })),
+        });
+
+        console.log(
+          "created listens for",
+          newListens.count,
+          "lastfm listens from lastfm listen id",
+          lastfmListenId,
+          "Updated analyzedAt for",
+          updatedLastfmListens.count,
+          "lastfm listens"
         );
 
         res

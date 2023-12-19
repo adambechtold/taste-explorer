@@ -85,11 +85,11 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Playlist"
-  /api/music/lastfm-listens/{id}/spotify-track:
+  /api/music/lastfm-listens/{id}/track:
     get:
-      summary: Get Spotify Track from last.fm Listen
-      description: Get the spotify track information for the track in a last.fm listen
-      operationId: getSpotifyTrackFromLastfmListen
+      summary: Get the Track from last.fm Listen
+      description: Get the track information the last.fm listen
+      operationId: getTrackFromLastfmListen
       tags:
         - music
       parameters:
