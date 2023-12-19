@@ -222,7 +222,11 @@ async function searchSpotifyTracks(
   const searchOptions = {
     url: "https://api.spotify.com/v1/search",
     qs: {
-      q: "track:" + trackName + " artist:" + artistName,
+      q:
+        "track:" +
+        trackName.replace(/'/g, "") + // remove apostrophes this tends to get better results
+        " artist:" +
+        artistName.replace(/'/g, ""), // remove apostrophes
       type: "track",
       limit: 1,
     },
@@ -281,8 +285,7 @@ export async function getTracksFeatures(
   );
 
   if (!response.ok) {
-    console.error(response);
-    throw new Error("Error getting tracks features");
+    throw new Error("Error getting tracks features: " + response.statusText);
   }
 
   return (await response.json()) as SpotifyAudioFeaturesBatchResponse;
