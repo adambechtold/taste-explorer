@@ -74,20 +74,26 @@ export async function getTrackFromTrackAndArtist(
   const tracks = await spotifyApi.searchTracks(trackName, artistName);
 
   if (!tracks.length) {
-    throw new TypedError("No tracks found for this listen.", 404);
+    throw new TypedError(
+      `No tracks found for name: ${trackName} by: ${artistName}.`,
+      404
+    );
   }
 
   const selectedTrack = tracks[0];
 
-  const trackFeaturesResponse = await spotifyApi.getTracksFeatures([
-    selectedTrack.spotifyId,
-  ]);
-  const selectedTrackFeatures = trackFeaturesResponse.audio_features[0];
+  const includeFeatures = false;
+  if (includeFeatures) {
+    const trackFeaturesResponse = await spotifyApi.getTracksFeatures([
+      selectedTrack.spotifyId,
+    ]);
+    const selectedTrackFeatures = trackFeaturesResponse.audio_features[0];
 
-  selectedTrack.features =
-    SpotifyUtils.convertSpotifyTrackFeaturesResponseToTrackFeatures(
-      selectedTrackFeatures
-    );
+    selectedTrack.features =
+      SpotifyUtils.convertSpotifyTrackFeaturesResponseToTrackFeatures(
+        selectedTrackFeatures
+      );
+  }
 
   return selectedTrack;
 }
