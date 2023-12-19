@@ -6,7 +6,7 @@ import {
 } from "@prisma/client";
 import { Artist, Track } from "./music.types";
 
-const prisma = new PrismaClient({ log: ["query"] });
+const prisma = new PrismaClient();
 
 /**
  * Inserts a new artist into the database or updates an existing one based on the
@@ -48,7 +48,7 @@ export async function upsertTrack(
     where: { spotifyId },
     update: {
       ...rest,
-      ...features,
+      //...features,
       artists: {
         connect: savedArtists.map((artist) => ({ id: artist.id })),
       },
