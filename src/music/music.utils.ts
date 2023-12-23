@@ -1,10 +1,10 @@
 import { Artist as PrismaArtist, Track as PrismaTrack } from "@prisma/client";
-import { Track } from "./music.types";
+import { TrackWithId } from "./music.types";
 
 export function convertPrismaTrackAndArtistsToTrack(
   prismaTrack: PrismaTrack,
   prismaArtists: PrismaArtist[]
-): Track {
+): TrackWithId {
   const {
     name,
     spotifyId,
@@ -29,6 +29,7 @@ export function convertPrismaTrackAndArtistsToTrack(
   } = prismaTrack;
 
   return {
+    id: prismaTrack.id,
     name,
     artists: prismaArtists.map((prismaArtist) => ({
       name: prismaArtist.name,

@@ -13,6 +13,10 @@ export type Track = {
   imageUrl?: string;
 };
 
+export type TrackWithId = Track & {
+  id: number;
+};
+
 export type TrackFeatures = {
   /**
    * Acousticness: Confidence measure of whether the track is acoustic

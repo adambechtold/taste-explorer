@@ -1,9 +1,24 @@
+import { PrismaClient } from "@prisma/client";
 import { TypedError } from "../errors/errors.types";
 import { UserWithId, UserWithLastfmAccountAndId } from "../users/users.types";
 import { LastfmListenBatchImportSize } from "../lastfm/lastfm.types";
 
-import * as LastfmService from "../lastfm/lastfm.service";
+import { Track, TrackWithId } from "./music.types";
 
+import * as LastfmService from "../lastfm/lastfm.service";
+import * as SpotifyService from "../spotify/spotify.service";
+import * as MusicUtils from "./music.utils";
+import * as MusicStorage from "./music.storage";
+
+const prisma = new PrismaClient();
+
+/**
+ * Triggers an update of a user's listening history from last.fm.
+ *
+ * @param {UserWithId} user - The user for whom to update listening history.
+ * @returns {Promise<LastfmListenBatchImportSize>} - A promise that resolves to the number of listens imported.
+ * @throws {TypedError} - If the user does not have a last.fm account.
+ */
 export async function triggerUpdateListensForUser(
   user: UserWithId
 ): Promise<LastfmListenBatchImportSize> {
@@ -25,4 +40,86 @@ export async function triggerUpdateListensForUser(
       resolve(size);
     });
   });
+}
+
+/**
+ * Get a track given its name and artist name.
+ *
+ * If the track is not found in the database already, search spotify and add it to the database.
+ *
+ * @param {string} trackName
+ * @param {string} artistName
+ * @returns {Track | null} - The track, or null if not found in the database or spotify.
+ * @throws {TypedError} - If the user does not have a spotify account.
+ */
+export async function getTrackByNameAndArtistName(
+  trackName: string,
+  artistName: string
+): Promise<TrackWithId | null> {
+  // Find Track and Artist in Database
+  const artists = await prisma.artist.findMany({
+    select: {
+      id: true,
+    },
+    where: {
+      name: artistName,
+    },
+  });
+
+  const prismaTrack = await prisma.track.findFirst({
+    where: {
+      name: trackName,
+      artists: {
+        some: {
+          id: {
+            in: artists.map((artist) => artist.id),
+          },
+        },
+      },
+    },
+    include: {
+      artists: true,
+    },
+  });
+
+  if (prismaTrack) {
+    return MusicUtils.convertPrismaTrackAndArtistsToTrack(
+      prismaTrack,
+      prismaTrack.artists
+    );
+  }
+
+  // Track not found in the database. Search Spotify.
+  const accessToken = await SpotifyService.getAccessToken({
+    id: 1, // TODO: Consider which access token to use when performing backend search operations.
+  } as UserWithId);
+
+  if (!accessToken) {
+    throw new TypedError(
+      "No access token found for user. Login with spotify to continue.",
+      400
+    );
+  }
+
+  try {
+    const track = await SpotifyService.getTrackFromTrackAndArtist(
+      accessToken,
+      trackName,
+      artistName
+    );
+
+    await Promise.all(track.artists.map((a) => MusicStorage.upsertArtist(a)));
+    const prismaTrack = await MusicStorage.upsertTrack(track);
+
+    return {
+      id: prismaTrack.id,
+      ...track,
+    };
+  } catch (error) {
+    console.error(
+      `Track ${trackName} by ${artistName} not found in Spotify.\n`,
+      error
+    );
+    return null;
+  }
 }

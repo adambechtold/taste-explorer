@@ -4,9 +4,7 @@ import { TypedError } from "../errors/errors.types";
 import { handleErrorResponse } from "../utils/response.utils";
 
 import * as PlaylistService from "./playlists/playlists.service";
-import * as SpotifyService from "../spotify/spotify.service";
-import * as MusicUtils from "./music.utils";
-import * as MusicStorage from "./music.storage";
+import * as MusicService from "./music.service";
 
 import { getCurrentUser } from "../auth/auth.utils";
 
@@ -79,7 +77,34 @@ musicRouter.get("/playlists/", async (req: Request, res: Response) => {
   }
 });
 
-// -- Identify Track from LastfmListen ---
+// --- Get Tracks by Name and Artist Name ---
+musicRouter.get("/tracks/", async (req: Request, res: Response) => {
+  try {
+    const trackName = req.query.name as string;
+    const artistName = req.query.artist as string;
+
+    if (!trackName || !artistName) {
+      throw new TypedError("Track name and artist name are required", 400);
+    }
+
+    const track = await MusicService.getTrackByNameAndArtistName(
+      trackName,
+      artistName
+    );
+
+    if (!track) {
+      throw new TypedError("No tracks found.", 404);
+    }
+
+    res.status(200).send({
+      tracks: [track],
+    });
+  } catch (e: any) {
+    handleErrorResponse(e, res);
+  }
+});
+
+// --- Identify Track from LastfmListen ---
 musicRouter.get(
   "/lastfm-listens/:id/track",
   async (req: Request, res: Response) => {
