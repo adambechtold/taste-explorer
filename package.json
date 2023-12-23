@@ -8,10 +8,11 @@
     "docker:down": "docker-compose down",
     "docker:up:test": "docker-compose up -d test-db",
     "docker:up:dev": "docker-compose up -d dev-db",
-    "test": "npm run docker:up:test && npx dotenv -e .env.test.local -- npx prisma migrate dev && npx dotenv -e .env.test.local -- jest -i",
+    "test": "npm run docker:up:test && npx dotenv -e .env.test.local -- npx prisma migrate dev && npx dotenv -e .env.test.local -- jest -i --coverage",
     "dev": "npm run docker:up:dev && ts-node-dev --respawn --pretty --transpile-only src/index.ts",
     "build": "rimraf ./build && tsc",
-    "start": "npm run build && node build/index.js"
+    "start": "npm run build && node build/index.js",
+    "debug": "ts-node-dev --inspect --transpile-only src/index.ts"
   },
   "author": "",
   "license": "ISC",
