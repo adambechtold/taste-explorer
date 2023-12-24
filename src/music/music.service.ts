@@ -10,7 +10,7 @@ import * as SpotifyService from "../spotify/spotify.service";
 import * as MusicUtils from "./music.utils";
 import * as MusicStorage from "./music.storage";
 
-const prisma = new PrismaClient();
+const prisma = new PrismaClient({ log: ["error"] });
 
 /**
  * Triggers an update of a user's listening history from last.fm.
@@ -106,12 +106,12 @@ export async function getTrackFromLastfmListenId(
     throw new TypedError("Track not found in the database or Spotify.", 404);
   }
 
-  // link the lastfmlisten to the track via a Listen
+  // Link all last.fm listens with the same track name and artist name to this track
   const result =
     await LastfmService.linkTrackIdToAllLastfmListensWithTrackNameAndArtistName(
       track.id,
-      track.name,
-      track.artists[0].name,
+      lastfmListens[0].trackName,
+      lastfmListens[0].artistName,
       true
     );
 
