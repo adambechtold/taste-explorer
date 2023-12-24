@@ -39,7 +39,7 @@ async function updateListenHistory() {
   });
 }
 
-// every 10 secondds, research the next lastfm listen
+// every 10 seconds, research the next lastfm listen
 async function researchNextLastfmListen() {
   const nextLastfmListenId = await getNextLastfmListenIdToResearch();
   if (nextLastfmListenId === null) {
