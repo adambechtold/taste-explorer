@@ -7,7 +7,7 @@ const numberToResearch = 70000;
 const startAtIndex = 33736;
 
 // 1-6 seconds
-const getTimeBetweenRequests = () => Math.floor(Math.random() * 50) + 0;
+const getTimeBetweenRequests = () => Math.floor(Math.random() * 200) + 0;
 
 async function getDistinctLastfmTrackIdsNotYetResearched() {
   const lastfmTracks = (await prisma.$queryRaw`

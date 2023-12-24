@@ -63,7 +63,7 @@ const queryTracks = async (
     FROM (
       SELECT
         userId,
-        concat(trackData->>'$.name', ' | by | ', trackData->>'$.artist.name') AS songNameAndArtist,
+        concat(trackName, ' | by | ', artistName) AS songNameAndArtist,
         count(userId) AS listenCount
       FROM
         LastfmListen
@@ -91,7 +91,7 @@ const queryTracks = async (
     FROM (
       SELECT
         userId,
-        concat(trackData->>'$.name', ' | by | ', trackData->>'$.artist.name') AS songNameAndArtist,
+        concat(trackName, ' | by | ', artistName) AS songNameAndArtist,
         count(userId) AS listenCount
       FROM
         LastfmListen
@@ -119,7 +119,7 @@ const queryTracks = async (
     FROM (
       SELECT
         userId,
-        concat(trackData->>'$.name', ' | by | ', trackData->>'$.artist.name') AS songNameAndArtist,
+        concat(trackName, ' | by | ', artistName) AS songNameAndArtist,
         count(userId) AS listenCount
       FROM
         LastfmListen

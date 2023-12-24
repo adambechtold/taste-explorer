@@ -3,7 +3,7 @@ const prisma = new PrismaClient();
 import { TypedError } from "../errors/errors.types";
 
 import { getAccountInfo } from "../lastfm/lastfm.service";
-import { User, UserWithId } from "./users.types";
+import { User, UserWithId, UserWithLastfmAccountAndId } from "./users.types";
 import { createUser as createUserFromPrisma } from "./users.utils";
 import * as MusicService from "../music/music.service";
 
@@ -40,28 +40,36 @@ export async function getUserById(userId: number): Promise<UserWithId> {
 
 export async function createUserByLastfmUsername(
   lastfmUsername: string
-): Promise<UserWithId> {
+): Promise<UserWithLastfmAccountAndId> {
   try {
     const lastfmAccount = await getAccountInfo(lastfmUsername);
     // check if user already exists
-    const checkUserResponse = await prisma.user.findFirst({
+    const existingUser = await prisma.user.findFirst({
       where: { lastfmAccount: { username: lastfmUsername } },
       include: {
         lastfmAccount: true,
       },
     });
 
-    if (checkUserResponse) {
-      return createUserFromPrisma(
-        checkUserResponse,
-        checkUserResponse.lastfmAccount
+    if (existingUser) {
+      const user = createUserFromPrisma(
+        existingUser,
+        existingUser.lastfmAccount
       );
+      return {
+        ...user,
+        lastfmAccount,
+      };
     }
 
     // create user
-    return storeUser({
+    const user = await storeUser({
       lastfmAccount,
     });
+    return {
+      ...user,
+      lastfmAccount,
+    };
   } catch (e) {
     console.error(e);
     throw new TypedError(

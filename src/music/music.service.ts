@@ -43,6 +43,86 @@ export async function triggerUpdateListensForUser(
 }
 
 /**
+ * Retrieves a track given its last.fm listen.
+ *
+ * @param {number} lastfmListenId - The Id of the last.fm listen.
+ * @returns {Promise<Track | null>} - A promise that resolves with the track or "null" if not found.
+ * @throws {TypedError} - If the last.fm listen is not found.
+ */
+export async function getTrackFromLastfmListenId(
+  lastfmListenId: number
+): Promise<Track | null> {
+  // Find Existing Listen
+  const listen = await prisma.listen.findUnique({
+    where: {
+      lastfmListenId: lastfmListenId,
+    },
+  });
+
+  // If Found, Return Corresponding Track
+  if (listen) {
+    const prismaTrack = await prisma.track.findUnique({
+      where: {
+        id: listen.trackId,
+      },
+      include: {
+        artists: true,
+      },
+    });
+
+    if (prismaTrack) {
+      return MusicUtils.convertPrismaTrackAndArtistsToTrack(
+        prismaTrack,
+        prismaTrack.artists
+      );
+    } else {
+      // This should never happen. All Listens should have a Track.
+      console.error(`Listen ${listen.id} has no track.`);
+    }
+  }
+
+  // If Not Found, Get Track Information from Lastfm Listen
+  const lastfmListens = await prisma.lastfmListen.findMany({
+    select: {
+      trackName: true,
+      artistName: true,
+    },
+    where: {
+      id: lastfmListenId,
+    },
+  });
+
+  if (!lastfmListens) {
+    throw new TypedError("Lastfm Listen not found", 404);
+  }
+
+  // Use Search to Find the Track
+  const track = await getTrackByNameAndArtistName(
+    lastfmListens[0].trackName,
+    lastfmListens[0].artistName
+  );
+
+  if (!track) {
+    throw new TypedError("Track not found in the database or Spotify.", 404);
+  }
+
+  // link the lastfmlisten to the track via a Listen
+  const result =
+    await LastfmService.linkTrackIdToAllLastfmListensWithTrackNameAndArtistName(
+      track.id,
+      track.name,
+      track.artists[0].name,
+      true
+    );
+
+  console.log(
+    `Linked ${result.count} listens to track ${track.name} while researching lastfmListen #${lastfmListenId}.`
+  );
+
+  return track;
+}
+
+/**
  * Get a track given its name and artist name.
  *
  * If the track is not found in the database already, search spotify and add it to the database.

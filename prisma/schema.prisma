@@ -48,6 +48,8 @@ model LastfmListen {
   updatedAt  DateTime  @updatedAt
   userId     Int
   listenedAt DateTime
+  trackName  String   @db.VarChar(320)
+  artistName String   @db.VarChar(320)
   trackData  Json
   analyzedAt DateTime?
 
