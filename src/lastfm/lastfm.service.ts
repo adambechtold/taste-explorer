@@ -10,7 +10,7 @@ import { LastfmListensEventEmitter } from "../lastfm/lastfm.types";
 import { storeListenBatch } from "./lastfm.storage";
 import { dateToUnixTimestamp, unixTimestampToDate } from "../utils/date.utils";
 
-import { PrismaClient } from "@prisma/client";
+import { Prisma, PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 export async function getAccountInfo(
@@ -131,4 +131,105 @@ export async function getAllListens(
   if (process.env.VERBOSE === "true") {
     console.log("done getting listens");
   }
+}
+
+/**
+ * Creates Listens to link each of the LastfmListens
+ * that have the same trackName and artistName to the given Track id
+ *
+ * @param {number} trackId - The id of the track to link the listens to.
+ * @param {string} trackName - The name of the track to search for.
+ * @param {string} artistName - The name of the artist of the track to search for.
+ * @param {boolean} overwrite - Whether to overwrite lastfm listens that are already linked to a track. (Default: false)
+ * @returns {Promise<Prisma.BatchPayload>} - A promise that resolves to the number of listens linked.
+ */
+export async function linkTrackIdToAllLastfmListensWithTrackNameAndArtistName(
+  trackId: number,
+  trackName: string,
+  artistName: string,
+  overwrite: boolean = false
+): Promise<Prisma.BatchPayload> {
+  const matchingListens = await prisma.lastfmListen.findMany({
+    select: {
+      id: true,
+      listenedAt: true,
+      userId: true,
+    },
+    where: {
+      trackName,
+      artistName,
+      analyzedAt: null,
+    },
+  });
+
+  // create listens for each lastfm listen
+  const [result, markAsAnalyzedResult] = await prisma.$transaction([
+    prisma.listen.createMany({
+      data: matchingListens.map((lastfmListen) => ({
+        trackId,
+        userId: lastfmListen.userId,
+        lastfmListenId: lastfmListen.id,
+        listenedAt: lastfmListen.listenedAt,
+      })),
+    }),
+    prisma.lastfmListen.updateMany({
+      where: {
+        id: {
+          in: matchingListens.map((lastfmListen) => lastfmListen.id),
+        },
+      },
+      data: {
+        analyzedAt: new Date(),
+      },
+    }),
+  ]);
+
+  if (overwrite) {
+    // overwrite listens that have already been analyzed
+    let previouslyAnalyzedLastfmListens = await prisma.lastfmListen.findMany({
+      select: {
+        id: true,
+      },
+      where: {
+        trackName,
+        artistName,
+        analyzedAt: {
+          not: null,
+        },
+        id: {
+          not: {
+            in: matchingListens.map((l) => l.id), // don't include the listens that were just analyzed
+          },
+        },
+      },
+    });
+
+    const [overwriteListensResult, updateAnalyzedTimeResult] =
+      await prisma.$transaction([
+        prisma.listen.updateMany({
+          where: {
+            lastfmListenId: {
+              in: previouslyAnalyzedLastfmListens.map((l) => l.id),
+            },
+          },
+          data: {
+            trackId,
+          },
+        }),
+        prisma.lastfmListen.updateMany({
+          where: {
+            id: {
+              in: previouslyAnalyzedLastfmListens.map((l) => l.id),
+            },
+          },
+          data: {
+            analyzedAt: new Date(),
+          },
+        }),
+      ]);
+
+    result.count = result.count + overwriteListensResult.count;
+  }
+
+  return result;
 }

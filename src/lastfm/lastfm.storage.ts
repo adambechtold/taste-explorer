@@ -42,6 +42,8 @@ export async function storeListenBatch(
     data: filteredListens.map((l) => ({
       userId: user.id,
       listenedAt: l.date,
+      trackName: l.track.name,
+      artistName: l.track.artist.name,
       trackData: l.track,
     })),
   });
@@ -58,9 +60,6 @@ export async function getLastfmListenById(id: number): Promise<LastfmListen> {
   const prismaListen = await prisma.lastfmListen.findUnique({
     where: {
       id,
-    },
-    include: {
-      User: true,
     },
   });
 
@@ -83,12 +82,11 @@ export async function getLastfmListenById(id: number): Promise<LastfmListen> {
   return {
     date: prismaListen.listenedAt,
     track: {
-      name: (prismaListen.trackData as { name: string })?.name,
+      name: prismaListen.trackName,
       mbid: (prismaListen.trackData as { mbid: string })?.mbid,
       url: (prismaListen.trackData as { url: string })?.url,
       artist: {
-        name: (prismaListen.trackData as { artist: { name: string } })?.artist
-          .name,
+        name: prismaListen.artistName,
         mbid: (prismaListen.trackData as { artist: { mbid: string } })?.artist
           .mbid,
       },

@@ -1,9 +1,11 @@
 import querystring from "querystring";
 import { generateRandomString } from "../utils/string.utils";
+import { TypedError } from "../errors/errors.types";
 
 import { SpotifyAccessToken } from "../auth/auth.types";
 import {
   SpotifyAccessTokenResponse,
+  SpotifyAudioFeaturesBatchResponse,
   SpotifySearchResults,
 } from "./spotify.types";
 import { Track } from "../music/music.types";
@@ -26,6 +28,12 @@ export default class SpotifyApi {
     this.accessToken = accessToken;
   }
 
+  /**
+   * Refreshes the current Spotify access token.
+   *
+   * @returns {Promise<SpotifyAccessToken>} A promise that resolves to the refreshed access token.
+   * @throws {Error} Will throw an error if no access token is currently set.
+   */
   async refreshAccessToken(): Promise<SpotifyAccessToken> {
     if (!this.accessToken) {
       throw new Error("No access token set");
@@ -116,7 +124,24 @@ export default class SpotifyApi {
     if (!this.accessToken) {
       throw new Error("No access token set");
     }
+    if (this.accessToken.expiresAt < new Date()) {
+      this.accessToken = await this.refreshAccessToken();
+    }
+
     return searchSpotifyTracks(trackName, artistName, this.accessToken.token);
+  }
+
+  async getTracksFeatures(
+    ids: string[]
+  ): Promise<SpotifyAudioFeaturesBatchResponse> {
+    if (!this.accessToken) {
+      throw new Error("No access token set");
+    }
+    if (this.accessToken.expiresAt < new Date()) {
+      this.accessToken = await this.refreshAccessToken();
+    }
+
+    return getTracksFeatures(this.accessToken, ids);
   }
 }
 
@@ -198,7 +223,11 @@ async function searchSpotifyTracks(
   const searchOptions = {
     url: "https://api.spotify.com/v1/search",
     qs: {
-      q: "track:" + trackName + " artist:" + artistName,
+      q:
+        "track:" +
+        trackName.replace(/'/g, "") + // remove apostrophes this tends to get better results
+        " artist:" +
+        artistName.replace(/'/g, ""), // remove apostrophes
       type: "track",
       limit: 1,
     },
@@ -216,15 +245,56 @@ async function searchSpotifyTracks(
     }
   );
 
+  if (!searchResponse.ok) {
+    if (searchResponse.status === 429) {
+      throw new TypedError("Too many requests to Spotify API", 429);
+    }
+    throw new Error("Error searching tracks: " + searchResponse.statusText);
+  }
+
   const searchJson = (await searchResponse.json()) as SpotifySearchResults;
 
   const tracks: Track[] = searchJson.tracks.items.map((track) => ({
     name: track.name,
+    spotifyId: track.id,
+    internationalArticleNumber: track.external_ids.ean,
+    internationalRecordingCode: track.external_ids.isrc,
+    universalProductCode: track.external_ids.upc,
     artists: track.artists.map((a) => ({
       name: a.name,
+      spotifyId: a.id,
     })),
-    spotifyId: track.id,
+    imageUrl: track.album.images[0].url,
   }));
 
   return tracks;
+}
+
+/**
+ * Retrieves the audio features for a batch of tracks from the Spotify API.
+ *
+ * @param {SpotifyAccessToken} accessToken - The access token for the Spotify API.
+ * @param {string[]} ids - An array of Spotify track IDs for which to retrieve audio features.
+ * @returns {Promise<SpotifyAudioFeaturesBatchResponse>} A promise that resolves to an object containing the audio features for each track.
+ * @throws {Error} Will throw an error if the request to the Spotify API fails.
+ */
+export async function getTracksFeatures(
+  accessToken: SpotifyAccessToken,
+  ids: string[]
+): Promise<SpotifyAudioFeaturesBatchResponse> {
+  const response = await fetch(
+    `https://api.spotify.com/v1/audio-features?ids=${ids.join(",")}`,
+    {
+      method: "GET",
+      headers: {
+        Authorization: "Bearer " + accessToken.token,
+      },
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error("Error getting tracks features: " + response.statusText);
+  }
+
+  return (await response.json()) as SpotifyAudioFeaturesBatchResponse;
 }

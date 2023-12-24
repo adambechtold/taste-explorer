@@ -5,7 +5,6 @@ import { TypedError } from "../errors/errors.types";
 import * as SpotifyUtils from "./spotify.utils";
 import SpotifyApi from "./spotify.api";
 import { Track } from "../music/music.types";
-import { LastfmListen } from "../lastfm/lastfm.types";
 
 /**
  * Handles the callback from the Spotify login process, exchanging the authorization code for an access token.
@@ -65,20 +64,36 @@ export async function refreshAccessToken(
   );
 }
 
-export async function getTrackFromLastfmListen(
+export async function getTrackFromTrackAndArtist(
   accessToken: SpotifyAccessToken,
-  lastfmListen: LastfmListen
+  trackName: string,
+  artistName: string
 ): Promise<Track> {
   const spotifyApi = new SpotifyApi(accessToken);
 
-  const tracks = await spotifyApi.searchTracks(
-    lastfmListen.track.name,
-    lastfmListen.track.artist.name
-  );
+  const tracks = await spotifyApi.searchTracks(trackName, artistName);
 
   if (!tracks.length) {
-    throw new TypedError("No tracks found for this listen.", 404);
+    throw new TypedError(
+      `No tracks found for name: ${trackName} by: ${artistName}.`,
+      404
+    );
   }
 
-  return tracks[0];
+  const selectedTrack = tracks[0];
+
+  const includeFeatures = false;
+  if (includeFeatures) {
+    const trackFeaturesResponse = await spotifyApi.getTracksFeatures([
+      selectedTrack.spotifyId,
+    ]);
+    const selectedTrackFeatures = trackFeaturesResponse.audio_features[0];
+
+    selectedTrack.features =
+      SpotifyUtils.convertSpotifyTrackFeaturesResponseToTrackFeatures(
+        selectedTrackFeatures
+      );
+  }
+
+  return selectedTrack;
 }
