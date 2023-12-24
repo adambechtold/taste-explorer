@@ -175,7 +175,7 @@ export async function linkTrackIdToAllLastfmListensWithTrackNameAndArtistName(
     prisma.lastfmListen.updateMany({
       where: {
         id: {
-          in: matchingListens.map((lastfmListen) => lastfmListen.userId),
+          in: matchingListens.map((lastfmListen) => lastfmListen.id),
         },
       },
       data: {
