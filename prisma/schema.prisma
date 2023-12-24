@@ -43,15 +43,16 @@ model LastfmAccount {
 }
 
 model LastfmListen {
-  id         Int       @id @default(autoincrement())
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
-  userId     Int
-  listenedAt DateTime
-  trackName  String   @db.VarChar(320)
-  artistName String   @db.VarChar(320)
-  trackData  Json
-  analyzedAt DateTime?
+  id              Int       @id @default(autoincrement())
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  userId          Int
+  listenedAt      DateTime
+  trackName       String    @db.VarChar(320)
+  artistName      String    @db.VarChar(320)
+  trackData       Json
+  analyzedAt      DateTime?
+  isBeingAnalyzed Boolean   @default(false)
 
   User   User    @relation(fields: [userId], references: [id])
   Listen Listen?

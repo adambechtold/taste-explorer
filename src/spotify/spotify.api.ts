@@ -1,5 +1,6 @@
 import querystring from "querystring";
 import { generateRandomString } from "../utils/string.utils";
+import { TypedError } from "../errors/errors.types";
 
 import { SpotifyAccessToken } from "../auth/auth.types";
 import {
@@ -243,6 +244,13 @@ async function searchSpotifyTracks(
       headers: searchOptions.headers,
     }
   );
+
+  if (!searchResponse.ok) {
+    if (searchResponse.status === 429) {
+      throw new TypedError("Too many requests to Spotify API", 429);
+    }
+    throw new Error("Error searching tracks: " + searchResponse.statusText);
+  }
 
   const searchJson = (await searchResponse.json()) as SpotifySearchResults;
 

@@ -103,6 +103,18 @@ export async function getTrackFromLastfmListenId(
   );
 
   if (!track) {
+    const result = await prisma.lastfmListen.updateMany({
+      where: {
+        trackName: lastfmListens[0].trackName,
+        artistName: lastfmListens[0].artistName,
+      },
+      data: {
+        analyzedAt: new Date(),
+      },
+    });
+    console.log(
+      `Lastfm Listen ${lastfmListenId}'s track was not found in Spotify. Marked ${result.count} listens as analyzed.`
+    );
     throw new TypedError("Track not found in the database or Spotify.", 404);
   }
 
@@ -196,6 +208,10 @@ export async function getTrackByNameAndArtistName(
       ...track,
     };
   } catch (error) {
+    if (error instanceof TypedError) {
+      throw error;
+    }
+
     console.error(
       `Track ${trackName} by ${artistName} not found in Spotify.\n`,
       error
