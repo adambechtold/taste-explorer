@@ -47,7 +47,6 @@ async function researchNextLastfmListen() {
     return;
   }
 
-  console.log("============================================================");
   console.log("researching lastfm listen id", nextLastfmListenId);
   let track: Track | null = null;
   try {
@@ -68,6 +67,7 @@ async function researchNextLastfmListen() {
       return;
     }
 
+    console.log("============================================================");
     console.log("Something went wrong.\n", error);
     console.log("============================================================");
     return;
@@ -107,6 +107,10 @@ async function researchNextLastfmListen() {
   ).toFixed(4);
 
   console.log(`
+============================================================
+Completed Research for Lastfm Listen Id: ${nextLastfmListenId}.
+${track ? "Track Found" : "Track Not Found"}
+
   Progress:
   ...total lastfm listens:       ${numberOfLastfmListens}
   ...total listens:              ${numberOfListens}
