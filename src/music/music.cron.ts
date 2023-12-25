@@ -3,7 +3,7 @@ import cron from "node-cron";
 import { triggerUpdateListenHistoryByUserId } from "../users/users.service";
 import { getTrackFromLastfmListenId } from "./music.service";
 import { Track } from "./music.types";
-import { TypedError } from "../errors/errors.types";
+import { TooManyRequestsError } from "../errors/errors.types";
 
 const prisma = new PrismaClient();
 
@@ -15,14 +15,13 @@ const researchListensTask = cron.schedule(
   researchNextLastfmListen
 );
 
-const pauseTask = (task: cron.ScheduledTask, minutes: number) => {
+const pauseTask = (task: cron.ScheduledTask, seconds: number) => {
   task.stop();
   setTimeout(() => {
     task.start();
-  }, minutes * 60 * 1000);
+  }, seconds * 1000);
 };
 
-// every day at 9am, update listening history for all users
 async function updateListenHistory() {
   console.log("updating listen history for all users");
   const allUserIds = (
@@ -39,48 +38,46 @@ async function updateListenHistory() {
   });
 }
 
-// every 10 seconds, research the next lastfm listen
 async function researchNextLastfmListen() {
-  const nextLastfmListenId = await getNextLastfmListenIdToResearch();
-  if (nextLastfmListenId === null) {
+  const nextLastfmListen = await getNextLastfmListenToResearch();
+  if (nextLastfmListen === null) {
     console.log("no more last.fm listens to research");
     return;
   }
 
-  console.log("researching lastfm listen id", nextLastfmListenId);
+  console.log(
+    "researching lastfm listen id",
+    nextLastfmListen.lastfmId,
+    "track: ",
+    nextLastfmListen.track
+  );
   let track: Track | null = null;
   try {
-    await prisma.lastfmListen.update({
-      where: {
-        id: nextLastfmListenId,
-      },
-      data: {
-        isBeingAnalyzed: true,
-      },
-    });
+    await markAnalyzedStatus(nextLastfmListen.lastfmId, true);
 
-    track = await getTrackFromLastfmListenId(nextLastfmListenId);
+    track = await getTrackFromLastfmListenId(nextLastfmListen.lastfmId);
   } catch (error) {
-    if (error instanceof TypedError && error.status === 429) {
-      console.log("...too many requests, pausing research task for 5 minutes");
-      pauseTask(researchListensTask, 5);
+    if (error instanceof TooManyRequestsError) {
+      const retryAfter = error.retryAfter ? error.retryAfter : 5 * 60;
+      console.log(
+        `...too many requests, pausing research task for ${retryAfter} seconds`
+      );
+      markAnalyzedStatus(nextLastfmListen.lastfmId, false);
+      pauseTask(researchListensTask, retryAfter);
       return;
     }
 
-    console.log("============================================================");
-    console.log("Something went wrong.\n", error);
-    console.log("============================================================");
+    console.log(`
+============================================================
+Something went wrong while researching lastfm listen id ${nextLastfmListen.lastfmId}, ${nextLastfmListen.track}
+${error}
+============================================================`);
+
+    markAnalyzedStatus(nextLastfmListen.lastfmId, false);
     return;
   }
 
-  await prisma.lastfmListen.update({
-    where: {
-      id: nextLastfmListenId,
-    },
-    data: {
-      isBeingAnalyzed: false,
-    },
-  });
+  await markAnalyzedStatus(nextLastfmListen.lastfmId, true);
 
   if (!track) {
     console.log("...track not found");
@@ -108,7 +105,9 @@ async function researchNextLastfmListen() {
 
   console.log(`
 ============================================================
-Completed Research for Lastfm Listen Id: ${nextLastfmListenId}.
+Completed Research for Lastfm Listen Id: ${nextLastfmListen.lastfmId}: ${
+    nextLastfmListen.track
+  }
 ${track ? "Track Found" : "Track Not Found"}
 
   Progress:
@@ -120,13 +119,24 @@ ${track ? "Track Found" : "Track Not Found"}
 `);
 }
 
-async function getNextLastfmListenIdToResearch(): Promise<number | null> {
+const markAnalyzedStatus = async (lastfmId: number, status: boolean) => {
+  return await prisma.lastfmListen.update({
+    where: {
+      id: lastfmId,
+    },
+    data: {
+      isBeingAnalyzed: status,
+    },
+  });
+};
+
+async function getNextLastfmListenToResearch() {
   const lastfmTracks = (await prisma.$queryRaw`
     SELECT track, min(lastfmId) AS minLastfmId, count(lastfmId) AS listenCount
     FROM (
       SELECT 
         Listen.id AS listenId,
-        concat(trackName, '|', artistName) AS track,
+        concat(trackName, ' by ', artistName) AS track,
         LastfmListen.id AS lastfmId
       FROM 
         LastfmListen
@@ -140,7 +150,9 @@ async function getNextLastfmListenIdToResearch(): Promise<number | null> {
     GROUP BY 
     track 
     ORDER BY 
-    listenCount DESC;`) as {
+    listenCount DESC,
+    minLastfmId ASC;`) as {
+    listenId: number;
     track: string;
     minLastfmId: number;
   }[];
@@ -149,5 +161,9 @@ async function getNextLastfmListenIdToResearch(): Promise<number | null> {
     return null;
   }
 
-  return Number(lastfmTracks[0].minLastfmId);
+  return {
+    listenId: Number(lastfmTracks[0].listenId),
+    track: lastfmTracks[0].track,
+    lastfmId: Number(lastfmTracks[0].minLastfmId),
+  };
 }

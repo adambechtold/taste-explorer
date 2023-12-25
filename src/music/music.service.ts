@@ -97,10 +97,22 @@ export async function getTrackFromLastfmListenId(
   }
 
   // Use Search to Find the Track
-  const track = await getTrackByNameAndArtistName(
-    lastfmListens[0].trackName,
-    lastfmListens[0].artistName
-  );
+  let track: TrackWithId | null = null;
+  try {
+    track = await getTrackByNameAndArtistName(
+      lastfmListens[0].trackName,
+      lastfmListens[0].artistName
+    );
+  } catch (error) {
+    if (error instanceof TypedError) {
+      if (error.status === 404) {
+        console.log("track not found. Marking lastfm listen as analyzed.");
+      } else {
+        throw error;
+      }
+    }
+    throw error;
+  }
 
   if (!track) {
     const result = await prisma.lastfmListen.updateMany({
@@ -115,23 +127,23 @@ export async function getTrackFromLastfmListenId(
     console.log(
       `Lastfm Listen ${lastfmListenId}'s track was not found in Spotify. Marked ${result.count} listens as analyzed.`
     );
-    throw new TypedError("Track not found in the database or Spotify.", 404);
-  }
+    throw TypedError.create("Track not found in the database or Spotify.", 404);
+  } else {
+    // Link all last.fm listens with the same track name and artist name to this track
+    const result =
+      await LastfmService.linkTrackIdToAllLastfmListensWithTrackNameAndArtistName(
+        track.id,
+        lastfmListens[0].trackName,
+        lastfmListens[0].artistName,
+        true
+      );
 
-  // Link all last.fm listens with the same track name and artist name to this track
-  const result =
-    await LastfmService.linkTrackIdToAllLastfmListensWithTrackNameAndArtistName(
-      track.id,
-      lastfmListens[0].trackName,
-      lastfmListens[0].artistName,
-      true
+    console.log(
+      `Linked ${result.count} listens to track ${track.name} while researching lastfmListen #${lastfmListenId}.`
     );
 
-  console.log(
-    `Linked ${result.count} listens to track ${track.name} while researching lastfmListen #${lastfmListenId}.`
-  );
-
-  return track;
+    return track;
+  }
 }
 
 /**

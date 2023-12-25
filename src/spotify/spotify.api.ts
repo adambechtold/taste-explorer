@@ -1,6 +1,6 @@
 import querystring from "querystring";
 import { generateRandomString } from "../utils/string.utils";
-import { TypedError } from "../errors/errors.types";
+import { TooManyRequestsError } from "../errors/errors.types";
 
 import { SpotifyAccessToken } from "../auth/auth.types";
 import {
@@ -247,7 +247,15 @@ async function searchSpotifyTracks(
 
   if (!searchResponse.ok) {
     if (searchResponse.status === 429) {
-      throw new TypedError("Too many requests to Spotify API", 429);
+      const retryAfterHeader = searchResponse.headers.get("Retry-After");
+      let retryAfter: number | undefined = undefined;
+      if (retryAfterHeader) {
+        retryAfter = parseInt(retryAfterHeader);
+      }
+      throw new TooManyRequestsError(
+        "Too many requests to Spotify API",
+        retryAfter
+      );
     }
     throw new Error("Error searching tracks: " + searchResponse.statusText);
   }
