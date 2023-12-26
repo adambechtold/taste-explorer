@@ -45,16 +45,24 @@ async function addFeaturesToTracks() {
     addFeaturesToTracksTask.stop();
   }
 
-  const { totalTracks, tracksWithFeatures: numTracksWithFeatures } =
-    await getCoverage();
+  const {
+    totalTracks,
+    tracksWithFeatures: numTracksWithFeatures,
+    tracksAnalyzed: numTrackAnalyzed,
+  } = await getCoverage();
 
   console.log("============================================================");
   console.log(`Added features to ${tracksWithFeatures.length} tracks`);
   console.table({
     "Total Number of Tracks:": totalTracks,
     "Tracks With Features": numTracksWithFeatures,
-    "Percent Coverage": `${(
+    "Percent Coverage with Features": `${(
       (numTracksWithFeatures / totalTracks) *
+      100
+    ).toFixed(4)}%`,
+    "Tracks Analyzed": numTrackAnalyzed,
+    "Percent of Tracks Analyzed": `${(
+      (numTrackAnalyzed / totalTracks) *
       100
     ).toFixed(4)}%`,
   });
@@ -62,11 +70,16 @@ async function addFeaturesToTracks() {
 }
 
 async function getCoverage() {
-  const [totalTracks, tracksWithFeatures] = await Promise.all([
+  const [totalTracks, tracksWithFeatures, tracksAnalyzed] = await Promise.all([
     prisma.track.count(),
     prisma.track.count({
       where: {
         acousticness: { not: null },
+      },
+    }),
+    prisma.track.count({
+      where: {
+        featuresAnalyzedAt: { not: null },
       },
     }),
   ]);
@@ -74,6 +87,7 @@ async function getCoverage() {
   return {
     totalTracks,
     tracksWithFeatures,
+    tracksAnalyzed,
   };
 }
 
