@@ -83,10 +83,14 @@ model Track {
   id        Int      @id @default(autoincrement())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  // Track Metadata
   name      String
   spotifyId String   @unique
-  artists   Artist[]
   imageUrl  String?
+
+  // Relationships
+  artists   Artist[]
   listens   Listen[]
 
   // External Ids
@@ -110,6 +114,10 @@ model Track {
   timeSignature    Int? // 3 to 7 //TODO: Consider using a TINYINT manually
   valence          Float? // 0.0 to 1.0
 
+  // Analysis Tracking
+  featuresAnalyzedAt DateTime?
+
+  // Indexes
   @@index([spotifyId], map: "Track_spotifyId")
 }
 

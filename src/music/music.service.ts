@@ -245,6 +245,10 @@ export async function addFeaturesToTracks(
     tracks
   );
 
+  tracksWithFeatures.forEach((track) => {
+    track.featuresAnalyzedAt = new Date();
+  });
+
   const prismaTracks = await Promise.all(
     tracksWithFeatures.map((track) => MusicStorage.upsertTrack(track))
   );

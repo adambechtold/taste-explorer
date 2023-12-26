@@ -11,6 +11,7 @@ export type Track = {
   internationalArticleNumber?: string;
   universalProductCode?: string;
   imageUrl?: string;
+  featuresAnalyzedAt?: Date;
 };
 
 export type TrackWithId = Track & {

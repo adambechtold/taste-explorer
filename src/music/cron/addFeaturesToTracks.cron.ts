@@ -30,9 +30,7 @@ async function addFeaturesToTracks() {
 
   let tracksWithFeatures: TrackWithId[] = [];
   try {
-    console.log("start");
     tracksWithFeatures = await MusicService.addFeaturesToTracks(tracks);
-    console.log("success");
   } catch (error: any) {
     if (error instanceof TooManyRequestsError) {
       const retryAfter = error.retryAfter ? error.retryAfter : 5 * 60;
@@ -85,14 +83,17 @@ export async function getNextTracksToResearch(): Promise<TrackWithId[]> {
   SELECT Track.id, spotifyId, count(Listen.id) AS listenCount 
   FROM Track
     JOIN Listen ON Listen.trackId = Track.id
-  WHERE Track.acousticness IS NULL
-    OR Track.danceability IS NULL
-    OR Track.energy IS NULL
-    OR Track.instrumentalness IS NULL
-    OR Track.liveness IS NULL
-    OR Track.loudness IS NULL
-    OR Track.speechiness IS NULL
-    OR Track.valence IS NULL
+  WHERE 
+    Track.featuresAnalyzedAt IS NULL
+    AND 
+      (Track.acousticness IS NULL
+      OR Track.danceability IS NULL
+      OR Track.energy IS NULL
+      OR Track.instrumentalness IS NULL
+      OR Track.liveness IS NULL
+      OR Track.loudness IS NULL
+      OR Track.speechiness IS NULL
+      OR Track.valence IS NULL)
   GROUP BY Track.id, spotifyId
   ORDER BY listenCount DESC
   LIMIT 100;
