@@ -107,6 +107,14 @@ export async function getTrackFromLastfmListenId(
     if (error instanceof TypedError) {
       if (error.status === 404) {
         console.log("track not found. Marking lastfm listen as analyzed.");
+        await prisma.lastfmListen.update({
+          where: {
+            id: lastfmListenId,
+          },
+          data: {
+            analyzedAt: new Date(),
+          },
+        });
       } else {
         throw error;
       }
