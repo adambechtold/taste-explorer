@@ -51,7 +51,8 @@ export default class SpotifyApi {
 
   getUrlToRedirectToLogin() {
     const state = generateRandomString(16);
-    const scope = "user-read-private user-read-email";
+    const scope =
+      "user-read-private user-read-email user-modify-playback-state";
 
     return (
       "https://accounts.spotify.com/authorize?" +
