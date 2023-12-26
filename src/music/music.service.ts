@@ -273,3 +273,21 @@ async function getSpotifyAccessToken() {
 
   return accessToken;
 }
+
+export async function playTrackForUser(trackId: number, user: UserWithId) {
+  const accessToken = await getSpotifyAccessToken();
+
+  const prismaTrack = await prisma.track.findUnique({
+    where: {
+      id: trackId,
+    },
+  });
+
+  if (!prismaTrack) {
+    throw TypedError.create("Track not found", 404);
+  }
+
+  const track = MusicUtils.convertPrismaTrackAndArtistsToTrack(prismaTrack, []);
+
+  await SpotifyService.playTrack(accessToken, track);
+}

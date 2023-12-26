@@ -1,6 +1,6 @@
 import querystring from "querystring";
 import { generateRandomString } from "../utils/string.utils";
-import { TooManyRequestsError } from "../errors/errors.types";
+import { TooManyRequestsError, TypedError } from "../errors/errors.types";
 
 import { SpotifyAccessToken } from "../auth/auth.types";
 import {
@@ -51,7 +51,8 @@ export default class SpotifyApi {
 
   getUrlToRedirectToLogin() {
     const state = generateRandomString(16);
-    const scope = "user-read-private user-read-email";
+    const scope =
+      "user-read-private user-read-email user-modify-playback-state";
 
     return (
       "https://accounts.spotify.com/authorize?" +
@@ -142,6 +143,32 @@ export default class SpotifyApi {
     }
 
     return getTracksFeatures(this.accessToken, spotifyIds);
+  }
+
+  /**
+   * Start or Resume Playback State
+   *
+   * Start a new context or resume current playback on the user's active device.
+   * Provide a list of track uris to play. The tracks will be played in the order
+   * provided and will begin playing at the first track.
+   *
+   * The user is determined by the API object's access token.
+   * The device will be the user's current device.
+   *
+   * @param {string[]} uris - The Spotify track uris to play.
+   * @returns {Promise<void>} - A promise that resolves when the request is complete.
+   * @throws {Error} - Will throw an error if the operation fails.
+   */
+  async startOrResumePlaybackState(uris: string[]) {
+    if (!this.accessToken) {
+      throw new Error("No access token set");
+    }
+
+    if (this.accessToken.expiresAt < new Date()) {
+      this.accessToken = await this.refreshAccessToken();
+    }
+
+    return startOrResumePlaybackState(this.accessToken, uris);
   }
 }
 
@@ -313,4 +340,39 @@ export async function getTracksFeatures(
   }
 
   return (await response.json()) as SpotifyAudioFeaturesBatchResponse;
+}
+
+/**
+ * Start/Resume Playback
+ * Start a new context or resume current playback on the user's active device.
+ *
+ * https://developer.spotify.com/documentation/web-api/reference/start-a-users-playback
+ *
+ * @param {SpotifyAccessToken} accessToken - The access token for the Spotify API.
+ * @param {string[]} uris - A set of Spotify URIs for the tracks to play.
+ * @returns {Promise<void>} A promise that resolves when the request is complete.
+ * @throws {Error} Will throw an error if the request to the Spotify API fails.
+ */
+export async function startOrResumePlaybackState(
+  accessToken: SpotifyAccessToken,
+  uris: string[]
+) {
+  const response = await fetch("https://api.spotify.com/v1/me/player/play", {
+    method: "PUT",
+    headers: {
+      Authorization: "Bearer " + accessToken.token,
+    },
+    body: JSON.stringify({
+      uris,
+    }),
+  });
+
+  if (response.status !== 204) {
+    throw TypedError.create(
+      "Error modifying playback" + response.statusText,
+      response.status
+    );
+  }
+
+  return;
 }

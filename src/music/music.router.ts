@@ -2,6 +2,7 @@ import express, { Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
 import { TypedError } from "../errors/errors.types";
 import { handleErrorResponse } from "../utils/response.utils";
+import { getCurrentUser } from "../auth/auth.utils";
 
 import * as PlaylistService from "./playlists/playlists.service";
 import * as MusicService from "./music.service";
@@ -177,4 +178,31 @@ musicRouter.get("/track-features/:trackId", async (req, res) => {
   } catch (e: any) {
     handleErrorResponse(e, res);
   }
+});
+
+/* Play Track
+ * Plays a track on the user's Spotify account.
+ */
+musicRouter.put("/play-track/:trackId", async (req, res) => {
+  const user = getCurrentUser(req);
+
+  if (!user) {
+    throw TypedError.create("User not found", 404);
+  }
+
+  const trackIdParam = req.params.trackId;
+
+  if (!trackIdParam) {
+    throw TypedError.create("Track ID is required", 400);
+  }
+
+  const trackId = parseInt(trackIdParam);
+
+  if (isNaN(trackId)) {
+    throw TypedError.create("Track ID must be a number", 400);
+  }
+
+  await MusicService.playTrackForUser(trackId, user);
+
+  res.status(204).send();
 });

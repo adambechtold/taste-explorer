@@ -9,6 +9,10 @@ const spotifyApi = new SpotifyApi();
 
 export const authRouter = express.Router();
 
+/**
+ * Spotify Login
+ * Redirects the user to the Spotify login page.
+ */
 authRouter.get("/login/spotify", (req: Request, res: Response) => {
   const user = getCurrentUser(req);
   if (!user) {
@@ -17,6 +21,10 @@ authRouter.get("/login/spotify", (req: Request, res: Response) => {
   res.redirect(spotifyApi.getUrlToRedirectToLogin());
 });
 
+/**
+ * Spotify Login Callback
+ * Handles the callback from the Spotify login process, exchanging the authorization code for an access token.
+ */
 authRouter.get(
   spotifyApi.getCallbackEndpoint(),
   async (req: Request, res: Response) => {
