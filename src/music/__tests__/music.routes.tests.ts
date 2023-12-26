@@ -172,9 +172,11 @@ describe("Music Routes", () => {
           "name",
           "User 2 Only"
         );
-        expect(response.body.tracks.items[0]).toHaveProperty("artists", [
-          { name: "Artist1" },
-        ]);
+        expect(response.body.tracks.items[0]).toHaveProperty("artists");
+        expect(response.body.tracks.items[0].artists[0]).toHaveProperty(
+          "name",
+          "Artist1"
+        );
       });
     });
   });

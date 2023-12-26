@@ -27,8 +27,10 @@ export async function getPlaylist(
       artists: [
         {
           name: track.songNameAndArtist.split(" | by | ")[1],
+          spotifyId: "test",
         },
       ],
+      spotifyId: "test", // TODO: Replace this with the actual spotify id
     };
   });
 
@@ -61,7 +63,7 @@ const queryTracks = async (
     FROM (
       SELECT
         userId,
-        concat(trackData->>'$.name', ' | by | ', trackData->>'$.artist.name') AS songNameAndArtist,
+        concat(trackName, ' | by | ', artistName) AS songNameAndArtist,
         count(userId) AS listenCount
       FROM
         LastfmListen
@@ -89,7 +91,7 @@ const queryTracks = async (
     FROM (
       SELECT
         userId,
-        concat(trackData->>'$.name', ' | by | ', trackData->>'$.artist.name') AS songNameAndArtist,
+        concat(trackName, ' | by | ', artistName) AS songNameAndArtist,
         count(userId) AS listenCount
       FROM
         LastfmListen
@@ -117,7 +119,7 @@ const queryTracks = async (
     FROM (
       SELECT
         userId,
-        concat(trackData->>'$.name', ' | by | ', trackData->>'$.artist.name') AS songNameAndArtist,
+        concat(trackName, ' | by | ', artistName) AS songNameAndArtist,
         count(userId) AS listenCount
       FROM
         LastfmListen

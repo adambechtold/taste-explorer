@@ -1,41 +1,10 @@
-import { Response } from "express";
-import querystring from "querystring";
-
-import { generateRandomString } from "../utils/string.utils";
-import { AccessToken } from "../auth/auth.types";
-import { SpotifyAccessTokenResponse } from "./spotify.types";
-import * as SpotifyUtils from "./spotify.utils";
+import { SpotifyAccessToken } from "../auth/auth.types";
 import { UserWithId } from "../users/users.types";
+import { TypedError } from "../errors/errors.types";
 
-/**
- * Spotify Services
- */
-const clientId = SpotifyUtils.getClientId();
-const clientSecret = SpotifyUtils.getClientSecret();
-
-export const callbackEndpoint = "/login/spotify/callback";
-export const redirectUri = "http://localhost:4000/auth" + callbackEndpoint;
-
-/**
- * Redirects the user to the Spotify login page for authentication.
- *
- * @param {Response} res - The Express response object.
- */
-export function redirectToLogin(res: Response) {
-  const state = generateRandomString(16);
-  const scope = "user-read-private user-read-email";
-
-  res.redirect(
-    "https://accounts.spotify.com/authorize?" +
-      querystring.stringify({
-        response_type: "code",
-        client_id: clientId,
-        scope: scope,
-        redirect_uri: redirectUri,
-        state: state,
-      })
-  );
-}
+import * as SpotifyUtils from "./spotify.utils";
+import SpotifyApi from "./spotify.api";
+import { Track, TrackWithId } from "../music/music.types";
 
 /**
  * Handles the callback from the Spotify login process, exchanging the authorization code for an access token.
@@ -45,52 +14,127 @@ export function redirectToLogin(res: Response) {
  * @throws {Error} Will throw an error if the request to the Spotify API fails, or if storing the access token in the database fails.
  */
 export async function handleLoginCallback(
-  code: string | null
-): Promise<AccessToken> {
-  const authOptions = {
-    url: "https://accounts.spotify.com/api/token",
-    form: {
-      code: code,
-      redirect_uri: redirectUri,
-      grant_type: "authorization_code",
-    },
-    headers: {
-      "content-type": "application/x-www-form-urlencoded",
-      Authorization:
-        "Basic " +
-        Buffer.from(clientId + ":" + clientSecret).toString("base64"),
-    },
-    json: true,
-  };
+  code: string | null,
+  user: UserWithId
+): Promise<SpotifyAccessToken> {
+  const spotifyApi = new SpotifyApi();
+  const accessToken = await spotifyApi.getAccessTokenFromCode(code);
 
-  const authTokenResponse = await fetch(authOptions.url, {
-    method: "POST",
-    headers: authOptions.headers,
-    body: querystring.stringify(authOptions.form),
-  });
-
-  const authTokenJson =
-    (await authTokenResponse.json()) as SpotifyAccessTokenResponse;
-
-  const accessToken = await SpotifyUtils.storeSpotifyAccessToken(
-    { id: 1 },
-    authTokenJson.access_token,
-    authTokenJson.refresh_token,
-    new Date(Date.now() + authTokenJson.expires_in * 1000)
+  const savedAccessToken = await SpotifyUtils.storeSpotifyAccessTokenForUser(
+    user,
+    accessToken.token,
+    accessToken.refreshToken,
+    accessToken.expiresAt
   );
 
-  return accessToken;
+  return savedAccessToken;
 }
 
+/**
+ * Retrieves the Spotify access token for a specific user.
+ *
+ * @param {UserWithId} user - The user for whom to retrieve the access token.
+ * @returns {Promise<AccessToken | null>} A promise that resolves to the access token for the user, or null if no access token is found.
+ */
 export async function getAccessToken(
   user: UserWithId
-): Promise<AccessToken | null> {
-  return SpotifyUtils.getSpotifyAccessToken(user);
+): Promise<SpotifyAccessToken | null> {
+  return SpotifyUtils.getSpotifyAccessTokenForUser(user);
 }
 
+/**
+ * Refreshes the Spotify access token for a specific user and stores the new token in the database.
+ *
+ * @param {AccessToken} accessToken - The current access token for the user.
+ * @param {UserWithId} user - The user for whom to refresh the access token.
+ * @returns {Promise<AccessToken>} A promise that resolves to the refreshed access token for the user.
+ * @throws {Error} Will throw an error if the request to the Spotify API fails, or if storing the refreshed access token in the database fails.
+ */
 export async function refreshAccessToken(
-  accessToken: AccessToken,
+  accessToken: SpotifyAccessToken,
   user: UserWithId
-): Promise<AccessToken> {
-  return SpotifyUtils.refreshSpotifyToken(accessToken, user);
+): Promise<SpotifyAccessToken> {
+  const spotifyApi = new SpotifyApi(accessToken);
+  const newAccessToken = await spotifyApi.refreshAccessToken();
+  return SpotifyUtils.storeSpotifyAccessTokenForUser(
+    user,
+    newAccessToken.token,
+    newAccessToken.refreshToken,
+    newAccessToken.expiresAt
+  );
+}
+
+export async function getTrackFromTrackAndArtist(
+  accessToken: SpotifyAccessToken,
+  trackName: string,
+  artistName: string
+): Promise<Track> {
+  const spotifyApi = new SpotifyApi(accessToken);
+
+  const tracks = await spotifyApi.searchTracks(trackName, artistName);
+
+  if (!tracks.length) {
+    throw new TypedError(
+      `No tracks found for name: ${trackName} by: ${artistName}.`,
+      404
+    );
+  }
+
+  const selectedTrack = tracks[0];
+
+  const includeFeatures = false;
+  if (includeFeatures) {
+    const trackFeaturesResponse = await spotifyApi.getTracksFeatures([
+      selectedTrack.spotifyId,
+    ]);
+    const selectedTrackFeatures = trackFeaturesResponse.audio_features[0];
+
+    selectedTrack.features =
+      SpotifyUtils.convertSpotifyTrackFeaturesResponseToTrackFeatures(
+        selectedTrackFeatures
+      );
+  }
+
+  return selectedTrack;
+}
+
+/**
+ * Add track features to the tracks provided.
+ *
+ * @param {TrackWithId[]} tracks - Tracks with or without features.
+ * @returns {TrackWithId[]} - Tracks with features.
+ */
+export async function addFeaturesToTracks(
+  access_token: SpotifyAccessToken,
+  tracks: TrackWithId[]
+) {
+  const spotifyApi = new SpotifyApi(access_token);
+
+  const trackSpotifyIds = tracks.map((track) => track.spotifyId);
+  const trackFeaturesResponse = await spotifyApi.getTracksFeatures(
+    trackSpotifyIds
+  );
+
+  const trackFeatures = trackFeaturesResponse.audio_features.filter(
+    (f) => f !== null
+  );
+
+  const tracksWithFeatures = tracks.map((track) => {
+    const featuresForTrack = trackFeatures.find(
+      (t) => t.id === track.spotifyId
+    );
+
+    if (!featuresForTrack) {
+      console.warn("Audio features not found for track", track.spotifyId);
+    } else {
+      track.features =
+        SpotifyUtils.convertSpotifyTrackFeaturesResponseToTrackFeatures(
+          featuresForTrack
+        );
+    }
+
+    return track;
+  });
+
+  return tracksWithFeatures;
 }

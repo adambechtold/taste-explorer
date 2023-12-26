@@ -1,15 +1,24 @@
+import { LastfmListen } from "@prisma/client";
+import { User } from "../users/users.types";
+
 export type Track = {
   name: string;
   artists: Artist[];
-  spotifyId?: string;
-  features?: TrackFeatures;
+  spotifyId: string;
+  features?: Partial<TrackFeatures>;
+  mbid?: string;
   internationalRecordingCode?: string;
   internationalArticleNumber?: string;
   universalProductCode?: string;
   imageUrl?: string;
+  featuresAnalyzedAt?: Date;
 };
 
-type TrackFeatures = {
+export type TrackWithId = Track & {
+  id: number;
+};
+
+export type TrackFeatures = {
   /**
    * Acousticness: Confidence measure of whether the track is acoustic
    * - Range: 0.0 - 1.0
@@ -26,7 +35,7 @@ type TrackFeatures = {
    */
   danceability: number;
 
-  duration_ms: number;
+  durationMs: number; // ms
 
   /**
    * Energy: Perceptual measure of intensity and activity
@@ -95,7 +104,7 @@ type TrackFeatures = {
    * - Example - 7 would be a 7/4 time signature
    * - Range - 3-7
    */
-  time_signature: number; // number over 4. E.g. 7 would be a 7/4 time signature. Range 3-7
+  timeSignature: number; // number over 4. E.g. 7 would be a 7/4 time signature. Range 3-7
 
   /**
    * Valence: Measure of Positivity
@@ -113,10 +122,17 @@ type TrackFeatures = {
  * 1 == Major
  * 0 == Minor
  */
-type Mode = "MAJOR" | "MINOR";
+type Mode = "Major" | "Minor";
 
 export type Artist = {
   name: string;
-  spotifyId?: string;
+  spotifyId: string;
   imageUrl?: string;
+};
+
+export type Listen = {
+  date: Date;
+  track: Track;
+  user: User;
+  lastfmListen?: LastfmListen;
 };

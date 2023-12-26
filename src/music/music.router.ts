@@ -1,14 +1,16 @@
 import express, { Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
+import { TypedError } from "../errors/errors.types";
+import { handleErrorResponse } from "../utils/response.utils";
 
 import * as PlaylistService from "./playlists/playlists.service";
+import * as MusicService from "./music.service";
+import * as MusicUtils from "./music.utils";
 
 import {
   PreferenceType,
   isValidPreferenceType,
 } from "./playlists/playlists.types";
-import { TypedError } from "../errors/errors.types";
-import { handleErrorResponse } from "../utils/response.utils";
 
 const prisma = new PrismaClient();
 
@@ -69,6 +71,109 @@ musicRouter.get("/playlists/", async (req: Request, res: Response) => {
     );
 
     res.status(200).send(playlist);
+  } catch (e: any) {
+    handleErrorResponse(e, res);
+  }
+});
+
+// --- Get Tracks by Name and Artist Name ---
+musicRouter.get("/tracks/", async (req: Request, res: Response) => {
+  try {
+    const trackName = req.query.name as string;
+    const artistName = req.query.artist as string;
+
+    if (!trackName || !artistName) {
+      throw new TypedError("Track name and artist name are required", 400);
+    }
+
+    const track = await MusicService.getTrackByNameAndArtistName(
+      trackName,
+      artistName
+    );
+
+    if (!track) {
+      throw new TypedError("No tracks found.", 404);
+    }
+
+    res.status(200).send({
+      tracks: [track],
+    });
+  } catch (e: any) {
+    handleErrorResponse(e, res);
+  }
+});
+
+// --- Identify Track from LastfmListen ---
+musicRouter.get(
+  "/lastfm-listens/:id/track",
+  async (req: Request, res: Response) => {
+    try {
+      const lastfmListenIdParam = req.params.id;
+
+      if (!lastfmListenIdParam) {
+        throw new TypedError("Listen ID is required", 400);
+      }
+
+      const lastfmListenId = parseInt(lastfmListenIdParam);
+
+      if (isNaN(lastfmListenId)) {
+        throw new TypedError("Listen ID must be a number", 400);
+      }
+
+      const track = await MusicService.getTrackFromLastfmListenId(
+        lastfmListenId
+      );
+
+      if (!track) {
+        throw new TypedError(
+          "Could not find track in database or spotify",
+          404
+        );
+      }
+
+      res.status(200).send(track);
+    } catch (e: any) {
+      handleErrorResponse(e, res);
+    }
+  }
+);
+
+musicRouter.get("/track-features/:trackId", async (req, res) => {
+  try {
+    const trackIdParam = req.params.trackId;
+
+    if (!trackIdParam) {
+      throw new TypedError("Track ID is required", 400);
+    }
+
+    const trackId = parseInt(trackIdParam);
+
+    if (isNaN(trackId)) {
+      throw new TypedError("Track ID must be a number", 400);
+    }
+
+    const prismaTrack = await prisma.track.findUnique({
+      where: {
+        id: trackId,
+      },
+    });
+
+    if (!prismaTrack) {
+      throw TypedError.create("Could not find track", 404);
+    }
+
+    const track = MusicUtils.convertPrismaTrackAndArtistsToTrack(
+      prismaTrack,
+      []
+    );
+
+    const trackFeatures = await MusicService.addFeaturesToTracks([track]);
+
+    if (!trackFeatures) {
+      throw TypedError.create("Could not find track features", 404);
+    }
+
+    res.status(200).send(trackFeatures);
   } catch (e: any) {
     handleErrorResponse(e, res);
   }

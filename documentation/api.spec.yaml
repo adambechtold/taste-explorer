@@ -12,8 +12,8 @@ servers:
 tags:
   - name: users
     description: Operations related to users.
-  - name: playlists
-    description: Operations related creating and modifying playlists.
+  - name: music
+    description: Operations related to music.
 paths:
   /api/users/{userId}:
     get:
@@ -54,7 +54,7 @@ paths:
       description: Get a playlist based on the users and the preference type
       operationId: getPlaylist
       tags:
-        - playlists
+        - music
       parameters:
         - name: userId1
           in: query
@@ -85,6 +85,89 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Playlist"
+  /api/music/tracks:
+    get:
+      summary: Get Tracks
+      description: Get Tracks that fit the query
+      operationId: getTracks
+      tags:
+        - music
+      parameters:
+        - name: name
+          in: query
+          description: The name of the track
+          required: false
+          schema:
+            type: string
+        - name: artist
+          in: query
+          description: The name of the artist
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Track(s) that fit the query
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tracks:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Track"
+        "400":
+          description: Invalid Query Parameters
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Track(s) not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /api/music/lastfm-listens/{id}/track:
+    get:
+      summary: Get the Track from last.fm Listen
+      description: Get the track information the last.fm listen
+      operationId: getTrackFromLastfmListen
+      tags:
+        - music
+      parameters:
+        - name: id
+          in: path
+          description: The id of the last.fm listen
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: A track object
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Track"
+        "400":
+          description: Invalid ID supplied
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: last.fm Listen not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
 components:
   schemas:
     User:
@@ -133,15 +216,19 @@ components:
       type: object
       required:
         - name
-        - artist
+        - artists
       properties:
         name:
           type: string
-        artist:
-          type: object
-          properties:
-            name:
-              type: string
+        artists:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+        spotifyId:
+          type: string
     UserId:
       type: integer
       minimum: 1

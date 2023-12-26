@@ -14,6 +14,7 @@ model User {
   updatedAt     DateTime       @updatedAt
   lastfmAccount LastfmAccount?
   LastfmListen  LastfmListen[]
+  Listen        Listen[]
 }
 
 model AccessToken {
@@ -42,13 +43,96 @@ model LastfmAccount {
 }
 
 model LastfmListen {
+  id              Int       @id @default(autoincrement())
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  userId          Int
+  listenedAt      DateTime
+  trackName       String    @db.VarChar(320)
+  artistName      String    @db.VarChar(320)
+  trackData       Json
+  analyzedAt      DateTime?
+  isBeingAnalyzed Boolean   @default(false)
+
+  User   User    @relation(fields: [userId], references: [id])
+  Listen Listen?
+
+  @@index([userId], map: "LastfmListen_userId")
+}
+
+model Listen {
   id         Int      @id @default(autoincrement())
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
-  userId     Int
   listenedAt DateTime
-  trackData  Json
-  User       User     @relation(fields: [userId], references: [id])
 
-  @@index([userId], map: "LastfmListen_userId")
+  userId         Int
+  trackId        Int
+  lastfmListenId Int? @unique
+
+  User         User          @relation(fields: [userId], references: [id])
+  Track        Track         @relation(fields: [trackId], references: [id])
+  LastfmListen LastfmListen? @relation(fields: [lastfmListenId], references: [id])
+
+  @@index([userId], map: "Listen_userId")
+  @@index([trackId], map: "Listen_trackId")
+  @@index([lastfmListenId], map: "Listen_lastfmListenId")
+}
+
+model Track {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Track Metadata
+  name      String
+  spotifyId String   @unique
+  imageUrl  String?
+
+  // Relationships
+  artists   Artist[]
+  listens   Listen[]
+
+  // External Ids
+  mbid                       String? // @unique
+  internationalRecordingCode String? @unique
+  internationalArticleNumber String? @unique
+  universalProductCode       String? @unique
+
+  // Track Features
+  acousticness     Float? // 0.0 to 1.0
+  danceability     Float? // 0.0 to 1.0
+  durationMs       Int? // Milliseconds
+  energy           Float? // 0.0 to 1.0
+  instrumentalness Float? // 0.0 to 1.0
+  key              Int? // 0 to 11 //TODO: Consider using a TINYINT manually
+  liveness         Float? // 0.0 to 1.0
+  loudness         Float? // -60.0 to 0.0 //TODO: Consider using a SMALLINT manually
+  mode             Mode? // Major or Minor
+  speechiness      Float? // 0.0 to 1.0
+  tempo            Float? // BPM
+  timeSignature    Int? // 3 to 7 //TODO: Consider using a TINYINT manually
+  valence          Float? // 0.0 to 1.0
+
+  // Analysis Tracking
+  featuresAnalyzedAt DateTime?
+
+  // Indexes
+  @@index([spotifyId], map: "Track_spotifyId")
+}
+
+enum Mode {
+  Major
+  Minor
+}
+
+model Artist {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  name      String
+  spotifyId String   @unique
+  tracks    Track[]
+
+  @@index([spotifyId], map: "Artist_spotifyId")
 }

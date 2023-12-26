@@ -1,37 +1,10 @@
 import { PrismaClient } from "@prisma/client";
 import { UserWithId } from "../users/users.types";
-import { AccessToken } from "../auth/auth.types";
-import { SpotifyAccessTokenResponse } from "./spotify.types";
+import { SpotifyAccessToken } from "../auth/auth.types";
+import { SpotifyAudioFeaturesResponse } from "./spotify.types";
+import { TrackFeatures } from "../music/music.types";
 
-const prisma = new PrismaClient({ log: ["query"] });
-
-/**
- * Retrieves the Spotify client ID from the environment variables.
- *
- * @returns {string} The Spotify client ID.
- * @throws {Error} Will throw an error if the SPOTIFY_CLIENT_ID environment variable is not set.
- */
-export function getClientId(): string {
-  const clientId = process.env.SPOTIFY_CLIENT_ID;
-  if (!clientId) {
-    throw new Error("Missing SPOTIFY_CLIENT_ID");
-  }
-  return clientId;
-}
-
-/**
- * Retrieves the Spotify client secret from the environment variables.
- *
- * @returns {string} The Spotify client secret.
- * @throws {Error} Will throw an error if the SPOTIFY_CLIENT_SECRET environment variable is not set.
- */
-export function getClientSecret(): string {
-  const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;
-  if (!clientSecret) {
-    throw new Error("Missing SPOTIFY_CLIENT_SECRET");
-  }
-  return clientSecret;
-}
+const prisma = new PrismaClient();
 
 /**
  * Stores or updates a Spotify access token for a user in the database.
@@ -43,12 +16,12 @@ export function getClientSecret(): string {
  * @returns {Promise<AccessToken>} A promise that resolves to an object containing the stored access token, refresh token, expiration date, and the service name ("SPOTIFY").
  * @throws {Error} Will throw an error if the database operation fails.
  */
-export async function storeSpotifyAccessToken(
+export async function storeSpotifyAccessTokenForUser(
   user: UserWithId,
   accessToken: string,
   refreshToken: string,
   expiresAt: Date
-): Promise<AccessToken> {
+): Promise<SpotifyAccessToken> {
   const userIdService = getUserIdService(user);
   const response = await prisma.accessToken.upsert({
     where: { userIdService },
@@ -77,12 +50,12 @@ export async function storeSpotifyAccessToken(
  * Retrieves a Spotify access token for a user from the database.
  *
  * @param {UserWithId} user - The user object, which must include an id.
- * @returns {Promise<AccessToken | null>} A promise that resolves to an object containing the stored access token, refresh token, expiration date, and the service name ("SPOTIFY"). If no access token is found, resolves to null.
+ * @returns {Promise<SpotifyAccessToken | null>} A promise that resolves to an object containing the stored access token, refresh token, expiration date, and the service name ("SPOTIFY"). If no access token is found, resolves to null.
  * @throws {Error} Will throw an error if the database operation fails.
  */
-export async function getSpotifyAccessToken(
+export async function getSpotifyAccessTokenForUser(
   user: UserWithId
-): Promise<AccessToken | null> {
+): Promise<SpotifyAccessToken | null> {
   const userIdService = getUserIdService(user);
 
   const accessToken = await prisma.accessToken.findUnique({
@@ -101,43 +74,26 @@ export async function getSpotifyAccessToken(
   };
 }
 
-/**
- * Retrieves a new Spotify access token for the user, using the refresh token.
- * Stores the new token in the database.
- *
- * @param {AccessToken} accessToken - The current access token object, which includes the refresh token.
- * @returns {Promise<AccessToken>} A promise that resolves to an object containing the new access token, the same refresh token, the new expiration date, and the service name ("SPOTIFY").
- * @throws {Error} Will throw an error if the request to the Spotify API fails, or if storing the new access token in the database fails.
- */
-export async function refreshSpotifyToken(
-  accessToken: AccessToken,
-  user: UserWithId
-): Promise<AccessToken> {
-  const response = await fetch("https://accounts.spotify.com/api/token", {
-    method: "POST",
-    headers: {
-      "content-type": "application/x-www-form-urlencoded",
-      Authorization:
-        "Basic " +
-        Buffer.from(getClientId() + ":" + getClientSecret()).toString("base64"),
-    },
-    body: new URLSearchParams({
-      grant_type: "refresh_token",
-      refresh_token: accessToken.refreshToken,
-    }),
-  });
-  const body = (await response.json()) as SpotifyAccessTokenResponse;
-
-  const newAccessToken = await storeSpotifyAccessToken(
-    user,
-    body.access_token,
-    accessToken.refreshToken,
-    new Date(Date.now() + body.expires_in * 1000)
-  );
-
-  return newAccessToken;
-}
-
 function getUserIdService(user: UserWithId): string {
   return `${user.id}-SPOTIFY`;
+}
+
+export function convertSpotifyTrackFeaturesResponseToTrackFeatures(
+  response: SpotifyAudioFeaturesResponse
+): TrackFeatures {
+  return {
+    acousticness: response.acousticness,
+    danceability: response.danceability,
+    durationMs: response.duration_ms,
+    energy: response.energy,
+    instrumentalness: response.instrumentalness,
+    key: response.key,
+    liveness: response.liveness,
+    loudness: response.loudness,
+    mode: response.mode === 1 ? "Major" : "Minor",
+    speechiness: response.speechiness,
+    tempo: response.tempo,
+    timeSignature: response.time_signature,
+    valence: response.valence,
+  };
 }
