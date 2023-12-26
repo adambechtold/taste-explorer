@@ -193,19 +193,9 @@ export async function getTrackByNameAndArtistName(
     );
   }
 
-  // Track not found in the database. Search Spotify.
-  const accessToken = await SpotifyService.getAccessToken({
-    id: 1, // TODO: Consider which access token to use when performing backend search operations.
-  } as UserWithId);
-
-  if (!accessToken) {
-    throw new TypedError(
-      "No access token found for user. Login with spotify to continue.",
-      400
-    );
-  }
-
   try {
+    const accessToken = await getSpotifyAccessToken();
+
     const track = await SpotifyService.getTrackFromTrackAndArtist(
       accessToken,
       trackName,
@@ -230,4 +220,44 @@ export async function getTrackByNameAndArtistName(
     );
     return null;
   }
+}
+
+/**
+ * This function adds features to an array of tracks and stores them.
+ *
+ * @param {TrackWithId[]} tracks - An array of tracks to which features will be added.
+ * @returns {Promise<TrackWithId[]>} - A promise that resolves to an array of tracks with features.
+ */
+export async function addFeaturesToTracks(
+  tracks: TrackWithId[]
+): Promise<TrackWithId[]> {
+  const accessToken = await getSpotifyAccessToken();
+  const tracksWithFeatures = await SpotifyService.addFeaturesToTracks(
+    accessToken,
+    tracks
+  );
+
+  const prismaTracks = await Promise.all(
+    tracksWithFeatures.map((track) => MusicStorage.upsertTrack(track))
+  );
+
+  return prismaTracks.map((prismaTrack) =>
+    MusicUtils.convertPrismaTrackAndArtistsToTrack(prismaTrack, [])
+  );
+}
+
+async function getSpotifyAccessToken() {
+  // Track not found in the database. Search Spotify.
+  const accessToken = await SpotifyService.getAccessToken({
+    id: 1, // TODO: Consider which access token to use when performing backend search operations.
+  } as UserWithId);
+
+  if (!accessToken) {
+    throw new TypedError(
+      "No access token found for user. Login with spotify to continue.",
+      400
+    );
+  }
+
+  return accessToken;
 }
