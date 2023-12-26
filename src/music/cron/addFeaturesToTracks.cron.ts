@@ -30,7 +30,9 @@ async function addFeaturesToTracks() {
 
   let tracksWithFeatures: TrackWithId[] = [];
   try {
+    console.log("start");
     tracksWithFeatures = await MusicService.addFeaturesToTracks(tracks);
+    console.log("success");
   } catch (error: any) {
     if (error instanceof TooManyRequestsError) {
       const retryAfter = error.retryAfter ? error.retryAfter : 5 * 60;
@@ -40,7 +42,9 @@ async function addFeaturesToTracks() {
       pauseTask(addFeaturesToTracksTask, retryAfter);
       return;
     }
-    throw error;
+    console.log("Something went wrong. Stopping Task.");
+    console.error(error);
+    addFeaturesToTracksTask.stop();
   }
 
   const { totalTracks, tracksWithFeatures: numTracksWithFeatures } =

@@ -9,6 +9,17 @@
       "request": "attach",
       "name": "Attach to Server",
       "port": 9229
+    },
+    {
+      "name": "Add Features to Tracks",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["--nolazy", "-r", "ts-node/register/transpile-only"],
+      "args": ["src/music/cron/addFeaturesToTracks.cron.ts"],
+      "cwd": "${workspaceRoot}",
+      "internalConsoleOptions": "openOnSessionStart",
+      "skipFiles": ["<node_internals>/**", "node_modules/**"]
     }
   ]
 }

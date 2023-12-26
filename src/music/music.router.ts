@@ -5,6 +5,7 @@ import { handleErrorResponse } from "../utils/response.utils";
 
 import * as PlaylistService from "./playlists/playlists.service";
 import * as MusicService from "./music.service";
+import * as MusicUtils from "./music.utils";
 
 import {
   PreferenceType,
@@ -136,3 +137,44 @@ musicRouter.get(
     }
   }
 );
+
+musicRouter.get("/track-features/:trackId", async (req, res) => {
+  try {
+    const trackIdParam = req.params.trackId;
+
+    if (!trackIdParam) {
+      throw new TypedError("Track ID is required", 400);
+    }
+
+    const trackId = parseInt(trackIdParam);
+
+    if (isNaN(trackId)) {
+      throw new TypedError("Track ID must be a number", 400);
+    }
+
+    const prismaTrack = await prisma.track.findUnique({
+      where: {
+        id: trackId,
+      },
+    });
+
+    if (!prismaTrack) {
+      throw TypedError.create("Could not find track", 404);
+    }
+
+    const track = MusicUtils.convertPrismaTrackAndArtistsToTrack(
+      prismaTrack,
+      []
+    );
+
+    const trackFeatures = await MusicService.addFeaturesToTracks([track]);
+
+    if (!trackFeatures) {
+      throw TypedError.create("Could not find track features", 404);
+    }
+
+    res.status(200).send(trackFeatures);
+  } catch (e: any) {
+    handleErrorResponse(e, res);
+  }
+});

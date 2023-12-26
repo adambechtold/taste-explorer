@@ -115,27 +115,26 @@ export async function addFeaturesToTracks(
     trackSpotifyIds
   );
 
-  const tracksWithFeatures = trackFeaturesResponse.audio_features.map(
-    (trackFeatures) => {
-      const trackIndex = tracks.findIndex(
-        (t) => t.spotifyId === trackFeatures.id
-      );
+  const trackFeatures = trackFeaturesResponse.audio_features.filter(
+    (f) => f !== null
+  );
 
-      if (trackIndex === -1) {
-        throw new Error(
-          `Track with spotifyId ${trackFeatures.id} not found in tracks array.`
-        );
-      }
-      const track = { ...tracks[trackIndex] };
+  const tracksWithFeatures = tracks.map((track) => {
+    const featuresForTrack = trackFeatures.find(
+      (t) => t.id === track.spotifyId
+    );
 
+    if (!featuresForTrack) {
+      console.warn("Audio features not found for track", track.spotifyId);
+    } else {
       track.features =
         SpotifyUtils.convertSpotifyTrackFeaturesResponseToTrackFeatures(
-          trackFeatures
+          featuresForTrack
         );
-
-      return track;
     }
-  );
+
+    return track;
+  });
 
   return tracksWithFeatures;
 }
