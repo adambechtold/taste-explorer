@@ -138,3 +138,18 @@ export async function addFeaturesToTracks(
 
   return tracksWithFeatures;
 }
+
+/**
+ * Play the Specified Track for the Given User
+ */
+export async function playTrack(
+  accessToken: SpotifyAccessToken,
+  track: TrackWithId
+) {
+  const spotifyApi = new SpotifyApi(accessToken);
+
+  const trackUri = `spotify:track:${track.spotifyId}`;
+  const playResponse = await spotifyApi.startOrResumePlaybackState([trackUri]);
+
+  return playResponse;
+}
