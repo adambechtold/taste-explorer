@@ -48,7 +48,7 @@ export async function upsertTrack(
     where: { spotifyId },
     update: {
       ...rest,
-      //...features,
+      ...features,
       artists: {
         connect: savedArtists.map((artist) => ({ id: artist.id })),
       },

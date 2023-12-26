@@ -132,7 +132,7 @@ export default class SpotifyApi {
   }
 
   async getTracksFeatures(
-    ids: string[]
+    spotifyIds: string[]
   ): Promise<SpotifyAudioFeaturesBatchResponse> {
     if (!this.accessToken) {
       throw new Error("No access token set");
@@ -141,7 +141,7 @@ export default class SpotifyApi {
       this.accessToken = await this.refreshAccessToken();
     }
 
-    return getTracksFeatures(this.accessToken, ids);
+    return getTracksFeatures(this.accessToken, spotifyIds);
   }
 }
 
@@ -301,6 +301,14 @@ export async function getTracksFeatures(
   );
 
   if (!response.ok) {
+    if (response.status === 429) {
+      const retryAfterHeader = response.headers.get("Retry-After");
+      throw new TooManyRequestsError(
+        "Too many requests to Spotify API",
+        retryAfterHeader ? parseInt(retryAfterHeader) : undefined
+      );
+    }
+
     throw new Error("Error getting tracks features: " + response.statusText);
   }
 

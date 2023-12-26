@@ -4,7 +4,7 @@ import { TypedError } from "../errors/errors.types";
 
 import * as SpotifyUtils from "./spotify.utils";
 import SpotifyApi from "./spotify.api";
-import { Track } from "../music/music.types";
+import { Track, TrackWithId } from "../music/music.types";
 
 /**
  * Handles the callback from the Spotify login process, exchanging the authorization code for an access token.
@@ -96,4 +96,46 @@ export async function getTrackFromTrackAndArtist(
   }
 
   return selectedTrack;
+}
+
+/**
+ * Add track features to the tracks provided.
+ *
+ * @param {TrackWithId[]} tracks - Tracks with or without features.
+ * @returns {TrackWithId[]} - Tracks with features.
+ */
+export async function addFeaturesToTracks(
+  access_token: SpotifyAccessToken,
+  tracks: TrackWithId[]
+) {
+  const spotifyApi = new SpotifyApi(access_token);
+
+  const trackSpotifyIds = tracks.map((track) => track.spotifyId);
+  const trackFeaturesResponse = await spotifyApi.getTracksFeatures(
+    trackSpotifyIds
+  );
+
+  const tracksWithFeatures = trackFeaturesResponse.audio_features.map(
+    (trackFeatures) => {
+      const trackIndex = tracks.findIndex(
+        (t) => t.spotifyId === trackFeatures.id
+      );
+
+      if (trackIndex === -1) {
+        throw new Error(
+          `Track with spotifyId ${trackFeatures.id} not found in tracks array.`
+        );
+      }
+      const track = { ...tracks[trackIndex] };
+
+      track.features =
+        SpotifyUtils.convertSpotifyTrackFeaturesResponseToTrackFeatures(
+          trackFeatures
+        );
+
+      return track;
+    }
+  );
+
+  return tracksWithFeatures;
 }
