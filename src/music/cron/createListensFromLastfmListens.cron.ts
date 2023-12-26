@@ -1,44 +1,21 @@
-import { PrismaClient } from "@prisma/client";
 import cron from "node-cron";
-import { triggerUpdateListenHistoryByUserId } from "../users/users.service";
-import { getTrackFromLastfmListenId } from "./music.service";
-import { Track } from "./music.types";
-import { TooManyRequestsError } from "../errors/errors.types";
+import { PrismaClient } from "@prisma/client";
 
-const prisma = new PrismaClient();
+import { pauseTask } from "../../utils/cron.utils";
 
-console.log("scheduling Update Listening History to run every day at 9:00am");
-cron.schedule("0 9 * * *", updateListenHistory);
-console.log("scheduling Research Next Lastfm Listen to run every second");
+import * as MusicService from "../music.service";
+import { Track } from "../music.types";
+import { TooManyRequestsError } from "../../errors/errors.types";
+
+const prisma = new PrismaClient({ log: ["error"] });
+
+console.log("Research Next Lastfm Listen will run every second");
 const researchListensTask = cron.schedule(
   "*/1 * * * * *",
-  researchNextLastfmListen
+  createListensFromLastfmListens
 );
 
-const pauseTask = (task: cron.ScheduledTask, seconds: number) => {
-  task.stop();
-  setTimeout(() => {
-    task.start();
-  }, seconds * 1000);
-};
-
-async function updateListenHistory() {
-  console.log("updating listen history for all users");
-  const allUserIds = (
-    await prisma.user.findMany({
-      select: {
-        id: true,
-      },
-    })
-  ).map((user) => user.id);
-
-  allUserIds.forEach(async (userId) => {
-    const response = await triggerUpdateListenHistoryByUserId(userId);
-    console.log(response);
-  });
-}
-
-async function researchNextLastfmListen() {
+async function createListensFromLastfmListens() {
   const nextLastfmListen = await getNextLastfmListenToResearch();
   if (nextLastfmListen === null) {
     console.log("no more last.fm listens to research");
@@ -53,16 +30,18 @@ async function researchNextLastfmListen() {
   );
   let track: Track | null = null;
   try {
-    await markAnalyzedStatus(nextLastfmListen.lastfmId, true);
+    await markAnalysisStatus(nextLastfmListen.lastfmId, true);
 
-    track = await getTrackFromLastfmListenId(nextLastfmListen.lastfmId);
+    track = await MusicService.getTrackFromLastfmListenId(
+      nextLastfmListen.lastfmId
+    );
   } catch (error) {
     if (error instanceof TooManyRequestsError) {
       const retryAfter = error.retryAfter ? error.retryAfter : 5 * 60;
       console.log(
         `...too many requests, pausing research task for ${retryAfter} seconds`
       );
-      markAnalyzedStatus(nextLastfmListen.lastfmId, false);
+      markAnalysisStatus(nextLastfmListen.lastfmId, false);
       pauseTask(researchListensTask, retryAfter);
       return;
     }
@@ -73,11 +52,11 @@ Something went wrong while researching lastfm listen id ${nextLastfmListen.lastf
 ${error}
 ============================================================`);
 
-    markAnalyzedStatus(nextLastfmListen.lastfmId, false);
+    markAnalysisStatus(nextLastfmListen.lastfmId, false);
     return;
   }
 
-  await markAnalyzedStatus(nextLastfmListen.lastfmId, true);
+  await markAnalysisStatus(nextLastfmListen.lastfmId, true);
 
   if (!track) {
     console.log("...track not found");
@@ -119,7 +98,7 @@ ${track ? "Track Found" : "Track Not Found"}
 `);
 }
 
-const markAnalyzedStatus = async (lastfmId: number, status: boolean) => {
+const markAnalysisStatus = async (lastfmId: number, status: boolean) => {
   return await prisma.lastfmListen.update({
     where: {
       id: lastfmId,
@@ -130,6 +109,7 @@ const markAnalyzedStatus = async (lastfmId: number, status: boolean) => {
   });
 };
 
+// ================== UTILS TO FIND THE NEXT ITEM TO RESEARCH =========================
 async function getNextLastfmListenToResearch() {
   const lastfmTracks = (await prisma.$queryRaw`
     SELECT track, min(lastfmId) AS minLastfmId, count(lastfmId) AS listenCount
