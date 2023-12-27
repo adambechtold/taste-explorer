@@ -106,15 +106,26 @@ export async function getTrackFromLastfmListenId(
   } catch (error) {
     if (error instanceof TypedError) {
       if (error.status === 404) {
-        console.log("track not found. Marking lastfm listen as analyzed.");
-        await prisma.lastfmListen.update({
+        console.log(
+          "track not found. Marking lastfm listen as analyzed, as well as any other listens with the same track name and artist name"
+        );
+        const result = await prisma.lastfmListen.updateMany({
           where: {
-            id: lastfmListenId,
+            OR: [
+              { id: lastfmListenId },
+              {
+                AND: [
+                  { trackName: lastfmListens[0].trackName },
+                  { artistName: lastfmListens[0].artistName },
+                ],
+              },
+            ],
           },
           data: {
             analyzedAt: new Date(),
           },
         });
+        console.log(`Marked ${result.count} listens as analyzed.`);
       } else {
         throw error;
       }
