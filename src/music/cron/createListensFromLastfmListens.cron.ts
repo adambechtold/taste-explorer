@@ -19,7 +19,12 @@ const researchListensTask = cron.schedule(
 async function createListensFromLastfmListens() {
   const nextLastfmListen = await getNextLastfmListenToResearch();
   if (nextLastfmListen === null) {
-    console.log("no more last.fm listens to research");
+    console.log(
+      `no more last.fm listens to research. Pausing for 5 minutes. It will run at ${new Date(
+        Date.now() + 5 * 60 * 1000
+      ).toLocaleTimeString()}`
+    );
+    pauseTask(researchListensTask, 5 * 60);
     return;
   }
 
