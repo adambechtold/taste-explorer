@@ -5,8 +5,8 @@ import { triggerUpdateListenHistoryByUserId } from "../../users/users.service";
 
 const prisma = new PrismaClient({ log: ["error"] });
 
-console.log("Update Listening History will run every day at 9:00am");
-cron.schedule("0 9 * * *", updateListenHistory);
+console.log("Update Listening History every 5 minutes");
+cron.schedule("*/5 * * * *", updateListenHistory);
 
 async function updateListenHistory() {
   console.log("updating listen history for all users");
