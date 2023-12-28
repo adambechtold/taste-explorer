@@ -8,6 +8,7 @@ import { Track } from "../music.types";
 import { TooManyRequestsError } from "../../errors/errors.types";
 
 const prisma = new PrismaClient({ log: ["error"] });
+const separator = "=".repeat(60);
 
 console.log("Research Next Lastfm Listen will run every second");
 const researchListensTask = cron.schedule(
@@ -45,25 +46,33 @@ async function createListensFromLastfmListens() {
       pauseTask(researchListensTask, retryAfter);
       return;
     }
-
+    const progress = await getProgress();
     console.log(`
-============================================================
+${separator}
 Something went wrong while researching lastfm listen id ${nextLastfmListen.lastfmId}, ${nextLastfmListen.track}
-${error}
-============================================================`);
+${error}`);
+
+    console.table(progress);
+    console.log(separator);
 
     markAnalysisStatus(nextLastfmListen.lastfmId, false);
     return;
   }
 
   await markAnalysisStatus(nextLastfmListen.lastfmId, true);
+  const progress = await getProgress();
 
-  if (!track) {
-    console.log("...track not found");
-  } else {
-    console.log("...track found");
+  console.log(`
+${separator}
+Completed Research for Lastfm Listen Id: ${nextLastfmListen.lastfmId}: ${
+    nextLastfmListen.track
   }
+${track ? "Track Found" : "Track Not Found"}`);
+  console.table(progress);
+  console.log(separator);
+}
 
+async function getProgress() {
   const [
     numberOfLastfmListens,
     numberOfListens,
@@ -77,25 +86,21 @@ ${error}
       },
     }),
   ]);
-  const percentComplete = (
-    (numberOfListens / numberOfLastfmListens) *
-    100
-  ).toFixed(4);
 
-  console.log(`
-============================================================
-Completed Research for Lastfm Listen Id: ${nextLastfmListen.lastfmId}: ${
-    nextLastfmListen.track
-  }
-${track ? "Track Found" : "Track Not Found"}
-
-  Progress:
-  ...total lastfm listens:       ${numberOfLastfmListens}
-  ...total listens:              ${numberOfListens}
-  ...percent coverage:           ${percentComplete}%
-  ...# remaining lastfm listens: ${numberOfLastfmListensNotAnalyzed}
-============================================================
-`);
+  return {
+    "Total Lastfm Listens": numberOfLastfmListens,
+    "Total Listens": numberOfListens,
+    "Remaining Lastfm Listens": numberOfLastfmListensNotAnalyzed,
+    "Percent of LastfmListens with Listens": `${(
+      (numberOfListens / numberOfLastfmListens) *
+      100
+    ).toFixed(4)}%`,
+    "Percent of LastfmListens Analyzed": `${(
+      ((numberOfLastfmListens - numberOfLastfmListensNotAnalyzed) /
+        numberOfLastfmListens) *
+      100
+    ).toFixed(4)}%`,
+  };
 }
 
 const markAnalysisStatus = async (lastfmId: number, status: boolean) => {
