@@ -41,6 +41,8 @@ async function createListensFromLastfmListens() {
     track = await MusicService.getTrackFromLastfmListenId(
       nextLastfmListen.lastfmId
     );
+
+    await markAnalysisStatus(nextLastfmListen.lastfmId, false);
   } catch (error) {
     if (error instanceof TooManyRequestsError) {
       const retryAfter = error.retryAfter ? error.retryAfter : 5 * 60;
