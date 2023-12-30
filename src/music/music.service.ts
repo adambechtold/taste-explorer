@@ -9,6 +9,7 @@ import * as LastfmService from "../lastfm/lastfm.service";
 import * as SpotifyService from "../spotify/spotify.service";
 import * as MusicUtils from "./music.utils";
 import * as MusicStorage from "./music.storage";
+import { markUserUpdatingHistoryStatus } from "../users/users.storage";
 
 const prisma = new PrismaClient({ log: ["error"] });
 
@@ -35,8 +36,40 @@ export async function triggerUpdateListensForUser(
     userWithLastfmAccount
   );
 
+  // END
+  lastfmUpdateTracker.onEnd(() => {
+    prisma.user
+      .update({
+        where: {
+          id: user.id,
+        },
+        data: {
+          lastUpdatedListeningHistoryAt: new Date(),
+          isUpdatingListeningHistory: false,
+        },
+      })
+      .then((user) => {
+        // for some reason, having the ".then..." clause makes this
+        // change actually affect the database. Without it, the change
+        // is not persisted.
+        console.log("Finished updating  user");
+        console.dir(user, { depth: 3 });
+      })
+      .catch((error) => {
+        console.log("something went wrong updating the user", error);
+      });
+  });
+
+  // ERROR
+  lastfmUpdateTracker.onError((error) => {
+    console.error(error);
+    markUserUpdatingHistoryStatus(user.id, false);
+  });
+
+  // START
   return new Promise((resolve, reject) => {
     lastfmUpdateTracker.onStart((size) => {
+      markUserUpdatingHistoryStatus(user.id, true);
       resolve(size);
     });
   });

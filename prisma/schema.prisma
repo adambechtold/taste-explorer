@@ -12,6 +12,12 @@ model User {
   id            Int            @id @default(autoincrement())
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
+
+  // Organize Cron Jobs
+  lastUpdatedListeningHistoryAt DateTime?
+  isUpdatingListeningHistory    Boolean @default(false)
+
+  // Relationships
   lastfmAccount LastfmAccount?
   LastfmListen  LastfmListen[]
   Listen        Listen[]

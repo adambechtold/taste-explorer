@@ -1,5 +1,6 @@
 import cron from "node-cron";
 import { PrismaClient } from "@prisma/client";
+import { PrismaTransactionClient } from "../../utils/prisma.types";
 
 import { pauseTask } from "../../utils/cron.utils";
 
@@ -10,11 +11,6 @@ import { TooManyRequestsError } from "../../errors/errors.types";
 
 const prisma = new PrismaClient({ log: ["error"] });
 const separator = "=".repeat(60);
-
-type PrismaTransactionClient = Omit<
-  PrismaClient,
-  "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends"
->;
 
 export async function createListensFromLastfmListens(task: cron.ScheduledTask) {
   const nextLastfmListen = await getNextLastfmListenToResearch();
