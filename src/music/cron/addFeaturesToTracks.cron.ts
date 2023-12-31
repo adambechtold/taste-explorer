@@ -9,9 +9,9 @@ import { pauseTask } from "../../utils/cron.utils";
 
 const prisma = new PrismaClient({ log: ["error"] });
 
-console.log("schedule Research Track Features to run 10 seconds");
+console.log("schedule Research Track Features to run every 2 minutes");
 const addFeaturesToTracksTask = cron.schedule(
-  "*/10 * * * * *",
+  "*/2 * * * *",
   addFeaturesToTracks
 );
 

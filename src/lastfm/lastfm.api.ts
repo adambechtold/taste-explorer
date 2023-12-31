@@ -71,7 +71,8 @@ export async function getRecentTracks(
   username: string,
   pageNumber: number = 1,
   limit: number = 200,
-  from?: Date
+  from?: Date,
+  attempts: number = 0
 ): Promise<LastfmGetRecentTracksResponse> {
   if (process.env.VERBOSE === "true") {
     console.log("getting recent tracks from lastfm");
@@ -110,6 +111,16 @@ export async function getRecentTracks(
     if (response.status !== 200) {
       console.error(`Response code ${response.status} from lastfm:`);
       console.dir(await response.json(), { depth: null });
+
+      if (response.status === 500 && attempts < 3) {
+        console.log("retrying...");
+        return getRecentTracks(username, pageNumber, limit, from, attempts + 1);
+      }
+
+      if (response.status === 429) {
+        throw TypedError.create("Too many requests to last.fm", 429);
+      }
+
       throw new Error(
         `Response code ${response.status} from lastfm: ${await response.json()}`
       );
