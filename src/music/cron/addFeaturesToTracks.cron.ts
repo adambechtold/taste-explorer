@@ -9,14 +9,17 @@ import { pauseTask } from "../../utils/cron.utils";
 
 const prisma = new PrismaClient({ log: ["error"] });
 
-console.log("schedule Research Track Features to run every minute");
-const addFeaturesToTracksTask = cron.schedule("* * * * *", addFeaturesToTracks);
+console.log("schedule Research Track Features to run every 2 minutes");
+const addFeaturesToTracksTask = cron.schedule(
+  "*/2 * * * *",
+  addFeaturesToTracks
+);
 
 async function addFeaturesToTracks() {
   const tracks = await getNextTracksToResearch();
   console.log(
     "researching tracks",
-    tracks.map((track) => track.spotifyId),
+    tracks.map((track) => track.spotifyId)
   );
 
   if (tracks.length === 0) {
@@ -32,7 +35,7 @@ async function addFeaturesToTracks() {
     if (error instanceof TooManyRequestsError) {
       const retryAfter = error.retryAfter ? error.retryAfter : 5 * 60;
       console.log(
-        `...too many requests, pausing research task for ${retryAfter} seconds`,
+        `...too many requests, pausing research task for ${retryAfter} seconds`
       );
       pauseTask(addFeaturesToTracksTask, retryAfter);
       return;
@@ -121,6 +124,6 @@ export async function getNextTracksToResearch(): Promise<TrackWithId[]> {
   });
 
   return prismaTracks.map((prismaTrack) =>
-    convertPrismaTrackAndArtistsToTrack(prismaTrack, []),
+    convertPrismaTrackAndArtistsToTrack(prismaTrack, [])
   );
 }

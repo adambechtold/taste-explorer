@@ -52,8 +52,7 @@ export async function triggerUpdateListensForUser(
         // for some reason, having the ".then..." clause makes this
         // change actually affect the database. Without it, the change
         // is not persisted.
-        console.log("Finished updating  user");
-        console.dir(user, { depth: 3 });
+        console.log("Finished updating user's listening history");
       })
       .catch((error) => {
         console.log("something went wrong updating the user", error);

@@ -19,6 +19,10 @@ export async function markAllUsersAsNotUpdating() {
   });
 }
 
+/**
+ *
+ * @param {cron.ScheduledTask} task
+ */
 export async function updateListenHistory(task: cron.ScheduledTask) {
   const numberOfUsersBeingUpdated = await getNumberOfUsersBeingUpdated();
 
@@ -39,12 +43,16 @@ export async function updateListenHistory(task: cron.ScheduledTask) {
   const response = await triggerUpdateListenHistoryByUserId(user.id);
 
   console.log({
-    message: "updated user",
+    message: "updating user",
     userId: user.id,
     listensToImport: response.listensToImport,
   });
 }
 
+/**
+ *
+ * @returns the number of users that are currently being updated
+ */
 function getNumberOfUsersBeingUpdated(): Promise<number> {
   return prisma.user.count({
     where: {
