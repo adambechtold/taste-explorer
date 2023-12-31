@@ -62,23 +62,41 @@ function getNumberOfUsersBeingUpdated(): Promise<number> {
 }
 
 export async function getNextUserToUpdate(): Promise<User | null> {
-  const users = (await prisma.$queryRaw`
-    SELECT
-      * 
-    FROM 
-      User
-    ORDER BY 
-      lastUpdatedListeningHistoryAt ASC
-    LIMIT 1
-    FOR UPDATE SKIP LOCKED;
-  `) as User[];
+  return await prisma.$transaction(async (tx) => {
+    const users = (await tx.$queryRaw`
+      SELECT
+        * 
+      FROM 
+        User
+      WHERE 
+        isUpdatingListeningHistory = false
+      ORDER BY 
+        lastUpdatedListeningHistoryAt ASC
+      LIMIT 1
+      FOR UPDATE SKIP LOCKED;
+    `) as User[];
 
-  if (users.length === 0) {
-    return null;
-  }
+    if (users.length === 0) {
+      return null;
+    }
 
-  // mark user as updating; This will be undone when the update is complete
-  await markUserUpdatingHistoryStatus(users[0].id, true);
+    let user = users[0];
 
-  return users[0];
+    // mark user as updating; This will be undone when the update is complete
+    await tx.$executeRaw`UPDATE User SET isUpdatingListeningHistory = true WHERE id = ${user.id};`;
+
+    const updatedUserStateResponse = await tx.user.findUnique({
+      where: {
+        id: user.id,
+      },
+    });
+
+    if (!updatedUserStateResponse) {
+      throw new Error(`Could not find user with id ${user.id}`);
+    }
+
+    user = updatedUserStateResponse;
+
+    return user;
+  });
 }
