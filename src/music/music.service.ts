@@ -41,7 +41,6 @@ export async function triggerUpdateListensForUser(
 
   // END
   lastfmUpdateTracker.onEnd(() => {
-    console.log("Mark as not updating because of end from music service!");
     hasFinished = true;
     sleep(10).then(() => {
       // TODO: Remove this sleep. Find a more robust way of ensuring the onEnd event runs after onStart (or onStart doesn't update analysis status)
@@ -52,14 +51,12 @@ export async function triggerUpdateListensForUser(
   // ERROR
   lastfmUpdateTracker.onError((error) => {
     console.error(error);
-    console.log("Mark as not updating because of error from music service!");
     markUserUpdatingHistoryStatus(user.id, false);
   });
 
   // START
   return new Promise((resolve, reject) => {
     lastfmUpdateTracker.onStart((size) => {
-      console.log("Mark as updating from music service!");
       if (!hasFinished) {
         markUserUpdatingHistoryStatus(user.id, true);
       }

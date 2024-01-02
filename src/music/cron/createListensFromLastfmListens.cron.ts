@@ -12,7 +12,12 @@ import { TooManyRequestsError } from "../../errors/errors.types";
 const prisma = new PrismaClient({ log: ["error"] });
 const separator = "=".repeat(60);
 
-export async function createListensFromLastfmListens(task: cron.ScheduledTask) {
+// uncomment for debugging
+// createListensFromLastfmListens();
+
+export async function createListensFromLastfmListens(
+  task: cron.ScheduledTask | undefined = undefined
+) {
   const nextLastfmListen = await getNextLastfmListenToResearch();
   if (nextLastfmListen === null) {
     console.log(
@@ -20,7 +25,7 @@ export async function createListensFromLastfmListens(task: cron.ScheduledTask) {
         Date.now() + 5 * 60 * 1000
       ).toLocaleTimeString()}`
     );
-    pauseTask(task, 5 * 60);
+    if (task) pauseTask(task, 5 * 60);
     return;
   }
 
@@ -40,10 +45,11 @@ export async function createListensFromLastfmListens(task: cron.ScheduledTask) {
         `...too many requests, pausing research task for ${retryAfter} seconds`
       );
       markAnalysisStatus(nextLastfmListen.id, false);
-      pauseTask(task, retryAfter);
+      if (task) pauseTask(task, retryAfter);
       return;
     }
 
+    /* REMOVED BECAUSE IT TAKES TOO LONG
     const progress = await getProgress();
     console.log(`
 ${separator}
@@ -52,11 +58,12 @@ ${error}`);
 
     console.table(progress);
     console.log(separator);
-
+    */
     markAnalysisStatus(nextLastfmListen.id, false);
     return;
   }
 
+  /* REMOVED BECAUSE IT TAKES TOO LONG
   const progress = await getProgress();
 
   console.log(`
@@ -67,6 +74,7 @@ Completed Research for Lastfm Listen Id: ${nextLastfmListen.id}: ${
 ${track ? "Track Found" : "Track Not Found"}`);
   console.table(progress);
   console.log(separator);
+ */
 }
 
 async function getProgress() {
