@@ -3,19 +3,19 @@ generator client {
 }
 
 datasource db {
-  provider     = "mysql"
-  url          = env("DATABASE_URL")
-  relationMode = "prisma"
+  provider          = "mysql"
+  url               = env("DATABASE_URL")
+  relationMode      = "prisma"
 }
 
 model User {
-  id            Int            @id @default(autoincrement())
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Organize Cron Jobs
   lastUpdatedListeningHistoryAt DateTime?
-  isUpdatingListeningHistory    Boolean @default(false)
+  isUpdatingListeningHistory    Boolean   @default(false)
 
   // Relationships
   lastfmAccount LastfmAccount?
@@ -64,6 +64,8 @@ model LastfmListen {
   Listen Listen?
 
   @@index([userId], map: "LastfmListen_userId")
+  @@index([trackName, artistName], map: "LastfmListen_trackName_artistName")
+  @@index([isBeingAnalyzed], map: "LastfmListen_isBeingAnalyzed")
 }
 
 model Listen {
@@ -92,12 +94,12 @@ model Track {
 
   // Track Metadata
   name      String
-  spotifyId String   @unique
+  spotifyId String  @unique
   imageUrl  String?
 
   // Relationships
-  artists   Artist[]
-  listens   Listen[]
+  artists Artist[]
+  listens Listen[]
 
   // External Ids
   mbid                       String? // @unique
