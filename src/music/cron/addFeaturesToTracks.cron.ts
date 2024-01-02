@@ -4,12 +4,13 @@ import { TooManyRequestsError } from "../../errors/errors.types";
 import { TrackWithId } from "../music.types";
 import * as MusicService from "../music.service";
 import { convertPrismaTrackAndArtistsToTrack } from "../music.utils";
+import { log } from "../../utils/log.utils";
 
 import { pauseTask } from "../../utils/cron.utils";
 
 const prisma = new PrismaClient({ log: ["error"] });
 
-console.log("schedule Research Track Features to run every 2 minutes");
+log("schedule Research Track Features to run every 2 minutes");
 const addFeaturesToTracksTask = cron.schedule(
   "*/2 * * * *",
   addFeaturesToTracks
@@ -17,13 +18,13 @@ const addFeaturesToTracksTask = cron.schedule(
 
 async function addFeaturesToTracks() {
   const tracks = await getNextTracksToResearch();
-  console.log(
+  log(
     "researching tracks",
     tracks.map((track) => track.spotifyId)
   );
 
   if (tracks.length === 0) {
-    console.log("no more tracks to research");
+    log("no more tracks to research");
     pauseTask(addFeaturesToTracksTask, 60 * 5); // pause for 5 minutes
     return;
   }
@@ -34,13 +35,13 @@ async function addFeaturesToTracks() {
   } catch (error: any) {
     if (error instanceof TooManyRequestsError) {
       const retryAfter = error.retryAfter ? error.retryAfter : 5 * 60;
-      console.log(
+      log(
         `...too many requests, pausing research task for ${retryAfter} seconds`
       );
       pauseTask(addFeaturesToTracksTask, retryAfter);
       return;
     }
-    console.log("Something went wrong. Stopping Task.");
+    log("Something went wrong. Stopping Task.");
     console.error(error);
     addFeaturesToTracksTask.stop();
   }
@@ -51,8 +52,8 @@ async function addFeaturesToTracks() {
     tracksAnalyzed: numTrackAnalyzed,
   } = await getCoverage();
 
-  console.log("============================================================");
-  console.log(`Added features to ${tracksWithFeatures.length} tracks`);
+  log("============================================================");
+  log(`Added features to ${tracksWithFeatures.length} tracks`);
   console.table({
     "Total Number of Tracks:": totalTracks,
     "Tracks With Features": numTracksWithFeatures,
@@ -66,7 +67,7 @@ async function addFeaturesToTracks() {
       100
     ).toFixed(4)}%`,
   });
-  console.log("============================================================");
+  log("============================================================");
 }
 
 async function getCoverage() {

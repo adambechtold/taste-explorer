@@ -7,6 +7,7 @@ dist/
 
 # Logs
 logs
+logs/
 *.log
 npm-debug.log*
 lerna-debug.log*
@@ -23,6 +24,7 @@ node_modules/
 # dotenv environment variable files
 .env
 .env.development.local
+.env.development.remote
 .env.test.local
 .env.production.local
 .env.local
@@ -33,3 +35,6 @@ node_modules/
 
 # Testing
 coverage/
+
+# Remote
+remote/

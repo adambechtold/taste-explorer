@@ -21,5 +21,7 @@ services:
       MYSQL_USER: developer
       MYSQL_PASSWORD: dev
       MYSQL_DATABASE: taste-explorer
+    # volumes:
+    #   - ./my.cnf:/etc/mysql/conf.d/my.cnfc
     ports:
       - "3307:3306"

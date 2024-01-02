@@ -43,14 +43,14 @@ function scheduleCreateListensTask() {
 }
 
 function scheduleUpdateListeningHistory() {
-  const intervalInSeconds = 5;
+  const intervalInMinutes = 10;
   console.log(
-    `Update Listening History will run every ${intervalInSeconds} seconds`
+    `Update Listening History will run every ${intervalInMinutes} minutes`
   );
   markAllUsersAsNotUpdating();
   let updateListenHistoryTask: cron.ScheduledTask;
   updateListenHistoryTask = cron.schedule(
-    `*/${intervalInSeconds} * * * * *`,
+    `*/${intervalInMinutes} * * * *`,
     () => updateListenHistory(updateListenHistoryTask)
   );
 }
