@@ -1,6 +1,7 @@
 import cron from "node-cron";
 import { PrismaClient } from "@prisma/client";
 import { PrismaTransactionClient } from "../../utils/prisma.types";
+import { log } from "../../utils/log.utils";
 
 import { pauseTask } from "../../utils/cron.utils";
 
@@ -10,7 +11,7 @@ import { LastfmListen } from "@prisma/client";
 import { TooManyRequestsError } from "../../errors/errors.types";
 
 const prisma = new PrismaClient({ log: ["error"] });
-const separator = "=".repeat(60);
+//const separator = "=".repeat(60);
 
 // uncomment for debugging
 // createListensFromLastfmListens();
@@ -20,16 +21,16 @@ export async function createListensFromLastfmListens(
 ) {
   const nextLastfmListen = await getNextLastfmListenToResearch();
   if (nextLastfmListen === null) {
-    console.log(
+    log(
       `no more last.fm listens to research. Pausing for 5 minutes. It will run at ${new Date(
         Date.now() + 5 * 60 * 1000
-      ).toLocaleTimeString()}`
+      ).toISOString()}`
     );
     if (task) pauseTask(task, 5 * 60);
     return;
   }
 
-  console.log(
+  log(
     "researching lastfm listen id",
     nextLastfmListen.id,
     `track: ${nextLastfmListen.trackName} by ${nextLastfmListen.artistName}`
@@ -41,8 +42,10 @@ export async function createListensFromLastfmListens(
   } catch (error) {
     if (error instanceof TooManyRequestsError) {
       const retryAfter = error.retryAfter ? error.retryAfter : 5 * 60;
-      console.log(
-        `...too many requests, pausing research task for ${retryAfter} seconds`
+      log(
+        `...too many requests, pausing research task for ${retryAfter} seconds. It will run at ${new Date(
+          Date.now() + retryAfter * 1000
+        ).toISOString()}}`
       );
       markAnalysisStatus(nextLastfmListen.id, false);
       if (task) pauseTask(task, retryAfter);
@@ -159,7 +162,7 @@ export async function getNextLastfmListenToResearch() {
 }
 
 export async function getNextLastfmListenToResearchBasedOnFrequencyOfListens() {
-  console.log("get next lastfm listen to research");
+  log("get next lastfm listen to research");
   return prisma.$transaction(async (tx) => {
     const lastfmTracks = (await tx.$queryRaw`
       SELECT 
@@ -202,7 +205,7 @@ export async function getNextLastfmListenToResearchBasedOnFrequencyOfListens() {
     }
 
     const lastfmListenId = Number(lastfmTracks[0].minLastfmId);
-    console.log("I'll search for lastfm listen id", lastfmListenId);
+    log("I'll search for lastfm listen id", lastfmListenId);
 
     await tx.$executeRaw`UPDATE LastfmListen SET isBeingAnalyzed = true WHERE id = ${Number(
       lastfmListenId

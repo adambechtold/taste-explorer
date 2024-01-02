@@ -1,8 +1,8 @@
 import cron from "node-cron";
 import { PrismaClient, User } from "@prisma/client";
+import { log } from "../../utils/log.utils";
 
 import { triggerUpdateListenHistoryByUserId } from "../../users/users.service";
-import { markUserUpdatingHistoryStatus } from "../../users/users.storage";
 
 const prisma = new PrismaClient({ log: ["error"] });
 
@@ -27,7 +27,7 @@ export async function updateListenHistory(task: cron.ScheduledTask) {
   const numberOfUsersBeingUpdated = await getNumberOfUsersBeingUpdated();
 
   if (numberOfUsersBeingUpdated >= maximumNumberOfUsersUpdatedInParallel) {
-    console.log(
+    log(
       `...${numberOfUsersBeingUpdated} users are being updated, skipping this run`
     );
     return;
@@ -36,13 +36,13 @@ export async function updateListenHistory(task: cron.ScheduledTask) {
   const user = await getNextUserToUpdate();
 
   if (user === null) {
-    console.log("no users to update");
+    log("no users to update");
     return;
   }
 
   const response = await triggerUpdateListenHistoryByUserId(user.id);
 
-  console.log({
+  log({
     message: "updating user",
     userId: user.id,
     listensToImport: response.listensToImport,
