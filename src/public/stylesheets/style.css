@@ -1,5 +1,6 @@
 :root {
   --primary-color: #007bff;
+  --primary-color-light: #cde5ff;
 }
 
 body {
@@ -62,11 +63,66 @@ a {
 .footer-container {
   position: fixed;
   bottom: 0;
-  right: 50%;
-  transform: translate(50%, 0);
+  right: 0;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  border-radius: 1rem 0 0 0;
+  background-color: var(--primary-color-light);
 
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+}
+
+.no-li-bullet-list {
+  list-style-type: none;
+  padding: 0;
+}
+
+.playlist-track-list {
+  li {
+    padding-bottom: 1rem;
+  }
+}
+
+/* Track */
+.track-container {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px;
+  gap: 1rem;
+  max-width: 30rem;
+}
+
+.track-image {
+  width: 5rem;
+  height: 5rem;
+  border-radius: 0.5rem;
+}
+
+.track-information {
+  display: flex;
+  flex-direction: column;
+  align-items: start;
+  justify-content: center;
+  width: 100%;
+
+  .track-title {
+    font-weight: bold;
+  }
+}
+
+.track-button-play {
+  width: 0;
+  height: 0;
+  border-bottom: 20px solid transparent; /* Adjust size as needed */
+  border-top: 20px solid transparent; /* Adjust size as needed */
+  border-left: 40px solid #000; /* Adjust size and color as needed */
+}
+
+.track-button-play:hover {
+  cursor: pointer;
 }

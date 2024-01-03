@@ -6,8 +6,8 @@ export async function clearEntireDatabase(): Promise<Prisma.BatchPayload[]> {
 
   results.push(await prisma.lastfmAccount.deleteMany());
   results.push(await prisma.artist.deleteMany());
-  results.push(await prisma.track.deleteMany());
   results.push(await prisma.listen.deleteMany());
+  results.push(await prisma.track.deleteMany());
   results.push(await prisma.user.deleteMany());
 
   return results;

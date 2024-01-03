@@ -1,0 +1,14 @@
+<div class="track-container bordered-container">
+  <img class="track-image" src="<%= track.imageUrl %>" alt="<%= track.name%>" />
+  <div class="track-information">
+    <div class="track-title"><%= track.name %></div>
+    <div class="track-artist">
+      <%= track.artists.map(artist => artist.name).join(', ') %>
+    </div>
+  </div>
+  <div
+    class="track-button-play"
+    hx-trigger="click"
+    hx-put="/api/music/play-track/<%= track.id %>"
+  ></div>
+</div>

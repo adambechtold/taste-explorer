@@ -4,7 +4,8 @@
   <body>
     <%- include('partials/header') %>
     <div class="content-container">
-      <%- include('partials/select-playlist') %>
+      <%- include('partials/select-playlist', {user1: {id: 1, name: 'Adam'},
+      user2: {id: 4, name: "Matt Sampson"}}) %>
       <div id="playlist-container">No Playlist Selected</div>
     </div>
   </body>

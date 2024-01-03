@@ -253,8 +253,13 @@ components:
         - name
         - artists
       properties:
+        id:
+          type: integer
         name:
           type: string
+        imageUrl:
+          type: string
+          format: uri
         artists:
           type: array
           items:
@@ -262,8 +267,6 @@ components:
             properties:
               name:
                 type: string
-        spotifyId:
-          type: string
     UserId:
       type: integer
       minimum: 1

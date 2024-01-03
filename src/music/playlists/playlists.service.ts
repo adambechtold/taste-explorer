@@ -1,136 +1,166 @@
 import { PrismaClient } from "@prisma/client";
 
 import { UserWithId } from "../../users/users.types";
-import { Track } from "../music.types";
+import { TrackWithId } from "../music.types";
 import { PreferenceType, Playlist } from "./playlists.types";
 
 const prisma = new PrismaClient();
 
-type LikedTracksQueryResponse = [
-  {
-    songNameAndArtist: string;
-    user1Count: number;
-    user2Count: number;
-  }
-];
+type LikedTracksQueryResponse = {
+  trackId: number;
+  user1Count: number;
+  user2Count: number;
+}[];
 
 export async function getPlaylist(
   user1: UserWithId,
   user2: UserWithId,
   preferenceType: PreferenceType
 ): Promise<Playlist> {
-  const result = await queryTracks(user1, user2, preferenceType);
+  const tracksMatchingPreferenceType = await getTrackIdsByPreferenceType(
+    user1,
+    user2,
+    preferenceType
+  );
 
-  const likedTracks: Track[] = result.map((track) => {
-    return {
-      name: track.songNameAndArtist.split(" | by | ")[0],
-      artists: [
-        {
-          name: track.songNameAndArtist.split(" | by | ")[1],
-          spotifyId: "test",
+  const tracks = (
+    await prisma.track.findMany({
+      select: {
+        id: true,
+        name: true,
+        imageUrl: true,
+        spotifyId: true,
+        artists: {
+          select: {
+            name: true,
+            spotifyId: true,
+          },
         },
-      ],
-      spotifyId: "test", // TODO: Replace this with the actual spotify id
-    };
-  });
+      },
+      where: {
+        id: {
+          in: tracksMatchingPreferenceType.map((track) => track.trackId),
+        },
+      },
+    })
+  ).map((track) => ({ ...track, imageUrl: track.imageUrl || undefined }));
 
   return {
-    tracks: { items: likedTracks },
+    tracks: { items: tracks },
   };
 }
 
-const queryTracks = async (
+const getTrackIdsByPreferenceType = async (
   user1: UserWithId,
   user2: UserWithId,
   preferenceType: PreferenceType
 ): Promise<LikedTracksQueryResponse> => {
   const likedTrackThreshold = 3;
+  const limit = 50;
 
   switch (preferenceType) {
     case "BOTH":
       return prisma.$queryRaw`SELECT
-      songNameAndArtist,
-      sum(CASE WHEN userId = ${user1.id} THEN
-        listenCount
-      ELSE
-        0
-      END) AS user1Count,
-      sum(CASE WHEN userId = ${user2.id} THEN
-        listenCount
-      ELSE
-        0
-      END) AS user2Count
-    FROM (
-      SELECT
-        userId,
-        concat(trackName, ' | by | ', artistName) AS songNameAndArtist,
-        count(userId) AS listenCount
-      FROM
-        LastfmListen
-      WHERE
-        userId = ${user1.id}
-        OR userId = ${user2.id}
+        trackId,
+        sum(
+          CASE WHEN userId = ${user1.id} THEN
+            listenCount
+          ELSE
+            0
+          END) AS user1Count,
+        sum(
+          CASE WHEN userId = ${user2.id} THEN
+            listenCount
+          ELSE
+            0
+          END) AS user2Count
+      FROM (
+        SELECT
+          userId,
+          trackId,
+          count(userId) AS listenCount
+        FROM
+          Listen
+        WHERE
+          userId = ${user1.id}
+          OR userId = ${user2.id}
+        GROUP BY
+          userId,
+          trackId) AS songCounts
       GROUP BY
-        userId,
-        songNameAndArtist) AS songCounts
-        GROUP by songNameAndArtist
-        HAVING user1Count >= ${likedTrackThreshold} AND user2Count >= ${likedTrackThreshold};` as Promise<LikedTracksQueryResponse>;
+        trackId
+      HAVING
+        user1Count >= ${likedTrackThreshold}
+        AND user2Count >= ${likedTrackThreshold}
+      LIMIT ${limit};` as Promise<LikedTracksQueryResponse>;
     case "USER1-ONLY":
       return prisma.$queryRaw`SELECT
-      songNameAndArtist,
-      sum(CASE WHEN userId = ${user1.id} THEN
-        listenCount
-      ELSE
-        0
-      END) AS user1Count,
-      sum(CASE WHEN userId = ${user2.id} THEN
-        listenCount
-      ELSE
-        0
-      END) AS user2Count
-    FROM (
-      SELECT
-        userId,
-        concat(trackName, ' | by | ', artistName) AS songNameAndArtist,
-        count(userId) AS listenCount
-      FROM
-        LastfmListen
-      WHERE
-        userId = ${user1.id}
-        OR userId = ${user2.id}
-      GROUP BY
-        userId,
-        songNameAndArtist) AS songCounts
-        GROUP by songNameAndArtist
-        HAVING user1Count >= ${likedTrackThreshold} AND user2Count < ${likedTrackThreshold};` as Promise<LikedTracksQueryResponse>;
+        trackId,
+          sum(
+            CASE WHEN userId = ${user1.id} THEN
+              listenCount
+            ELSE
+              0
+            END) AS user1Count,
+          sum(
+            CASE WHEN userId = ${user2.id} THEN
+              listenCount
+            ELSE
+              0
+            END) AS user2Count
+        FROM (
+          SELECT
+            userId,
+            trackId,
+            count(userId) AS listenCount
+          FROM
+            Listen
+          WHERE
+            userId = ${user1.id}
+            OR userId = ${user2.id}
+          GROUP BY
+            userId,
+            trackId) AS songCounts
+        GROUP BY
+          trackId
+        HAVING
+          user1Count >= ${likedTrackThreshold}
+          AND user2Count < ${likedTrackThreshold}
+        LIMIT ${limit};` as Promise<LikedTracksQueryResponse>;
     case "USER2-ONLY":
       return prisma.$queryRaw`SELECT
-      songNameAndArtist,
-      sum(CASE WHEN userId = ${user1.id} THEN
-        listenCount
-      ELSE
-        0
-      END) AS user1Count,
-      sum(CASE WHEN userId = ${user2.id} THEN
-        listenCount
-      ELSE
-        0
-      END) AS user2Count
-    FROM (
-      SELECT
-        userId,
-        concat(trackName, ' | by | ', artistName) AS songNameAndArtist,
-        count(userId) AS listenCount
-      FROM
-        LastfmListen
-      WHERE
-        userId = ${user1.id}
-        OR userId = ${user2.id}
-      GROUP BY
-        userId,
-        songNameAndArtist) AS songCounts
-        GROUP by songNameAndArtist
-        HAVING user1Count < ${likedTrackThreshold} AND user2Count >= ${likedTrackThreshold};` as Promise<LikedTracksQueryResponse>;
+        trackId,
+          sum(
+            CASE WHEN userId = ${user1.id} THEN
+              listenCount
+            ELSE
+              0
+            END) AS user1Count,
+          sum(
+            CASE WHEN userId = ${user2.id} THEN
+              listenCount
+            ELSE
+              0
+            END) AS user2Count
+        FROM (
+          SELECT
+            userId,
+            trackId,
+            count(userId) AS listenCount
+          FROM
+            Listen
+          WHERE
+            userId = ${user1.id}
+            OR userId = ${user2.id}
+          GROUP BY
+            userId,
+            trackId) AS songCounts
+        GROUP BY
+          trackId
+        HAVING
+          user1Count < ${likedTrackThreshold}
+          AND user2Count >= ${likedTrackThreshold}
+        LIMIT ${limit};` as Promise<LikedTracksQueryResponse>;
     default:
       throw new Error("Invalid preference type");
   }
