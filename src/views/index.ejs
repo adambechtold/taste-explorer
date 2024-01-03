@@ -1,35 +1,13 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <title><%= title %></title>
-    <link rel="stylesheet" href="/stylesheets/style.css" />
-  </head>
+<html lang="en">
+  <%- include('partials/head') %>
   <body>
+    <%- include('partials/header') %>
     <div class="content-container">
-      <h1><%= title %></h1>
-      <div class="configuration-container">
-        <% if (user) { %>
-        <h2>Logged in as user: <%= user.id %></h2>
-        <% } else { %>
-        <h2>Not logged in</h2>
-        <% } %>
-
-        <!-- Spotify Access Token -->
-        <% if (!spotify.isAuthorized) { %>
-        <a href="auth/login/spotify">Add Spotify</a>
-        <% } else { %>
-        <h3>Current Spotify Access Token</h3>
-        <p id="token"><%= spotify.accessToken %></p>
-        <button onclick="copyToClipboard('token')">Copy to Clipboard</button>
-        <% } %>
-      </div>
+      <%- include('partials/select-playlist', {user1: {id: 1, name: 'Adam'},
+      user2: {id: 4, name: "Matt Sampson"}}) %>
+      <div id="playlist-container">No Playlist Selected</div>
     </div>
   </body>
-  <script>
-    function copyToClipboard(id) {
-      var copyText = document.getElementById(id);
-      copyText.select();
-      document.execCommand("copy");
-    }
-  </script>
+  <%- include('partials/footer') %>
 </html>

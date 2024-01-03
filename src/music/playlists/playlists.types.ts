@@ -1,4 +1,4 @@
-import { Track } from "../music.types";
+import { TrackWithId } from "../music.types";
 
 export type PreferenceType = "USER1-ONLY" | "USER2-ONLY" | "BOTH";
 
@@ -8,6 +8,6 @@ export const isValidPreferenceType = (type: string): type is PreferenceType => {
 
 export type Playlist = {
   tracks: {
-    items: Track[];
+    items: TrackWithId[];
   };
 };

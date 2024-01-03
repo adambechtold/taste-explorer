@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+  <%- include('partials/head') %>
+  <body>
+    <%- include('partials/header') %>
+    <div class="content-container">
+      <div class="configuration-container bordered-container">
+        <% if (user) { %>
+        <h2>Logged in as user: <%= user.id %></h2>
+        <% } else { %>
+        <h2>Not logged in</h2>
+        <% } %>
+
+        <!-- Spotify Access Token -->
+        <% if (!spotify.isAuthorized) { %>
+        <a href="auth/login/spotify">Add Spotify</a>
+        <% } else { %>
+        <h3>Current Spotify Access Token</h3>
+        <p id="token"><%= spotify.accessToken %></p>
+        <% } %>
+      </div>
+    </div>
+    <%- include('partials/footer') %>
+  </body>
+</html>

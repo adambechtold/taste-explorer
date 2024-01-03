@@ -1,3 +1,4 @@
+import { Listen, PrismaClient } from "@prisma/client";
 import createServer from "../../utils/server";
 import supertest from "supertest";
 import { clearEntireDatabase } from "../../utils/test.utils";
@@ -10,6 +11,7 @@ import { LastfmListen } from "../../lastfm/lastfm.types";
 import { storeListenBatch } from "../../lastfm/lastfm.storage";
 
 const app = createServer();
+const prisma = new PrismaClient();
 
 /** Test Music Routes
  * Get Playlist
@@ -186,46 +188,79 @@ async function saveExampleListens(
   user1: UserWithLastfmAccountAndId,
   user2: UserWithLastfmAccountAndId
 ) {
+  const artist = await prisma.artist.create({
+    data: {
+      name: "Artist1",
+      spotifyId: "spotifyId-artist",
+    },
+  });
+
+  const [trackBothLike, trackUser1Only, trackUser2Only] = await Promise.all([
+    prisma.track.create({
+      data: {
+        name: "Both Like",
+        spotifyId: "spotifyId-bothLike",
+        artists: {
+          connect: {
+            id: artist.id,
+          },
+        },
+      },
+    }),
+    prisma.track.create({
+      data: {
+        name: "User 1 Only",
+        spotifyId: "spotifyId-user1Only",
+        artists: {
+          connect: {
+            id: artist.id,
+          },
+        },
+      },
+    }),
+    prisma.track.create({
+      data: {
+        name: "User 2 Only",
+        spotifyId: "spotifyId-user2Only",
+        artists: {
+          connect: {
+            id: artist.id,
+          },
+        },
+      },
+    }),
+  ]);
+
   return Promise.all([
-    storeExampleListen(user1, "Both Like", "Artist1", new Date(1)),
-    storeExampleListen(user1, "Both Like", "Artist1", new Date(2)),
-    storeExampleListen(user1, "Both Like", "Artist1", new Date(3)),
-    storeExampleListen(user2, "Both Like", "Artist1", new Date(4)),
-    storeExampleListen(user2, "Both Like", "Artist1", new Date(5)),
-    storeExampleListen(user2, "Both Like", "Artist1", new Date(6)),
+    storeExampleListen(user1, trackBothLike.id, new Date(1)),
+    storeExampleListen(user1, trackBothLike.id, new Date(2)),
+    storeExampleListen(user1, trackBothLike.id, new Date(3)),
+    storeExampleListen(user2, trackBothLike.id, new Date(4)),
+    storeExampleListen(user2, trackBothLike.id, new Date(5)),
+    storeExampleListen(user2, trackBothLike.id, new Date(6)),
     // - Only User 1 likes this
-    storeExampleListen(user1, "User 1 Only", "Artist1", new Date(7)),
-    storeExampleListen(user1, "User 1 Only", "Artist1", new Date(8)),
-    storeExampleListen(user1, "User 1 Only", "Artist1", new Date(9)),
-    storeExampleListen(user1, "User 1 Only", "Artist1", new Date(10)),
+    storeExampleListen(user1, trackUser1Only.id, new Date(7)),
+    storeExampleListen(user1, trackUser1Only.id, new Date(8)),
+    storeExampleListen(user1, trackUser1Only.id, new Date(9)),
+    storeExampleListen(user1, trackUser1Only.id, new Date(10)),
     // - Only User 2 likes this, but
-    storeExampleListen(user2, "User 2 Only", "Artist1", new Date(11)),
-    storeExampleListen(user2, "User 2 Only", "Artist1", new Date(12)),
-    storeExampleListen(user2, "User 2 Only", "Artist1", new Date(13)),
-    storeExampleListen(user1, "User 2 Only", "Artist1", new Date(13)),
+    storeExampleListen(user2, trackUser2Only.id, new Date(11)),
+    storeExampleListen(user2, trackUser2Only.id, new Date(12)),
+    storeExampleListen(user2, trackUser2Only.id, new Date(13)),
+    storeExampleListen(user1, trackUser2Only.id, new Date(13)),
   ]);
 }
 
 const storeExampleListen = async (
   user: UserWithLastfmAccountAndId,
-  trackName: string,
-  artistName: string,
+  trackId: number,
   date: Date
-) => {
-  const lastfmListen: LastfmListen = {
-    date,
-    track: {
-      name: trackName,
-      artist: {
-        name: artistName,
-      },
-      url: "https://www.last.fm/music/test-artist/test-track",
-      album: {
-        name: "Test Album",
-      },
+): Promise<Listen> => {
+  return prisma.listen.create({
+    data: {
+      userId: user.id,
+      trackId: trackId,
+      listenedAt: date,
     },
-    lastfmAccount: user.lastfmAccount,
-    isNowPlaying: false,
-  };
-  return storeListenBatch([lastfmListen], user);
+  });
 };
