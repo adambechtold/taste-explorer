@@ -66,8 +66,10 @@ a {
   right: 0;
   padding-left: 1rem;
   padding-right: 1rem;
-  border-radius: 1rem 0 0 0;
+  border-radius: 0.5rem 0 0 0;
   background-color: var(--primary-color-light);
+
+  font-size: 0.8rem;
 
   display: flex;
   flex-direction: column;
@@ -81,7 +83,7 @@ a {
 }
 
 .playlist-track-list {
-  li {
+  .playlist-track-container {
     padding-bottom: 1rem;
   }
 }
