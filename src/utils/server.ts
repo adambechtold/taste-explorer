@@ -6,6 +6,7 @@ import { indexRouter } from "../routes/index.router";
 import { usersRouter } from "../users/users.router";
 import { musicRouter } from "../music/music.router";
 import { authRouter } from "../auth/auth.router";
+import { playerRouter } from "../routes/player.routes";
 
 function createServer(): Express {
   const app = express();
@@ -20,11 +21,21 @@ function createServer(): Express {
    * https://www.youtube.com/watch?v=eg244TvZHyU
    **/
 
-  app.use(helmet());
+  app.use(
+    helmet({
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'self'"],
+          scriptSrc: ["'self'", "https://unpkg.com"],
+        },
+      },
+    })
+  );
   app.use(cors());
   app.use(express.json());
 
   app.use("/", indexRouter);
+  app.use("/player", playerRouter);
   app.use("/api/users", usersRouter);
   app.use("/api/music", musicRouter);
   app.use("/auth", authRouter);

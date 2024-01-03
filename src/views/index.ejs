@@ -3,7 +3,10 @@
   <%- include('partials/head') %>
   <body>
     <%- include('partials/header') %>
-    <div class="content-container">Let's fill this with content!</div>
+    <div class="content-container">
+      <%- include('partials/select-playlist') %>
+      <div id="playlist-container">No Playlist Selected</div>
+    </div>
   </body>
   <%- include('partials/footer') %>
 </html>
