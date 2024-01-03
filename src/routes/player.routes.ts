@@ -3,13 +3,9 @@ import { getCurrentUser } from "../auth/auth.utils";
 import * as SpotifyService from "../spotify/spotify.service";
 import { SpotifyAccessToken } from "../auth/auth.types";
 
-export const indexRouter = express.Router();
+export const playerRouter = express.Router();
 
-indexRouter.get("/", async (req: Request, res: Response) => {
-  res.render("index");
-});
-
-indexRouter.get("/debug", async (req: Request, res: Response) => {
+playerRouter.get("/player/playlist", async (req: Request, res: Response) => {
   const user = getCurrentUser(req);
   let spotifyAccessToken: SpotifyAccessToken | null = null;
   let isSpotifyAuthorized = false;
@@ -29,7 +25,8 @@ indexRouter.get("/debug", async (req: Request, res: Response) => {
     }
   }
 
-  res.render("debug", {
+  res.render("index", {
+    title: "Taste Explorer",
     user,
     spotify: {
       isAuthorized: isSpotifyAuthorized,
