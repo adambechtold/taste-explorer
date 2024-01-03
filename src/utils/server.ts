@@ -2,7 +2,7 @@ import express, { Express } from "express";
 import cors from "cors";
 import helmet from "helmet";
 import path from "path";
-import { indexRouter } from "../index/index.router";
+import { indexRouter } from "../routes/index.router";
 import { usersRouter } from "../users/users.router";
 import { musicRouter } from "../music/music.router";
 import { authRouter } from "../auth/auth.router";
