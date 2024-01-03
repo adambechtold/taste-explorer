@@ -9,6 +9,7 @@
   <div
     class="track-button-play"
     hx-trigger="click"
-    hx-put="/api/music/play-track/<%= track.id %>"
+    hx-put="/api/music/play-tracks"
+    hx-vals='{"trackIds": [<%= trackIds.join(',') %>], "offset": <%= track.index %>}'
   ></div>
 </div>

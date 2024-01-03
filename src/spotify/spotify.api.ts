@@ -369,7 +369,7 @@ export async function startOrResumePlaybackState(
 
   if (response.status !== 204) {
     throw TypedError.create(
-      "Error modifying playback" + response.statusText,
+      "Error modifying playback " + response.statusText,
       response.status
     );
   }

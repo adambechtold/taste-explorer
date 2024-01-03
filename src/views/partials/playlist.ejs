@@ -1,7 +1,8 @@
 <ul class="playlist-track-list no-li-bullet-list">
   <% for (let i = 0; i < tracks.length; i++) { %>
   <li class="playlist-track-container">
-    <%- include('track', {track: tracks[i]}) %>
+    <%- include('track', {track: {...tracks[i], index: i}, trackIds:
+    tracks.map(track => track.id) }) %>
   </li>
   <% } %>
 </ul>

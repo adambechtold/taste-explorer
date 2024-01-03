@@ -308,20 +308,31 @@ async function getSpotifyAccessToken() {
   return accessToken;
 }
 
-export async function playTrackForUser(trackId: number, user: UserWithId) {
+/**
+ *
+ */
+export async function playTracksForUser(
+  trackIds: number[],
+  offset: number,
+  user: UserWithId
+) {
   const accessToken = await getSpotifyAccessToken();
 
-  const prismaTrack = await prisma.track.findUnique({
+  const prismaTracks = await prisma.track.findMany({
     where: {
-      id: trackId,
+      id: {
+        in: trackIds,
+      },
     },
   });
 
-  if (!prismaTrack) {
-    throw TypedError.create("Track not found", 404);
+  if (!prismaTracks.length) {
+    throw TypedError.create("No tracks found", 404);
   }
 
-  const track = MusicUtils.convertPrismaTrackAndArtistsToTrack(prismaTrack, []);
+  const tracks = prismaTracks.map((prismaTrack) =>
+    MusicUtils.convertPrismaTrackAndArtistsToTrack(prismaTrack, [])
+  );
 
-  await SpotifyService.playTrack(accessToken, track);
+  await SpotifyService.playTracks(accessToken, tracks, offset);
 }

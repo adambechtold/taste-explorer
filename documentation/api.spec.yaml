@@ -83,6 +83,50 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+  /api/music/play-tracks:
+    put:
+      summary: Play the Given Tracks
+      description: Plays the provided tracks. This will always affect user 1 (per-user control coming soon).
+      operationId: playTracks
+      tags:
+        - music
+      requestBody:
+        description: The tracks to play
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                trackIds:
+                  type: array
+                  items:
+                    type: integer
+                offset:
+                  type: integer
+                  description: The offset to start playing the tracks at.
+                  default: 0
+      responses:
+        "204":
+          description: Tracks played successfully
+        "400":
+          description: Invalid ID supplied
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Track not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
   /api/music/playlists:
     get:
       summary: Get Playlist
