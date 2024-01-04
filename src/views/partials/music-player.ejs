@@ -1,0 +1,44 @@
+<div class="bordered-container music-player-container">
+  <% var track = {}; track.imageUrl =
+  "https://i.scdn.co/image/ab67616d0000b273d5e8665c0cab1fcb17104ea1";
+  track.name= "Test Track"; track.artists = [{name: "Test Artists"}]; %>
+  <div class="track-container">
+    <!-- prettier-ignore -->
+    <%- 
+    include('track/album-image', { 
+      imageUrl: track.imageUrl, 
+      trackName: track.name, 
+      artistName: track.artists.map(artist => artist.name).join(', ')
+    }); %>
+    <div class="track-information">
+      <div class="track-title"><%= track.name %></div>
+      <div class="track-artist">
+        <%= track.artists.map(artist => artist.name).join(', ') %>
+      </div>
+    </div>
+  </div>
+  <div class="play-state-container">
+    <% var playState = {}; playState.trackPosition = 100;
+    playState.trackDuration = 1000; // seconds %>
+    <div class="track-duration-container">
+      <div class="track-duration">
+        <%= secondsToTimeFormat(playState.trackPosition) %>
+      </div>
+      <progress
+        class="track-progress-bar"
+        value="<%= playState.trackPosition %>"
+        max="<%= playState.trackDuration %>"
+      ></progress>
+      <div class="track-duration">
+        <%= secondsToTimeFormat(playState.trackDuration) %>
+      </div>
+    </div>
+    <div class="track-controls-container">
+      <div class="track-controls-button" aria-label="Previous track">⏮︎</div>
+      <div class="track-controls-button" aria-label="Play or pause track">
+        ▶︎
+      </div>
+      <div class="track-controls-button" aria-label="Next track">⏭︎</div>
+    </div>
+  </div>
+</div>

@@ -128,3 +128,69 @@ a {
 .track-button-play:hover {
   cursor: pointer;
 }
+
+/* Music Player */
+.music-player-container {
+  position: fixed;
+  bottom: 2rem;
+  right: 50%;
+  transform: translate(50%, 0);
+  padding-left: 1rem;
+  padding-right: 1rem;
+
+  background-color: white;
+
+  width: 80%;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+
+  .track-container {
+    width: 100%;
+    padding: 0;
+  }
+}
+
+.play-state-container {
+  width: 100%;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.track-duration-container {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 1rem;
+
+  .track-duration {
+    font-size: 0.8rem;
+  }
+}
+
+.track-controls-container {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-around;
+  width: 100%;
+  max-width: 240px;
+  min-width: 150px;
+
+  .track-controls-button {
+    font-size: 2.5rem;
+  }
+}
+
+.track-progress-bar {
+  width: 100%;
+}
