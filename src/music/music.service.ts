@@ -309,13 +309,18 @@ async function getSpotifyAccessToken() {
 }
 
 /**
- *
+ * Plays a track on the user's Spotify account.
+ * @param {number} trackId - The ID of the track to play.
+ * @param {number} offset - The offset in milliseconds to start playing the track.
+ * @param {UserWithId} user - The user for whom to play the track.
+ * @throws {TypedError} - If the track is not found.
  */
 export async function playTracksForUser(
   trackIds: number[],
   offset: number,
   user: UserWithId
 ) {
+  // TODO: Consider which access token to get based on the user.
   const accessToken = await getSpotifyAccessToken();
 
   const prismaTracks = await prisma.track.findMany({
@@ -335,4 +340,17 @@ export async function playTracksForUser(
   );
 
   await SpotifyService.playTracks(accessToken, tracks, offset);
+}
+
+/**
+ * Transfer Playback to the provided device.
+ * @param {string} deviceId - The ID of the device to transfer playback to.
+ * @param {UserWithId} user - The user for whom to transfer playback.
+ * @throws {TypedError} - If the user does not have a spotify account.
+ */
+export async function transferPlaybackToUserDevice(
+  deviceId: string,
+  user: UserWithId
+) {
+  return SpotifyService.transferPlaybackToUserDevice(deviceId, user);
 }

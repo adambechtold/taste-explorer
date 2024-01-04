@@ -156,3 +156,26 @@ export async function playTracks(
 
   return playResponse;
 }
+
+/**
+ * Transfer Playback to the provided device.
+ * @param {string} deviceId - The ID of the device to transfer playback to.
+ * @param {UserWithId} user - The user for whom to transfer playback.
+ * @throws {TypedError} - If the user does not have a spotify account.
+ */
+export async function transferPlaybackToUserDevice(
+  deviceId: string,
+  user: UserWithId
+) {
+  const accessToken = await getAccessToken(user);
+
+  if (!accessToken) {
+    throw new TypedError(
+      "No access token found for user. Login with spotify to continue.",
+      400
+    );
+  }
+
+  const spotifyApi = new SpotifyApi(accessToken);
+  await spotifyApi.transferPlaybackToDevice(deviceId);
+}

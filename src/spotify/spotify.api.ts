@@ -170,6 +170,28 @@ export default class SpotifyApi {
 
     return startOrResumePlaybackState(this.accessToken, uris);
   }
+
+  /**
+   * Transfer Playback to the provided Device ID.
+   *
+   * This will only work is the new device is active
+   * and on the same Spotify account as the API object's access token.
+   *
+   * @param {string} deviceId - The ID of the device to transfer playback to.
+   * @returns
+   * @throws {Error} - Will throw an error if the operation fails.
+   */
+  async transferPlaybackToDevice(deviceId: string) {
+    if (!this.accessToken) {
+      throw new Error("No access token set");
+    }
+
+    if (this.accessToken.expiresAt < new Date()) {
+      this.accessToken = await this.refreshAccessToken();
+    }
+
+    return transferPlayback(this.accessToken, deviceId);
+  }
 }
 
 /**
@@ -364,6 +386,39 @@ export async function startOrResumePlaybackState(
     },
     body: JSON.stringify({
       uris,
+    }),
+  });
+
+  if (response.status !== 204) {
+    throw TypedError.create(
+      "Error modifying playback " + response.statusText,
+      response.status
+    );
+  }
+
+  return;
+}
+
+/**
+ * Transfers playback to a device.
+ *
+ * @param {SpotifyAccessToken} accessToken - The access token for the Spotify API.
+ * @param {string} deviceId - The ID of the device to transfer playback to.
+ * @returns - A promise that resolves when the request is complete.
+ * @throws {TypedError} - Will throw an error if the request to the Spotify API fails.
+ */
+async function transferPlayback(
+  accessToken: SpotifyAccessToken,
+  deviceId: string
+) {
+  const response = await fetch("https://api.spotify.com/v1/me/player", {
+    method: "PUT",
+    headers: {
+      Authorization: "Bearer " + accessToken.token,
+    },
+    body: JSON.stringify({
+      device_ids: [deviceId],
+      play: true,
     }),
   });
 

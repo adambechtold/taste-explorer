@@ -127,6 +127,44 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+  /api/music/transfer-playback:
+    put:
+      summary: Transfer Playback
+      description: Transfer playback to the given device
+      operationId: transferPlayback
+      tags:
+        - music
+      requestBody:
+        description: The device to transfer playback to
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                deviceId:
+                  type: string
+      responses:
+        "204":
+          description: Playback transferred successfully
+        "400":
+          description: Invalid ID supplied
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Device not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
   /api/music/playlists:
     get:
       summary: Get Playlist

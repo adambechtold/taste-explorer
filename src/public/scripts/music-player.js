@@ -133,8 +133,14 @@ function updateProgress(newPosition, newDuration) {
 }
 
 async function transferPlayStateToDevice(deviceId) {
-  console.log("Transfer playback to device", deviceId);
-  // create an endpoint to transfer playback to device
+  return fetch("/api/music/transfer-playback", {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ deviceId }),
+  });
+}
 }
 
 /** WebPlaybackState Object
