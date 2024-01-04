@@ -15,12 +15,6 @@ function createServer(): Express {
   app.set("views", path.join(__dirname, "../views"));
   app.use(express.static(path.join(__dirname, "../public")));
 
-  /*
-   * Consider adding this options
-   * app.use(express.urlencoded({ extended: true })); // handle URL-encoded data (extended: true allows for nested objects)
-   * https://www.youtube.com/watch?v=eg244TvZHyU
-   **/
-
   app.use(
     helmet({
       contentSecurityPolicy: {
