@@ -13,9 +13,12 @@ setInterval(() => {
 }, 1000);
 
 window.onSpotifyWebPlaybackSDKReady = () => {
-  console.log("Spotify Web Playback SDK is ready");
-  const token =
-    "BQAa907to6Ym2W3cYqgjawFrKmn7gqsSahCngCWZiw0qt4rhgs_jETTi3DcbEJLJcH5PhOhm1QqVkomvH4EjzBIJNbVsfcntP94Zp_qp4y0I-q6vA6nHUjmivrmXhMkEBXTPnzN_6H3EMnHQfw3Fv3qhIvPVwwDTETKpr9U1cQvvEuhWzq3MDoVAdaj2CN0uqf4vtBPN";
+  getLatestAccessToken().then((token) => {
+    initializeSpotifyPlayer(token);
+  });
+};
+
+function initializeSpotifyPlayer(token) {
   const player = new Spotify.Player({
     name: "Web Playback for Taste Explorer",
     getOAuthToken: (cb) => {
@@ -84,8 +87,6 @@ window.onSpotifyWebPlaybackSDKReady = () => {
 
   // Watch Player State
   player.addListener("player_state_changed", (state) => {
-    console.log("player_state_changed", state);
-
     if (!state) {
       console.warn("player_state_changed: state is null");
       isPlayingOnThisDevice = false;
@@ -115,7 +116,7 @@ window.onSpotifyWebPlaybackSDKReady = () => {
   });
 
   player.connect();
-};
+}
 
 function updateProgress(newPosition, newDuration) {
   position = newPosition;
@@ -141,6 +142,11 @@ async function transferPlayStateToDevice(deviceId) {
     body: JSON.stringify({ deviceId }),
   });
 }
+
+async function getLatestAccessToken() {
+  const response = await fetch("/auth/spotify/token");
+  const { token } = await response.json();
+  return token;
 }
 
 /** WebPlaybackState Object

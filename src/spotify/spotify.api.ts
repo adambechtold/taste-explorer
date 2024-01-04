@@ -29,6 +29,21 @@ export default class SpotifyApi {
   }
 
   /**
+   * Provides the current access token, or refreshes the token if it has expired.
+   *
+   * @returns {Promise<SpotifyAccessToken>} A promise that resolves to the current access token.
+   */
+  async getActiveAccessToken(): Promise<SpotifyAccessToken> {
+    if (!this.accessToken) {
+      throw new Error("No access token set");
+    }
+    if (this.accessToken.expiresAt < new Date()) {
+      this.accessToken = await this.refreshAccessToken();
+    }
+    return this.accessToken;
+  }
+
+  /**
    * Refreshes the current Spotify access token.
    *
    * @returns {Promise<SpotifyAccessToken>} A promise that resolves to the refreshed access token.
@@ -122,14 +137,8 @@ export default class SpotifyApi {
    * @throws {Error} Will throw an error if no access token is set.
    */
   async searchTracks(trackName: string, artistName: string): Promise<Track[]> {
-    if (!this.accessToken) {
-      throw new Error("No access token set");
-    }
-    if (this.accessToken.expiresAt < new Date()) {
-      this.accessToken = await this.refreshAccessToken();
-    }
-
-    return searchSpotifyTracks(trackName, artistName, this.accessToken.token);
+    const accessToken = await this.getActiveAccessToken();
+    return searchSpotifyTracks(trackName, artistName, accessToken.token);
   }
 
   async getTracksFeatures(

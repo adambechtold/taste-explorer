@@ -4,6 +4,8 @@ import querystring from "querystring";
 import * as SpotifyService from "../spotify/spotify.service";
 import { getCurrentUser } from "./auth.utils";
 import SpotifyApi from "../spotify/spotify.api";
+import { handleErrorResponse } from "../utils/response.utils";
+import { TypedError } from "../errors/errors.types";
 
 const spotifyApi = new SpotifyApi();
 
@@ -50,3 +52,29 @@ authRouter.get(
     }
   }
 );
+
+/**
+ * Get Spotify Access Token
+ * Returns the user's Spotify access token.
+ */
+authRouter.get("/spotify/token", async (req: Request, res: Response) => {
+  try {
+    const user = getCurrentUser(req);
+    if (!user) {
+      throw new Error("User not found");
+    }
+    const token = await SpotifyService.getAccessToken(user);
+
+    if (!token) {
+      throw TypedError.create("Spotify token not found", 401);
+    }
+
+    res.json({
+      token: token.token,
+      expiresAt: token.expiresAt,
+      service: "SPOTIFY",
+    });
+  } catch (e: any) {
+    handleErrorResponse(e, res);
+  }
+});

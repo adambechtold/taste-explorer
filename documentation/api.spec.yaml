@@ -14,6 +14,8 @@ tags:
     description: Operations related to users.
   - name: music
     description: Operations related to music.
+  - name: authentication
+    description: Operations related to authentication.
 paths:
   /api/users/{userId}:
     get:
@@ -285,6 +287,36 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+  /auth/spotify/token:
+    get:
+      summary: Get Spotify Access Token
+      description: Get a Spotify access token based on the currently signed in user.
+      operationId: getSpotifyAccessToken
+      tags:
+        - music
+        - authentication
+      responses:
+        "200":
+          description: A Spotify access token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accessToken:
+                    type: string
+        "401":
+          description: User is not authorized or no user is signed in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
 components:
   schemas:
     User:
@@ -359,3 +391,16 @@ components:
       properties:
         message:
           type: string
+    AccessToken:
+      type: object
+      required:
+        - accessToken
+      properties:
+        token:
+          type: string
+        expiresAt:
+          type: string
+          format: date-time
+        service:
+          type: string
+          enum: ["SPOTIFY"]
