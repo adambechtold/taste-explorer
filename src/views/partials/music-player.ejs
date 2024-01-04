@@ -1,44 +1,78 @@
 <div class="bordered-container music-player-container">
   <% var track = {}; track.imageUrl =
   "https://i.scdn.co/image/ab67616d0000b273d5e8665c0cab1fcb17104ea1";
-  track.name= "Test Track"; track.artists = [{name: "Test Artists"}]; %>
-  <div class="track-container">
+  track.name= "Test Track"; track.artists = [{name: "Test Artists"}]; var
+  isPlayingOnThisDevice = false; %> <% if (!isPlayingOnThisDevice) { %>
+  <button id="music-player-transfer-playback">
+    Transfer Playback to This Device
+  </button>
+  <% } %>
+  <div
+    class="track-container"
+    style="display: none"
+    id="music-player-track-information"
+  >
     <!-- prettier-ignore -->
     <%- 
     include('track/album-image', { 
       imageUrl: track.imageUrl, 
       trackName: track.name, 
-      artistName: track.artists.map(artist => artist.name).join(', ')
+      artistName: track.artists.map(artist => artist.name).join(', '),
+      id: 'music-player-track-image'
     }); %>
     <div class="track-information">
-      <div class="track-title"><%= track.name %></div>
-      <div class="track-artist">
+      <div class="track-title" id="music-player-track-name">
+        <%= track.name %>
+      </div>
+      <div class="track-artist" id="music-player-track-artist">
         <%= track.artists.map(artist => artist.name).join(', ') %>
       </div>
     </div>
   </div>
-  <div class="play-state-container">
+  <div
+    class="play-state-container"
+    style="display: none"
+    id="music-player-play-state"
+  >
     <% var playState = {}; playState.trackPosition = 100;
     playState.trackDuration = 1000; // seconds %>
     <div class="track-duration-container">
-      <div class="track-duration">
+      <div class="track-duration" id="track-progress-text">
         <%= secondsToTimeFormat(playState.trackPosition) %>
       </div>
       <progress
         class="track-progress-bar"
         value="<%= playState.trackPosition %>"
         max="<%= playState.trackDuration %>"
+        id="track-progress-bar"
       ></progress>
-      <div class="track-duration">
+      <div class="track-duration" id="track-duration-text">
         <%= secondsToTimeFormat(playState.trackDuration) %>
       </div>
     </div>
     <div class="track-controls-container">
-      <div class="track-controls-button" aria-label="Previous track">⏮︎</div>
-      <div class="track-controls-button" aria-label="Play or pause track">
+      <button
+        class="track-controls-button"
+        aria-label="Previous track"
+        id="previous-track"
+      >
+        ⏮︎
+      </button>
+      <button
+        class="track-controls-button"
+        aria-label="Play or pause track"
+        id="toggle-play-pause"
+      >
         ▶︎
-      </div>
-      <div class="track-controls-button" aria-label="Next track">⏭︎</div>
+      </button>
+      <button
+        class="track-controls-button"
+        aria-label="Next track"
+        id="next-track"
+      >
+        ⏭︎
+      </button>
     </div>
   </div>
 </div>
+<script src="/scripts/music-player.js"></script>

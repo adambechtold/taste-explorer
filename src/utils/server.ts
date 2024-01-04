@@ -20,8 +20,9 @@ function createServer(): Express {
       contentSecurityPolicy: {
         directives: {
           defaultSrc: ["'self'"],
-          scriptSrc: ["'self'", "https://unpkg.com"],
+          scriptSrc: ["'self'", "https://unpkg.com", "https://sdk.scdn.co"],
           imgSrc: ["'self'", "https://i.scdn.co"],
+          frameSrc: ["'self'", "https://sdk.scdn.co"],
         },
       },
     })
