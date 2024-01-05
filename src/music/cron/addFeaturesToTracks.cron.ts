@@ -10,13 +10,7 @@ import { pauseTask } from "../../utils/cron.utils";
 
 const prisma = new PrismaClient({ log: ["error"] });
 
-log("schedule Research Track Features to run every 2 minutes");
-const addFeaturesToTracksTask = cron.schedule(
-  "*/2 * * * *",
-  addFeaturesToTracks
-);
-
-async function addFeaturesToTracks() {
+export async function addFeaturesToTracks(task: cron.ScheduledTask) {
   const tracks = await getNextTracksToResearch();
   log(
     "researching tracks",
@@ -25,7 +19,7 @@ async function addFeaturesToTracks() {
 
   if (tracks.length === 0) {
     log("no more tracks to research");
-    pauseTask(addFeaturesToTracksTask, 60 * 5); // pause for 5 minutes
+    pauseTask(task, 60 * 5); // pause for 5 minutes
     return;
   }
 
@@ -38,12 +32,12 @@ async function addFeaturesToTracks() {
       log(
         `...too many requests, pausing research task for ${retryAfter} seconds`
       );
-      pauseTask(addFeaturesToTracksTask, retryAfter);
+      pauseTask(task, retryAfter);
       return;
     }
     log("Something went wrong. Stopping Task.");
     console.error(error);
-    addFeaturesToTracksTask.stop();
+    task.stop();
   }
 
   const {

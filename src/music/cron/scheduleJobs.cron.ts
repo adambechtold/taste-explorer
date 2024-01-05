@@ -1,14 +1,16 @@
-import cron from "node-cron";
+import cron, { schedule } from "node-cron";
 
 import { createListensFromLastfmListens } from "./createListensFromLastfmListens.cron";
 import {
   updateListenHistory,
   markAllUsersAsNotUpdating,
 } from "./updateListeningHistory.cron";
+import { addFeaturesToTracks } from "./addFeaturesToTracks.cron";
 
 const tasksMap = new Map<string, () => void>([
   ["createListens", scheduleCreateListensTask],
   ["updateListeningHistory", scheduleUpdateListeningHistory],
+  ["addFeaturesToTracks", scheduleAddFeaturesToTrack],
 ]);
 
 function main() {
@@ -52,5 +54,17 @@ function scheduleUpdateListeningHistory() {
   updateListenHistoryTask = cron.schedule(
     `*/${intervalInMinutes} * * * *`,
     () => updateListenHistory(updateListenHistoryTask)
+  );
+}
+
+function scheduleAddFeaturesToTrack() {
+  const intervalInMinutes = 10;
+  console.log(
+    `Add Features To Tracks will run every ${intervalInMinutes} minutes`
+  );
+  let addFeaturesToTracksTask: cron.ScheduledTask;
+  addFeaturesToTracksTask = cron.schedule(
+    `*/${intervalInMinutes} * * * *`,
+    () => addFeaturesToTracks(addFeaturesToTracksTask)
   );
 }
