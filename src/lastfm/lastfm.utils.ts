@@ -4,7 +4,7 @@ import {
   LastfmGetRecentTracksResponse,
   LastfmListen,
 } from "./lastfm.types";
-import { unixTimestampToDate } from "../utils/date.utils";
+import { unixTimestampToDate } from "../utils/datetime.utils";
 
 export function createLastfmAccount(
   response: LastfmAccountInfoResponse

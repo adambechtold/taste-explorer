@@ -1,5 +1,5 @@
 import { TypedError } from "../errors/errors.types";
-import { dateToUnixTimestamp } from "../utils/date.utils";
+import { dateToUnixTimestamp } from "../utils/datetime.utils";
 import {
   LastfmAccountInfoResponse,
   LastfmGetRecentTracksResponse,

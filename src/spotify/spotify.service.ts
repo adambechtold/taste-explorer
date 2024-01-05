@@ -2,7 +2,7 @@ import { SpotifyAccessToken } from "../auth/auth.types";
 import { UserWithId } from "../users/users.types";
 import { TypedError } from "../errors/errors.types";
 
-import * as SpotifyUtils from "./spotify.utils";
+import * as SpotifyStorage from "./spotify.storage";
 import SpotifyApi from "./spotify.api";
 import { Track, TrackWithId } from "../music/music.types";
 
@@ -20,7 +20,7 @@ export async function handleLoginCallback(
   const spotifyApi = new SpotifyApi();
   const accessToken = await spotifyApi.getAccessTokenFromCode(code);
 
-  const savedAccessToken = await SpotifyUtils.storeSpotifyAccessTokenForUser(
+  const savedAccessToken = await SpotifyStorage.storeSpotifyAccessTokenForUser(
     user,
     accessToken.token,
     accessToken.refreshToken,
@@ -39,7 +39,14 @@ export async function handleLoginCallback(
 export async function getAccessToken(
   user: UserWithId
 ): Promise<SpotifyAccessToken | null> {
-  return SpotifyUtils.getSpotifyAccessTokenForUser(user);
+  const currentToken = await SpotifyStorage.getSpotifyAccessTokenForUser(user);
+
+  if (!currentToken) {
+    return null;
+  }
+
+  const spotifyApi = new SpotifyApi(currentToken);
+  return spotifyApi.getActiveAccessToken();
 }
 
 /**
@@ -56,7 +63,7 @@ export async function refreshAccessToken(
 ): Promise<SpotifyAccessToken> {
   const spotifyApi = new SpotifyApi(accessToken);
   const newAccessToken = await spotifyApi.refreshAccessToken();
-  return SpotifyUtils.storeSpotifyAccessTokenForUser(
+  return SpotifyStorage.storeSpotifyAccessTokenForUser(
     user,
     newAccessToken.token,
     newAccessToken.refreshToken,
@@ -90,7 +97,7 @@ export async function getTrackFromTrackAndArtist(
     const selectedTrackFeatures = trackFeaturesResponse.audio_features[0];
 
     selectedTrack.features =
-      SpotifyUtils.convertSpotifyTrackFeaturesResponseToTrackFeatures(
+      SpotifyStorage.convertSpotifyTrackFeaturesResponseToTrackFeatures(
         selectedTrackFeatures
       );
   }
@@ -128,7 +135,7 @@ export async function addFeaturesToTracks(
       console.warn("Audio features not found for track", track.spotifyId);
     } else {
       track.features =
-        SpotifyUtils.convertSpotifyTrackFeaturesResponseToTrackFeatures(
+        SpotifyStorage.convertSpotifyTrackFeaturesResponseToTrackFeatures(
           featuresForTrack
         );
     }
@@ -155,4 +162,27 @@ export async function playTracks(
   const playResponse = await spotifyApi.startOrResumePlaybackState(trackUris);
 
   return playResponse;
+}
+
+/**
+ * Transfer Playback to the provided device.
+ * @param {string} deviceId - The ID of the device to transfer playback to.
+ * @param {UserWithId} user - The user for whom to transfer playback.
+ * @throws {TypedError} - If the user does not have a spotify account.
+ */
+export async function transferPlaybackToUserDevice(
+  deviceId: string,
+  user: UserWithId
+) {
+  const accessToken = await getAccessToken(user);
+
+  if (!accessToken) {
+    throw new TypedError(
+      "No access token found for user. Login with spotify to continue.",
+      400
+    );
+  }
+
+  const spotifyApi = new SpotifyApi(accessToken);
+  await spotifyApi.transferPlaybackToDevice(deviceId);
 }

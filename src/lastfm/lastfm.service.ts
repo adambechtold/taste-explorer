@@ -8,7 +8,10 @@ import {
 } from "./lastfm.utils";
 import { LastfmListensEventEmitter } from "../lastfm/lastfm.types";
 import { storeListenBatch } from "./lastfm.storage";
-import { dateToUnixTimestamp, unixTimestampToDate } from "../utils/date.utils";
+import {
+  dateToUnixTimestamp,
+  unixTimestampToDate,
+} from "../utils/datetime.utils";
 
 import { Prisma, PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();

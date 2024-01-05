@@ -239,3 +239,28 @@ musicRouter.put("/play-tracks", async (req, res) => {
     handleErrorResponse(e, res);
   }
 });
+
+/* Transfer Playback to Device
+ * Transfers playback to a device.
+ */
+musicRouter.put("/transfer-playback", async (req, res) => {
+  try {
+    const user = getCurrentUser(req);
+
+    if (!user) {
+      throw TypedError.create("User not found", 404);
+    }
+
+    const deviceId = req.body.deviceId as string;
+
+    if (!deviceId) {
+      throw TypedError.create("Device ID is required", 400);
+    }
+
+    await MusicService.transferPlaybackToUserDevice(deviceId, user);
+
+    res.status(204).send();
+  } catch (e: any) {
+    handleErrorResponse(e, res);
+  }
+});

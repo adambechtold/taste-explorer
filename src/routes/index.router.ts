@@ -2,11 +2,14 @@ import express, { Request, Response } from "express";
 import { getCurrentUser } from "../auth/auth.utils";
 import * as SpotifyService from "../spotify/spotify.service";
 import { SpotifyAccessToken } from "../auth/auth.types";
+import { secondsToTimeFormat } from "../utils/datetime.utils";
 
 export const indexRouter = express.Router();
 
 indexRouter.get("/", async (req: Request, res: Response) => {
-  res.render("index");
+  res.render("index", {
+    secondsToTimeFormat: secondsToTimeFormat,
+  });
 });
 
 indexRouter.get("/debug", async (req: Request, res: Response) => {
