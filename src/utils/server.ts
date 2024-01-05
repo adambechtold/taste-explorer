@@ -21,7 +21,7 @@ function createServer(): Express {
         directives: {
           defaultSrc: ["'self'"],
           scriptSrc: ["'self'", "https://unpkg.com", "https://sdk.scdn.co"],
-          imgSrc: ["'self'", "https://i.scdn.co"],
+          imgSrc: ["'self'", "https://i.scdn.co", "https://media.giphy.com"],
           frameSrc: ["'self'", "https://sdk.scdn.co"],
         },
       },

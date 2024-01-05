@@ -1,8 +1,13 @@
 <div class="bordered-container music-player-container">
-  <% var track = {}; track.imageUrl =
-  "https://i.scdn.co/image/ab67616d0000b273d5e8665c0cab1fcb17104ea1";
-  track.name= "Test Track"; track.artists = [{name: "Test Artists"}]; var
-  isPlayingOnThisDevice = false; %> <% if (!isPlayingOnThisDevice) { %>
+  <!-- prettier-ignore -->
+  <% 
+    var track = {}; 
+    track.imageUrl = "https://media.giphy.com/media/DhstvI3zZ598Nb1rFf/giphy-downsized.gif";
+    track.name= "...Loading Track..."; 
+    track.artists = []; 
+    var isPlayingOnThisDevice = false; 
+  %>
+  <% if (!isPlayingOnThisDevice) { %>
   <button id="music-player-transfer-playback">
     Transfer Playback to This Device
   </button>
