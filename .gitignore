@@ -38,3 +38,6 @@ coverage/
 
 # Remote
 remote/
+
+# Security
+security/
