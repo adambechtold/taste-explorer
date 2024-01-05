@@ -398,7 +398,7 @@ export async function startOrResumePlaybackState(
     }),
   });
 
-  if (response.status !== 204) {
+  if (response.status !== 204 && response.status !== 202) {
     throw TypedError.create(
       "Error modifying playback " + response.statusText,
       response.status
