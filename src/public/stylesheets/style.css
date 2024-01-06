@@ -109,6 +109,10 @@ a {
   max-width: 30rem;
 }
 
+.track-playing {
+  background-color: var(--primary-color);
+}
+
 .track-image {
   width: 5rem;
   height: 5rem;

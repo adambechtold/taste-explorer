@@ -101,12 +101,24 @@ function initializeSpotifyPlayer(token) {
       );
       const trackName = document.getElementById("music-player-track-name");
       const trackArtist = document.getElementById("music-player-track-artist");
+      const trackInPlaylist = document.getElementById(
+        `track-spotify-${state.track_window.current_track.id}`
+      );
+
       trackAlbumImage.src =
         state.track_window.current_track.album.images[0].url;
       trackName.innerHTML = state.track_window.current_track.name;
       trackArtist.innerHTML = state.track_window.current_track.artists
         .map((artist) => artist.name)
         .join(", ");
+
+      if (trackInPlaylist) {
+        const previousTrack = document.getElementsByClassName("track-playing");
+        if (previousTrack.length > 0) {
+          previousTrack[0].classList.remove("track-playing");
+        }
+        trackInPlaylist.classList.add("track-playing");
+      }
     }
   });
 
