@@ -26,26 +26,6 @@ function initializeSpotifyPlayer(token) {
     },
   });
 
-  // Ready
-  player.addListener("ready", ({ device_id }) => {
-    thisDeviceId = device_id;
-    document.getElementById("music-player-transfer-playback").onclick = () => {
-      player.activateElement();
-      transferPlayStateToDevice(thisDeviceId).then(() => {
-        isPlayingOnThisDevice = true;
-        document.getElementById(
-          "music-player-transfer-playback"
-        ).style.display = "none";
-        document
-          .getElementById("music-player-track-information")
-          .style.removeProperty("display");
-        document
-          .getElementById("music-player-play-state")
-          .style.removeProperty("display");
-      });
-    };
-  });
-
   // Not Ready
   player.addListener("not_ready", ({ device_id }) => {
     console.log("Device ID has gone offline", device_id);
@@ -72,24 +52,34 @@ function initializeSpotifyPlayer(token) {
     console.error("Autoplay Error:", message);
   });
 
-  // Connect to Music Player UI
-  document.getElementById("toggle-play-pause").onclick = () => {
-    player.togglePlay();
-  };
+  // Ready
+  player.addListener("ready", ({ device_id }) => {
+    thisDeviceId = device_id;
+    document.getElementById("music-player-transfer-playback-button").onclick =
+      () => {
+        player.activateElement();
 
-  document.getElementById("next-track").onclick = () => {
-    player.nextTrack();
-  };
-
-  document.getElementById("previous-track").onclick = () => {
-    player.previousTrack();
-  };
+        try {
+          setDisplayOfTransferPlaybackDialog(false);
+          setDisplayOfMusicPlayer(true);
+          transferPlayStateToDevice(thisDeviceId).then(() => {
+            isPlayingOnThisDevice = true;
+            connectPlayerToUI(player);
+          });
+        } catch (error) {
+          setDisplayOfTransferPlaybackDialog(true);
+          setDisplayOfMusicPlayer(false);
+          console.error(error);
+        }
+      };
+  });
 
   // Watch Player State
   player.addListener("player_state_changed", (state) => {
     if (!state) {
-      console.warn("player_state_changed: state is null");
       isPlayingOnThisDevice = false;
+      setDisplayOfTransferPlaybackDialog(true);
+      setDisplayOfMusicPlayer(false);
       return;
     }
 
@@ -105,17 +95,36 @@ function initializeSpotifyPlayer(token) {
     updateProgress(state.position, state.duration);
 
     // Update Track Information
-    const trackAlbumImage = document.getElementById("music-player-track-image");
-    const trackName = document.getElementById("music-player-track-name");
-    const trackArtist = document.getElementById("music-player-track-artist");
-    trackAlbumImage.src = state.track_window.current_track.album.images[0].url;
-    trackName.innerHTML = state.track_window.current_track.name;
-    trackArtist.innerHTML = state.track_window.current_track.artists
-      .map((artist) => artist.name)
-      .join(", ");
+    if (state.track_window.current_track) {
+      const trackAlbumImage = document.getElementById(
+        "music-player-track-image"
+      );
+      const trackName = document.getElementById("music-player-track-name");
+      const trackArtist = document.getElementById("music-player-track-artist");
+      trackAlbumImage.src =
+        state.track_window.current_track.album.images[0].url;
+      trackName.innerHTML = state.track_window.current_track.name;
+      trackArtist.innerHTML = state.track_window.current_track.artists
+        .map((artist) => artist.name)
+        .join(", ");
+    }
   });
 
   player.connect();
+}
+
+function connectPlayerToUI(player) {
+  document.getElementById("toggle-play-pause").onclick = () => {
+    player.togglePlay();
+  };
+
+  document.getElementById("next-track").onclick = () => {
+    player.nextTrack();
+  };
+
+  document.getElementById("previous-track").onclick = () => {
+    player.previousTrack();
+  };
 }
 
 function updateProgress(newPosition, newDuration) {
@@ -147,6 +156,31 @@ async function getLatestAccessToken() {
   const response = await fetch("/auth/spotify/token");
   const { token } = await response.json();
   return token;
+}
+
+function setDisplayOfTransferPlaybackDialog(isVisible) {
+  if (isVisible) {
+    document
+      .getElementById("music-player-transfer-playback-container")
+      .style.removeProperty("display");
+  } else {
+    document.getElementById(
+      "music-player-transfer-playback-container"
+    ).style.display = "none";
+  }
+}
+
+function setDisplayOfMusicPlayer(isVisible) {
+  if (!document.getElementById("music-player-container")) {
+    return;
+  }
+  if (isVisible) {
+    document
+      .getElementById("music-player-container")
+      .style.removeProperty("display");
+  } else {
+    document.getElementById("music-player-container").style.display = "none";
+  }
 }
 
 /** WebPlaybackState Object

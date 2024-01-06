@@ -3,9 +3,7 @@ import { PrismaClient } from "@prisma/client";
 import { TypedError } from "../errors/errors.types";
 import { handleErrorResponse } from "../utils/response.utils";
 
-import { getCurrentUser } from "../auth/auth.utils";
-import * as SpotifyService from "../spotify/spotify.service";
-import { SpotifyAccessToken } from "../auth/auth.types";
+import { secondsToTimeFormat } from "../utils/datetime.utils";
 
 import {
   PreferenceType,
@@ -61,28 +59,26 @@ playerRouter.get("/playlist", async (req: Request, res: Response) => {
     res.render("partials/playlist", {
       tracks: playlist.tracks.items,
     });
-
-    /*
-    const user = getCurrentUser(req);
-    let spotifyAccessToken: SpotifyAccessToken | null = null;
-    let isSpotifyAuthorized = false;
-
-    if (user) {
-      spotifyAccessToken = await SpotifyService.getAccessToken(user);
-
-      if (spotifyAccessToken) {
-        if (spotifyAccessToken.expiresAt < new Date()) {
-          spotifyAccessToken = await SpotifyService.refreshAccessToken(
-            spotifyAccessToken,
-            user
-          );
-        }
-
-        isSpotifyAuthorized = true;
-      }
-    }
-    */
   } catch (e: any) {
     handleErrorResponse(e, res);
   }
+});
+
+/**
+ * Returns the music player partial view
+ */
+playerRouter.get("/music-player", (req: Request, res: Response) => {
+  res.render("../views/partials/music-player", {
+    secondsToTimeFormat,
+    track: {
+      imageUrl:
+        "https://media.giphy.com/media/DhstvI3zZ598Nb1rFf/giphy-downsized.gif",
+      name: "...Loading Tracks...",
+      artists: [],
+    },
+    playState: {
+      trackPosition: 0,
+      trackDuration: 60,
+    },
+  });
 });

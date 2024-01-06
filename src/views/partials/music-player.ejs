@@ -1,22 +1,9 @@
-<div class="bordered-container music-player-container">
+<div
+  class="music-player-container elevated bordered-container"
+  id="music-player-container"
+>
   <!-- prettier-ignore -->
-  <% 
-    var track = {}; 
-    track.imageUrl = "https://media.giphy.com/media/DhstvI3zZ598Nb1rFf/giphy-downsized.gif";
-    track.name= "...Loading Track..."; 
-    track.artists = []; 
-    var isPlayingOnThisDevice = false; 
-  %>
-  <% if (!isPlayingOnThisDevice) { %>
-  <button id="music-player-transfer-playback">
-    Transfer Playback to This Device
-  </button>
-  <% } %>
-  <div
-    class="track-container"
-    style="display: none"
-    id="music-player-track-information"
-  >
+  <div class="track-container" id="music-player-track-information">
     <!-- prettier-ignore -->
     <%- 
     include('track/album-image', { 
@@ -34,13 +21,7 @@
       </div>
     </div>
   </div>
-  <div
-    class="play-state-container"
-    style="display: none"
-    id="music-player-play-state"
-  >
-    <% var playState = {}; playState.trackPosition = 100;
-    playState.trackDuration = 1000; // seconds %>
+  <div class="play-state-container" id="music-player-play-state">
     <div class="track-duration-container">
       <div class="track-duration" id="track-progress-text">
         <%= secondsToTimeFormat(playState.trackPosition) %>
@@ -80,4 +61,3 @@
     </div>
   </div>
 </div>
-<script src="/scripts/music-player.js"></script>
