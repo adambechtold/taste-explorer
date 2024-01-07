@@ -46,7 +46,18 @@ export async function getAccessToken(
   }
 
   const spotifyApi = new SpotifyApi(currentToken);
-  return spotifyApi.getActiveAccessToken();
+  const refreshedAccessToken = await spotifyApi.getActiveAccessToken();
+
+  if (refreshedAccessToken.token !== currentToken.token) {
+    SpotifyStorage.storeSpotifyAccessTokenForUser(
+      user,
+      refreshedAccessToken.token,
+      refreshedAccessToken.refreshToken,
+      refreshedAccessToken.expiresAt
+    );
+  }
+
+  return refreshedAccessToken;
 }
 
 /**
