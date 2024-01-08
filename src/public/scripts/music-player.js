@@ -114,11 +114,22 @@ function initializeSpotifyPlayer(token) {
         .join(", ");
 
       if (trackInPlaylist) {
-        const previousTrack = document.getElementsByClassName("track-playing");
-        if (previousTrack.length > 0) {
-          previousTrack[0].classList.remove("track-playing");
+        // show that the currently playing track is playing
+        setIsPlayingStyle(trackInPlaylist, true);
+
+        // any other tracks that are shown as playing should be toggled off
+        const isPlayingTracks = document.querySelectorAll(".track-playing");
+
+        if (isPlayingTracks.length > 0) {
+          isPlayingTracks.forEach((track) => {
+            if (track.id === trackInPlaylist.id) {
+              // skip because this track is the one playing
+              return;
+            }
+            // toggle off the track playing styling
+            setIsPlayingStyle(track, false);
+          });
         }
-        trackInPlaylist.classList.add("track-playing");
       }
     }
   });
@@ -193,6 +204,28 @@ function setDisplayOfMusicPlayer(isVisible) {
       .style.removeProperty("display");
   } else {
     document.getElementById("music-player-container").style.display = "none";
+  }
+}
+
+function setIsPlayingStyle(trackElement, isPlaying) {
+  const trackPlayingButtons =
+    trackElement.querySelectorAll(".track-button-play");
+
+  if (isPlaying) {
+    trackElement.classList.add("track-playing");
+
+    if (trackPlayingButtons.length > 0) {
+      trackPlayingButtons.forEach(
+        (button) => (button.style.visibility = "hidden")
+      );
+    }
+  } else {
+    trackElement.classList.remove("track-playing");
+    if (trackPlayingButtons.length > 0) {
+      trackPlayingButtons.forEach(
+        (button) => (button.style.visibility = "visible")
+      );
+    }
   }
 }
 

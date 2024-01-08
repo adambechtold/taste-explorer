@@ -104,7 +104,7 @@ a {
 }
 
 .track-playing {
-  background-color: var(--primary-color);
+  border-width: 0.5rem;
 }
 
 .track-image {
