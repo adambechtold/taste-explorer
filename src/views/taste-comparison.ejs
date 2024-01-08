@@ -1,12 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
   <%- include('partials/head') %>
+  <script src="https://sdk.scdn.co/spotify-player.js"></script>
+  <script src="/scripts/music-player.js"></script>
   <body>
     <%- include('partials/header') %>
     <div class="content-container">
-      <%- include('partials/select-playlist', {user1: {id: 1, name: 'Adam'},
-      user2: {id: 4, name: "Matt Sampson"}}) %>
-      <div id="playlist-container">No Playlist Selected</div>
+      <%- include('partials/select-playlist', { user1, user2 }) %>
+      <div id="playlist-container" />
       <%- include('partials/transfer-playback') %>
     </div>
   </body>

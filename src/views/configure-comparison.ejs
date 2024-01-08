@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<link rel="stylesheet" href="/stylesheets/configure-comparison.styles.css" />
+<html lang="en">
+  <%- include('partials/head') %>
+  <body>
+    <%- include('partials/header') %>
+    <div class="content-container">
+      <h3>Choose 2 last.fm users to compare.</h3>
+      <form
+        class="centered-container"
+        id="form-configure-comparison"
+        method="get"
+        action="/taste-comparison"
+      >
+        <div class="centered-container" id="choose-lastfm-usernames">
+          <input
+            list="users"
+            name="user1"
+            placeholder="User 1"
+            value="<%= (typeof user1 != 'undefined' && user1.lastfmAccount) ? user1.lastfmAccount.username : '' %>"
+            autocomplete="off"
+            required
+          />
+          vs.
+          <input
+            list="users"
+            name="user2"
+            placeholder="User 2"
+            value="<%= (typeof user2 !== 'undefined' && user2.lastfmAccount) ? user2.lastfmAccount.username : '' %>"
+            autocomplete="off"
+            required
+          />
+          <datalist id="users">
+            <% for (let i = 0; i < users.length; i++) { %>
+            <option value="<%- users[i].lastfmAccount.username %>" />
+            <% } %>
+          </datalist>
+        </div>
+        <input type="submit" value="Compare" />
+      </form>
+      <% if (typeof error !== 'undefined' && error.hasOwnProperty('message')) {
+      %>
+      <p><%= error.message %></p>
+      <% } %>
+    </div>
+  </body>
+  <%- include('partials/footer') %>
+</html>
+<script src="/scripts/configure-comparison.js"></script>

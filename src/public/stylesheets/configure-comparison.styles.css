@@ -1,0 +1,11 @@
+.content-container {
+  min-height: calc(100vh - 5rem);
+}
+
+#form-configure-comparison {
+  gap: 1rem;
+}
+
+#choose-lastfm-usernames {
+  gap: 0.8rem;
+}
