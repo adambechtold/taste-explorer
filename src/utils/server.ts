@@ -21,9 +21,15 @@ function createServer(): Express {
       contentSecurityPolicy: {
         directives: {
           defaultSrc: ["'self'"],
-          scriptSrc: ["'self'", "https://unpkg.com", "https://sdk.scdn.co"],
+          scriptSrc: [
+            "'self'",
+            "https://unpkg.com",
+            "https://sdk.scdn.co",
+            "https://kit.fontawesome.com",
+          ],
           imgSrc: ["'self'", "https://i.scdn.co", "https://media.giphy.com"],
           frameSrc: ["'self'", "https://sdk.scdn.co"],
+          connectSrc: ["'self'", "https://ka-f.fontawesome.com"],
         },
       },
     })

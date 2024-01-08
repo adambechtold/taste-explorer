@@ -11,10 +11,13 @@
       <%= track.artists.map(artist => artist.name).join(', ') %>
     </div>
   </div>
-  <div
-    class="track-button-play"
-    hx-trigger="click"
-    hx-put="/api/music/play-tracks"
-    hx-vals='{"trackIds": [<%= trackIds.join(',') %>], "offset": <%= track.index %>}'
-  ></div>
+  <div 
+  class="track-button-play clickable"
+  hx-trigger="click"
+  hx-put="/api/music/play-tracks"
+  hx-vals='{"trackIds": [<%= trackIds.join(',') %>], "offset": <%= track.index %>}'
+  >
+    <i class="fa-solid fa-play"></i>
+    <i class="fa-brands fa-spotify"></i>
+  </div>
 </div>

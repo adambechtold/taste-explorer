@@ -55,23 +55,24 @@ function initializeSpotifyPlayer(token) {
   // Ready
   player.addListener("ready", ({ device_id }) => {
     thisDeviceId = device_id;
-    document.getElementById("music-player-transfer-playback-button").onclick =
-      () => {
-        player.activateElement();
+    document.getElementById(
+      "music-player-transfer-playback-container"
+    ).onclick = () => {
+      player.activateElement();
 
-        try {
-          setDisplayOfTransferPlaybackDialog(false);
-          setDisplayOfMusicPlayer(true);
-          transferPlayStateToDevice(thisDeviceId).then(() => {
-            isPlayingOnThisDevice = true;
-            connectPlayerToUI(player);
-          });
-        } catch (error) {
-          setDisplayOfTransferPlaybackDialog(true);
-          setDisplayOfMusicPlayer(false);
-          console.error(error);
-        }
-      };
+      try {
+        setDisplayOfTransferPlaybackDialog(false);
+        setDisplayOfMusicPlayer(true);
+        transferPlayStateToDevice(thisDeviceId).then(() => {
+          isPlayingOnThisDevice = true;
+          connectPlayerToUI(player);
+        });
+      } catch (error) {
+        setDisplayOfTransferPlaybackDialog(true);
+        setDisplayOfMusicPlayer(false);
+        console.error(error);
+      }
+    };
   });
 
   // Watch Player State

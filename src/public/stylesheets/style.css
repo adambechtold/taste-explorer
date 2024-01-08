@@ -38,6 +38,14 @@ a {
   box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
 }
 
+.clickable {
+  cursor: pointer;
+}
+
+.fa-spotify {
+  color: #1ed760;
+}
+
 .configuration-container {
   display: flex;
   flex-direction: column;
@@ -118,15 +126,21 @@ a {
 }
 
 .track-button-play {
-  width: 0;
-  height: 0;
-  border-bottom: 20px solid transparent; /* Adjust size as needed */
-  border-top: 20px solid transparent; /* Adjust size as needed */
-  border-left: 40px solid #000; /* Adjust size and color as needed */
-}
+  position: relative;
 
-.track-button-play:hover {
-  cursor: pointer;
+  .fa-play {
+    color: black;
+    font-size: 3rem;
+  }
+
+  .fa-spotify {
+    position: absolute;
+    top: 50%;
+    left: 39%;
+    transform: translate(-50%, -50%);
+
+    font-size: 1rem;
+  }
 }
 
 /* Music Player */
@@ -208,9 +222,14 @@ a {
   min-width: 13.5rem;
 
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
   justify-content: center;
+  gap: 0.5rem;
+
+  .fa-spotify {
+    font-size: 1.8rem;
+  }
 
   @media (max-width: 400px), (min-width: 1400px) {
     left: 50%;
