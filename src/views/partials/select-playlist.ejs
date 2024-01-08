@@ -1,29 +1,31 @@
+<link rel="stylesheet" href="/stylesheets/select-playlist.styles.css" />
 <div class="select-playlist-container bordered-container">
-  <button
-    class="playlist-button"
-    hx-get="/player/playlist?userId1=<%= user1.id  %>=1&userId2=<%= user2.id %>&preferenceType=USER1-ONLY"
-    hx-trigger="click"
-    hx-target="#playlist-container"
-    hx-swap="innerHTML"
-  >
-    <%= user1.name %>
-  </button>
-  <button
-    class="playlist-button"
-    hx-get="/player/playlist?userId1=<%= user1.id  %>=1&userId2=<%= user2.id %>&preferenceType=BOTH"
-    hx-trigger="click"
-    hx-target="#playlist-container"
-    hx-swap="innerHTML"
-  >
-    Mix
-  </button>
-  <button
-    class="playlist-button"
-    hx-get="/player/playlist?userId1=<%= user1.id  %>=1&userId2=<%= user2.id %>&preferenceType=USER2-ONLY"
-    hx-trigger="click"
-    hx-target="#playlist-container"
-    hx-swap="innerHTML"
-  >
-    <%= user2.name %>
-  </button>
+  Generate a playlist for...
+  <div class="playlist-options-container">
+    <button
+      hx-get="/player/playlist?userId1=<%= user1.id  %>=1&userId2=<%= user2.id %>&preferenceType=USER1-ONLY"
+      hx-trigger="click"
+      hx-target="#playlist-container"
+      hx-swap="innerHTML"
+    >
+      <%= user1.lastfmAccount.username %>
+    </button>
+    <button
+      hx-get="/player/playlist?userId1=<%= user1.id  %>=1&userId2=<%= user2.id %>&preferenceType=BOTH"
+      hx-trigger="click"
+      hx-target="#playlist-container"
+      hx-swap="innerHTML"
+    >
+      both
+    </button>
+    <button
+      hx-get="/player/playlist?userId1=<%= user1.id  %>=1&userId2=<%= user2.id %>&preferenceType=USER2-ONLY"
+      hx-trigger="click"
+      hx-target="#playlist-container"
+      hx-swap="innerHTML"
+    >
+      <%= user2.lastfmAccount.username %>
+    </button>
+  </div>
+  <a href="/">Compare Different Users</a>
 </div>
