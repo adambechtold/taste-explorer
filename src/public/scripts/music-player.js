@@ -210,22 +210,28 @@ function setDisplayOfMusicPlayer(isVisible) {
 function setIsPlayingStyle(trackElement, isPlaying) {
   const trackPlayingButtons =
     trackElement.querySelectorAll(".track-button-play");
+  const isPlayingImages = trackElement.querySelectorAll(".is-playing-image");
 
   if (isPlaying) {
     trackElement.classList.add("track-playing");
-
-    if (trackPlayingButtons.length > 0) {
-      trackPlayingButtons.forEach(
-        (button) => (button.style.visibility = "hidden")
-      );
+    if (isPlayingImages.length > 0) {
+      isPlayingImages.forEach((image) => {
+        image.style.removeProperty("display");
+      });
     }
   } else {
     trackElement.classList.remove("track-playing");
-    if (trackPlayingButtons.length > 0) {
-      trackPlayingButtons.forEach(
-        (button) => (button.style.visibility = "visible")
-      );
+    if (isPlayingImages.length > 0) {
+      isPlayingImages.forEach((image) => {
+        image.style.display = "none";
+      });
     }
+  }
+
+  if (trackPlayingButtons.length > 0) {
+    trackPlayingButtons.forEach(
+      (button) => (button.style.visibility = isPlaying ? "hidden" : "visible")
+    );
   }
 }
 

@@ -56,8 +56,15 @@ playerRouter.get("/playlist", async (req: Request, res: Response) => {
       preferenceType as PreferenceType
     );
 
+    const tracks = playlist.tracks.items.map((item, index) => {
+      return {
+        ...item,
+        image: isPlayingImages[index % isPlayingImages.length],
+      };
+    });
+
     res.render("partials/playlist", {
-      tracks: playlist.tracks.items,
+      tracks,
     });
   } catch (e: any) {
     handleErrorResponse(e, res);
@@ -82,3 +89,38 @@ playerRouter.get("/music-player", (req: Request, res: Response) => {
     },
   });
 });
+
+const isPlayingImages = [
+  {
+    src: "https://media.giphy.com/media/3bE8vLlScDrNUC9FL5/giphy.gif",
+    alt: "Cartoon of a man bobbing is head and listening to music.",
+  },
+  {
+    src: "https://media.giphy.com/media/lqSDx8SI1916ysr4eq/giphy.gif",
+    alt: "Cartoon of a little bear with headphones listening to music.",
+  },
+  {
+    src: "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExY3AwanhpdW9mdW45dmpsemxkMW1qOTc4MmhzeHR4eG90NWxncnE2eCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/4oMoIbIQrvCjm/giphy.gif",
+    alt: "Bart Simpson wearing headphones listening to music.",
+  },
+  {
+    src: "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExbXU4YXRtZTk2d3ZkcWFoc3Rhd20wenQ4MTk1Mnprbzd6aGF5MTM3dSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/tbapfDZ4mZJn2/giphy.gif",
+    alt: "Cartoon of Jimmy Pesto Jr. from Bob's Burgers dancing to music.",
+  },
+  {
+    src: "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExYXBuNjRmNGpzcTR0YWRhYTJpbmkzM2owcWh2ZHZjbHUzcmE1b2Q4eSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/3oKHWeNw29DuZ6ocZa/giphy.gif",
+    alt: "Cartoon of Patrick Star from Spongebob Squarepants playing the drums.",
+  },
+  {
+    src: "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExZjdiZTNjcWJnbmNocXN3b3JiZnA5bTc4am5mYnlxdHZldHJqeG8ydSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/Y0GyZQpjqafoatTvjB/giphy.gif",
+    alt: "Cartoon of a bird with headphones on listening to music.",
+  },
+  {
+    src: "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExOWE0M2U1OTI1MTQ5NDE3czNuYXBzdzB4dDhid2pyMmt1amhrMW9weSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/YgsGYbakNrZg3sVmop/giphy.gif",
+    alt: "Cartoon of a man slowly playing the piano, pressing just one key at a time.",
+  },
+  {
+    src: "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExc2d1ZmtiOTRjdm1iZ2NyYWMzamFhMWtydXhoejA4c3VjaG52dnpxciZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/y2B9WU8Yl0rIs/giphy.gif",
+    alt: "Cartoon of Spongebob Squarepants playing the guitar.",
+  },
+];
