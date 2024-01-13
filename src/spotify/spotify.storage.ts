@@ -78,6 +78,43 @@ function getUserIdService(user: UserWithId): string {
   return `${user.id}-SPOTIFY`;
 }
 
+type SessionTokenId = string;
+const spotifyAccessTokensStorage = new Map<
+  SessionTokenId,
+  SpotifyAccessToken
+>();
+
+/**
+ * Saves the access token to an in-memory data store.
+ * @param {SessionTokenId} sessionId - The session ID.
+ * @param {SpotifyAccessToken} accessToken - The access token to be stored.
+ * @returns {SpotifyAccessToken} - The access token that was stored.
+ */
+export function storeSpotifyAccessTokenForSessionId(
+  sessionId: SessionTokenId,
+  accessToken: SpotifyAccessToken
+): SpotifyAccessToken {
+  spotifyAccessTokensStorage.set(sessionId, accessToken);
+  return accessToken;
+}
+
+/**
+ * Retrieves a Spotify access token from the in-memory data store.
+ * @param {SessionTokenId} sessionId - The session ID.
+ * @returns {SpotifyAccessToken | null} - The access token that was stored, or null if no access token was found.
+ */
+export function getSpotifyAccessTokenForSessionId(
+  sessionId: SessionTokenId
+): SpotifyAccessToken | null {
+  const accessToken = spotifyAccessTokensStorage.get(sessionId);
+
+  if (!accessToken) {
+    return null;
+  }
+
+  return accessToken;
+}
+
 export function convertSpotifyTrackFeaturesResponseToTrackFeatures(
   response: SpotifyAudioFeaturesResponse
 ): TrackFeatures {

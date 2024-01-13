@@ -2,7 +2,7 @@ import express, { Request, Response } from "express";
 import querystring from "querystring";
 
 import * as SpotifyService from "../spotify/spotify.service";
-import { getCurrentUser } from "./auth.utils";
+import { getSpotifyAccessTokenForSessionId } from "../spotify/spotify.storage";
 import SpotifyApi from "../spotify/spotify.api";
 import { handleErrorResponse } from "../utils/response.utils";
 import { TypedError } from "../errors/errors.types";
@@ -16,10 +16,20 @@ export const authRouter = express.Router();
  * Redirects the user to the Spotify login page.
  */
 authRouter.get("/login/spotify", (req: Request, res: Response) => {
-  const user = getCurrentUser(req);
-  if (!user) {
-    throw new Error("User not found");
+  const user1 = req.query.user1 as string;
+  const user2 = req.query.user2 as string;
+
+  if (!req.session.tasteComparison) {
+    req.session.tasteComparison = {};
   }
+
+  if (user1) {
+    req.session.tasteComparison.user1 = user1;
+  }
+  if (user2) {
+    req.session.tasteComparison.user2 = user2;
+  }
+
   res.redirect(spotifyApi.getUrlToRedirectToLogin());
 });
 
@@ -42,13 +52,35 @@ authRouter.get(
           })
       );
     } else {
+      /**
+       * This is here because I thought we would have people sign in, but now we don't.
+       * I'm leaving this here because a lot of services rely on the having a spotify access token 
+       * saved in the database. For example:
+       *   - Research Track Features
+       *   - Search Tracks
+
       const user = getCurrentUser(req);
       if (!user) {
         throw new Error("User not found");
       }
 
-      await SpotifyService.handleLoginCallback(code, user);
-      res.redirect("/");
+      */
+      await SpotifyService.handleLoginCallback(code, null, req.session.id);
+
+      if (req.session.tasteComparison) {
+        const user1 = req.session.tasteComparison.user1;
+        const user2 = req.session.tasteComparison.user2;
+
+        if (user1 && user2) {
+          res.redirect(
+            `/taste-comparison?user1=${user1}&user2=${user2}&spotifyLogin=true`
+          );
+        } else {
+          res.redirect("/");
+        }
+      } else {
+        res.redirect("/");
+      }
     }
   }
 );
@@ -59,11 +91,8 @@ authRouter.get(
  */
 authRouter.get("/spotify/token", async (req: Request, res: Response) => {
   try {
-    const user = getCurrentUser(req);
-    if (!user) {
-      throw new Error("User not found");
-    }
-    const token = await SpotifyService.getAccessToken(user);
+    // TODO: Consider abstracting this into the Spotify service.
+    const token = getSpotifyAccessTokenForSessionId(req.session.id);
 
     if (!token) {
       throw TypedError.create("Spotify token not found", 401);

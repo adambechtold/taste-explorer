@@ -3,6 +3,7 @@ import { getCurrentUser } from "../auth/auth.utils";
 
 import * as UserService from "../users/users.service";
 import * as SpotifyService from "../spotify/spotify.service";
+import { getSpotifyAccessTokenForSessionId } from "../spotify/spotify.storage";
 
 import { SpotifyAccessToken } from "../auth/auth.types";
 import { secondsToTimeFormat } from "../utils/datetime.utils";
@@ -64,11 +65,28 @@ indexRouter.get("/taste-comparison", async (req: Request, res: Response) => {
     }
   }
 
+  const hasSpotifyAccessToken = getSpotifyAccessTokenForSessionId(
+    req.sessionID
+  );
+
+  // Construct the Spotify login URL. This helps us return to the right page after logging in.
+  let spotifyLoginUrl = "/auth/login/spotify";
+  let params = new URLSearchParams();
+  if (user1) {
+    params.append("user1", user1.lastfmAccount.username as string);
+  }
+  if (user2) {
+    params.append("user2", user2.lastfmAccount.username as string);
+  }
+  spotifyLoginUrl += "?" + params.toString();
+
   if (user1 && user2) {
     res.render("taste-comparison", {
       secondsToTimeFormat: secondsToTimeFormat,
       user1,
       user2,
+      sessionHasSpotifyAccessToken: hasSpotifyAccessToken,
+      spotifyLoginRedirectURL: spotifyLoginUrl.toString(),
     });
   } else {
     const users = await UserService.getAllUsers();

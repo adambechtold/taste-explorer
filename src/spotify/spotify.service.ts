@@ -15,19 +15,28 @@ import { Track, TrackWithId } from "../music/music.types";
  */
 export async function handleLoginCallback(
   code: string | null,
-  user: UserWithId
+  user: UserWithId | null,
+  sessionId: string | null
 ): Promise<SpotifyAccessToken> {
   const spotifyApi = new SpotifyApi();
   const accessToken = await spotifyApi.getAccessTokenFromCode(code);
 
-  const savedAccessToken = await SpotifyStorage.storeSpotifyAccessTokenForUser(
-    user,
-    accessToken.token,
-    accessToken.refreshToken,
-    accessToken.expiresAt
-  );
+  if (user) {
+    // persist access token for user
+    await SpotifyStorage.storeSpotifyAccessTokenForUser(
+      user,
+      accessToken.token,
+      accessToken.refreshToken,
+      accessToken.expiresAt
+    );
+  }
 
-  return savedAccessToken;
+  if (sessionId) {
+    // persist access token for session
+    SpotifyStorage.storeSpotifyAccessTokenForSessionId(sessionId, accessToken);
+  }
+
+  return accessToken;
 }
 
 /**
