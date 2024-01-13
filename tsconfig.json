@@ -1,5 +1,5 @@
 {
-  "exclude": ["ignore"],
+  "exclude": ["ignore", "explore"],
   "compilerOptions": {
     /* Visit https://aka.ms/tsconfig to read more about this file */
 
