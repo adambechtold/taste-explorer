@@ -15,7 +15,7 @@
     "debug:local": "npm run docker:up:dev && npx dotenv -e .env.development.local -- ts-node-dev --inspect --transpile-only src/index.ts",
     "debug:remote": "npx dotenv -e .env.development.remote -- ts-node-dev --inspect --transpile-only src/index.ts",
     "build": "rimraf ./build && tsc && npm run copy-views",
-    "copy-views": "ncp ./src/views ./build/views",
+    "copy-views": "ncp ./src/views ./build/views && ncp ./src/public ./build/public",
     "start": "npm run build && node build/index.js"
   },
   "author": "",
