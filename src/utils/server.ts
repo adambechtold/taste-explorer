@@ -14,7 +14,10 @@ function createServer(): Express {
 
   app.set("view engine", "ejs");
   app.set("views", path.join(__dirname, "../views"));
+
+  console.log("let's make the assets available on public!");
   app.use(express.static(path.join(__dirname, "../public")));
+  console.log("They should be available now..");
 
   app.use(
     helmet({
