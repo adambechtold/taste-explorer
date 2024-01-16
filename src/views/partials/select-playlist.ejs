@@ -2,30 +2,36 @@
 <div class="select-playlist-container bordered-container">
   Generate a playlist for...
   <div class="playlist-options-container">
-    <button
+    <div
       hx-get="/player/playlist?userId1=<%= user1.id  %>=1&userId2=<%= user2.id %>&preferenceType=USER1-ONLY"
       hx-trigger="click"
       hx-target="#playlist-container"
       hx-swap="innerHTML"
+      class="venn-left"
     >
-      <%= user1.lastfmAccount.username %>
-    </button>
-    <button
+      <span class="label"><%= user1.lastfmAccount.username %></span>
+      <img src="/shapes/venn-left.svg" alt="left" />
+    </div>
+    <div
       hx-get="/player/playlist?userId1=<%= user1.id  %>=1&userId2=<%= user2.id %>&preferenceType=BOTH"
       hx-trigger="click"
       hx-target="#playlist-container"
       hx-swap="innerHTML"
+      class="venn-middle"
     >
-      both
-    </button>
-    <button
+      <span class="label">overlap</span>
+      <img src="/shapes/venn-middle.svg" alt="middle" />
+    </div>
+    <div
       hx-get="/player/playlist?userId1=<%= user1.id  %>=1&userId2=<%= user2.id %>&preferenceType=USER2-ONLY"
       hx-trigger="click"
       hx-target="#playlist-container"
       hx-swap="innerHTML"
+      class="venn-right"
     >
-      <%= user2.lastfmAccount.username %>
-    </button>
+      <span class="label"><%= user2.lastfmAccount.username %></span>
+      <img src="/shapes/venn-right.svg" alt="right" />
+    </div>
   </div>
   <a href="/">Compare Different Users</a>
 </div>
