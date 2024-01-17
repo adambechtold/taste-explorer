@@ -32,6 +32,7 @@
       max-width: 6rem;
       word-wrap: break-word;
       transform: translate(20%, -50%);
+      cursor: pointer;
     }
   }
 
@@ -53,6 +54,7 @@
       word-wrap: break-word;
       transform: translate(50%, -50%);
       z-index: 3;
+      cursor: pointer;
     }
   }
 
@@ -73,6 +75,7 @@
       max-width: 6rem;
       word-wrap: break-word;
       transform: translate(75%, -50%);
+      cursor: pointer;
     }
   }
 }
