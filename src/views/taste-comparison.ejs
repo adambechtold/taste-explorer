@@ -1,7 +1,18 @@
-<% const playerUrl = `/player/playlist?user1Id=${user1.id}&user2Id=${user2.id}`;
-const pageUrl = `/taste-comparison?user1Id=${user1.id}&user2Id=${user2.id}`;
-const getUrl = (baseUrl, preferenceType) => (
-`${baseUrl}&preferenceType=${preferenceType}` ) %>
+<!-- prettier-ignore -->
+<% 
+  const suffix = `?user1Id=${user1.id}&user2Id=${user2.id}`;
+
+  const playerUrl = `/player/playlist${suffix}`;
+  const playlistSelectorUrl = `/player/select-playlist${suffix}`; 
+  const pageUrl = `/taste-comparison${suffix}`;
+
+  const getUrl = (baseUrl, preferenceType) => {
+    if (typeof preferenceType === 'undefined') {
+      return baseUrl;
+    }
+    return `${baseUrl}&preferenceType=${preferenceType}`;
+    } 
+%>
 
 <!DOCTYPE html>
 <html lang="en">
@@ -11,16 +22,12 @@ const getUrl = (baseUrl, preferenceType) => (
   <body>
     <%- include('partials/header') %>
     <div class="content-container">
-      <%- include('partials/select-playlist', { user1, user2 }) %>
-      <!-- prettier-ignore -->
-      <% if (typeof preferenceType != 'undefined') { %>
       <div
-        hx-get="<%= getUrl(playerUrl, preferenceType) %>"
-        hx-trigger="load"
+        hx-get="<%= getUrl(playlistSelectorUrl, preferenceType) %>"
         hx-swap="innerHTML"
-        hx-target="#playlist-container"
+        hx-trigger="load"
       ></div>
-      <% } %>
+      <!-- prettier-ignore -->
       <div id="playlist-container"></div>
       <%- include('partials/transfer-playback') %>
     </div>
