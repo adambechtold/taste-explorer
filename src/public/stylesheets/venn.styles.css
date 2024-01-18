@@ -1,0 +1,44 @@
+.venn-parent {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.venn-child {
+  height: 205px;
+  width: 205px;
+  border-radius: 50%;
+  border: 1.5px solid black;
+}
+
+.venn-child-1 {
+  margin-right: -50px;
+  position: relative;
+  overflow: hidden;
+}
+
+.venn-child-2 {
+  margin-left: -50px;
+  position: relative;
+  overflow: hidden;
+  z-index: -1;
+}
+
+.venn-child-1::after {
+  content: "";
+  position: absolute;
+  height: 100%;
+  width: 100%;
+  border-radius: 50%;
+  left: 52%;
+  top: -1%;
+  border: 1.5px solid black;
+}
+
+.venn-active {
+  background-color: var(--primary-color);
+}
+
+.venn-after-active::after {
+  background-color: var(--primary-color);
+}
