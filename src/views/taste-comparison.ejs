@@ -2,7 +2,7 @@
 <% 
   const suffix = `?user1Id=${user1.id}&user2Id=${user2.id}`;
 
-  const playerUrl = `/player/playlist${suffix}`;
+  const playlistUrl = `/player/playlist${suffix}`;
   const playlistSelectorUrl = `/player/select-playlist${suffix}`; 
   const pageUrl = `/taste-comparison${suffix}`;
 
@@ -28,6 +28,14 @@
         hx-trigger="load"
       ></div>
       <!-- prettier-ignore -->
+      <% if (typeof preferenceType != 'undefined') { %>
+      <div
+        hx-get="<%= getUrl(playlistUrl, preferenceType) %>"
+        hx-trigger="load"
+        hx-target="#playlist-container"
+        hx-swap="innerHTML"
+      ></div>
+      <% } %>
       <div id="playlist-container"></div>
       <%- include('partials/transfer-playback') %>
     </div>
