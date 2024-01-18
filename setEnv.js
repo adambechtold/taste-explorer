@@ -31,7 +31,7 @@ client.getSecretValue({ SecretId: secretName }, function (err, data) {
   }
 
   const dbCredentials = JSON.parse(secret);
-  const dbPassword = dbCredentials.password;
+  const dbPassword = encodeURIComponent(dbCredentials.password);
   const dbUsername = dbCredentials.username;
 
   const dbUrl = `mysql://${dbUsername}:${dbPassword}@${dbHost}:${dbPort}/${dbName}`;

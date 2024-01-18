@@ -1,11 +1,12 @@
 import { PrismaClient } from "@prisma/client";
-const prisma = new PrismaClient();
 import { TypedError } from "../errors/errors.types";
 
 import { getAccountInfo } from "../lastfm/lastfm.service";
 import { User, UserWithId, UserWithLastfmAccountAndId } from "./users.types";
 import { createUser as createUserFromPrisma } from "./users.utils";
 import * as MusicService from "../music/music.service";
+
+const prisma = new PrismaClient({ log: ["error"] });
 
 /*
  * Service Methods
