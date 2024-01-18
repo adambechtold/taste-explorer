@@ -41,7 +41,7 @@
           hx-swap="innerHTML"
           class="venn-left"
         >
-          <span class="label"><%= user1.lastfmAccount.username %></span>
+          <span class="label <%= isLeftActive ? "venn-active-label" : "" %>"><%= user1.lastfmAccount.username %></span>
           <img src="/shapes/venn-left.svg" alt="left" />
         </div>
       </div>
@@ -62,7 +62,7 @@
           hx-push-url="<%= getUrl(pageUrl, 'BOTH') %>"
           class="venn-middle"
         >
-          <span class="label">overlap</span>
+          <span class="label <%= isMiddleActive ? "venn-active-label" : "" %>">overlap</span>
           <img src="/shapes/venn-middle.svg" alt="middle" />
         </div>
       </div>
@@ -83,7 +83,7 @@
         hx-push-url="<%= getUrl(pageUrl, 'USER2-ONLY') %>" 
         class="venn-right" 
         >
-        <span class="label"><%= user2.lastfmAccount.username %></span>
+        <span class="label <%= isRightActive ? "venn-active-label" : "" %>"><%= user2.lastfmAccount.username %></span>
         <img src="/shapes/venn-right.svg" alt="right" />
       </div>
     </div>
