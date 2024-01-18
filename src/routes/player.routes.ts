@@ -28,8 +28,6 @@ playerRouter.get("/select-playlist", async (req: Request, res: Response) => {
   let user1: UserWithLastfmAccountAndId | null = null;
   let user2: UserWithLastfmAccountAndId | null = null;
 
-  console.log("preferenceType", preferenceType);
-
   if (preferenceType) {
     if (!isValidPreferenceType(preferenceType)) {
       res.status(400).send("Invalid preference type.");
