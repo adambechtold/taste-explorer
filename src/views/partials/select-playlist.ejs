@@ -75,16 +75,16 @@
           hx-swap="outerHTML"
         ></div>
         <div 
-        id="right-trigger-update-playlist"
-        hx-get="<%= getUrl(playlistUrl, "USER2-ONLY") %>" 
-        hx-trigger="click-right-update-playlist"
-        hx-target="#playlist-container" 
-        hx-swap="innerHTML" 
-        hx-push-url="<%= getUrl(pageUrl, 'USER2-ONLY') %>" 
-        class="venn-right" 
+          id="right-trigger-update-playlist"
+          hx-get="<%= getUrl(playlistUrl, "USER2-ONLY") %>" 
+          hx-trigger="click-right-update-playlist"
+          hx-target="#playlist-container" 
+          hx-swap="innerHTML" 
+          hx-push-url="<%= getUrl(pageUrl, 'USER2-ONLY') %>" 
+          class="venn-right" 
         >
-        <span class="label <%= isRightActive ? "venn-active-label" : "" %>"><%= user2.lastfmAccount.username %></span>
-        <img src="/shapes/venn-right.svg" alt="right" />
+          <span class="label <%= isRightActive ? "venn-active-label" : "" %>"><%= user2.lastfmAccount.username %></span>
+          <img src="/shapes/venn-right.svg" alt="right" />
       </div>
     </div>
   </div>
