@@ -9,27 +9,6 @@ import { musicRouter } from "../music/music.router";
 import { authRouter } from "../auth/auth.router";
 import { playerRouter } from "../routes/player.routes";
 
-import { getDatabasePassword } from "./awsSecrets.utils";
-
-type AWSDatabaseSecret = {
-  username: string;
-  password: string;
-};
-if (!process.env.DATABASE_URL) {
-  const databaseHost = process.env.DATABASE_HOST || "localhost";
-  const databasePort = process.env.DATABASE_PORT || "3306";
-  const databaseName = process.env.DATABASE_NAME || "taste_explorer";
-
-  getDatabasePassword().then((secret) => {
-    if (!secret) {
-      throw new Error("No secret found");
-    }
-    const { username, password } = JSON.parse(secret) as AWSDatabaseSecret;
-
-    process.env.DATABASE_URL = `mysql://${username}:${password}@${databaseHost}:${databasePort}/${databaseName}`;
-  });
-}
-
 function createServer(): Express {
   const app = express();
 

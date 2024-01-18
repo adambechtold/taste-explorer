@@ -9,7 +9,7 @@
     "docker:up:test": "docker-compose up -d test-db",
     "docker:up:dev": "docker-compose up -d dev-db",
     "test": "npm run docker:up:test && npx dotenv -e .env.test.local -- npx prisma migrate dev && npx dotenv -e .env.test.local -- jest -i --coverage",
-    "dev": "npx ts-node-dev --respawn --pretty --transpile-only src/index.ts",
+    "dev": "node setEnv.js && npx ts-node-dev --respawn --pretty --transpile-only src/index.ts",
     "dev:local": "npm run docker:up:dev && npx dotenv -e .env.development.local -- ts-node-dev --respawn --pretty --transpile-only src/index.ts",
     "dev:remote": "npx dotenv -e .env.development.remote -- ts-node-dev --respawn --pretty --transpile-only src/index.ts",
     "debug:local": "npm run docker:up:dev && npx dotenv -e .env.development.local -- ts-node-dev --inspect --transpile-only src/index.ts",
