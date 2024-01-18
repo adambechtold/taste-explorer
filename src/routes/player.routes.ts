@@ -17,8 +17,8 @@ export const playerRouter = express.Router();
 
 playerRouter.get("/playlist", async (req: Request, res: Response) => {
   try {
-    const userId1 = parseInt(req.query.userId1 as string);
-    const userId2 = parseInt(req.query.userId2 as string);
+    const userId1 = parseInt(req.query.user1Id as string);
+    const userId2 = parseInt(req.query.user2Id as string);
     const preferenceType = req.query.preferenceType as string;
 
     if (isNaN(userId1) || isNaN(userId2)) {

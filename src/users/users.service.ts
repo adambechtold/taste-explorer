@@ -22,7 +22,9 @@ export async function testEndpoint(): Promise<string> {
  * @returns {Promise<UserWithId>} The user with the specified ID.
  * @throws {TypedError} If the user with the specified ID is not found or if there's an error in the retrieval process.
  */
-export async function getUserById(userId: number): Promise<UserWithId> {
+export async function getUserById(
+  userId: number
+): Promise<UserWithLastfmAccountAndId> {
   try {
     const user = await prisma.user.findFirst({
       where: { id: userId },
@@ -34,8 +36,17 @@ export async function getUserById(userId: number): Promise<UserWithId> {
     if (!user) {
       throw new TypedError(`User with id:${userId} not found.`, 404);
     }
+    if (!user.lastfmAccount) {
+      throw new TypedError(
+        `User with id:${userId} does not have a Last.fm account.`,
+        404
+      );
+    }
 
-    return createUserFromPrisma(user, user.lastfmAccount);
+    return createUserFromPrisma(
+      user,
+      user.lastfmAccount
+    ) as UserWithLastfmAccountAndId;
   } catch (e: any) {
     console.error(e);
     if (e instanceof TypedError) {

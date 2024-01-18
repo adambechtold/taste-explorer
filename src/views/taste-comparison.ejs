@@ -1,3 +1,8 @@
+<% const playerUrl = `/player/playlist?user1Id=${user1.id}&user2Id=${user2.id}`;
+const pageUrl = `/taste-comparison?user1Id=${user1.id}&user2Id=${user2.id}`;
+const getUrl = (baseUrl, preferenceType) => (
+`${baseUrl}&preferenceType=${preferenceType}` ) %>
+
 <!DOCTYPE html>
 <html lang="en">
   <%- include('partials/head') %>
@@ -7,6 +12,15 @@
     <%- include('partials/header') %>
     <div class="content-container">
       <%- include('partials/select-playlist', { user1, user2 }) %>
+      <!-- prettier-ignore -->
+      <% if (typeof preferenceType != 'undefined') { %>
+      <div
+        hx-get="<%= getUrl(playerUrl, preferenceType) %>"
+        hx-trigger="load"
+        hx-swap="innerHTML"
+        hx-target="#playlist-container"
+      ></div>
+      <% } %>
       <div id="playlist-container"></div>
       <%- include('partials/transfer-playback') %>
     </div>

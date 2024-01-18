@@ -5,6 +5,7 @@ import * as UserService from "../users/users.service";
 import * as SpotifyService from "../spotify/spotify.service";
 
 import { SpotifyAccessToken } from "../auth/auth.types";
+import { isValidPreferenceType } from "../music/playlists/playlists.types";
 import { secondsToTimeFormat } from "../utils/datetime.utils";
 import { NotFoundError, TypedError } from "../errors/errors.types";
 import { handleErrorResponse } from "../utils/response.utils";
@@ -36,13 +37,29 @@ indexRouter.get("/", async (req: Request, res: Response) => {
 indexRouter.get("/taste-comparison", async (req: Request, res: Response) => {
   const user1Username = req.query.user1 as string;
   const user2Username = req.query.user2 as string;
+  const user1Id = req.query.user1Id as string;
+  const user2Id = req.query.user2Id as string;
+
+  const preferenceType = req.query.preferenceType as string;
 
   // check if the users are valid
   let user1: UserWithLastfmAccountAndId | null = null;
   let user2: UserWithLastfmAccountAndId | null = null;
 
+  // check if the preference type is valid
+  if (preferenceType) {
+    if (!isValidPreferenceType(preferenceType)) {
+      res.status(400).send("Invalid preference type.");
+      return;
+    }
+  }
+
   try {
-    user1 = await UserService.getUsersByLastfmUsername(user1Username);
+    if (user1Id && !isNaN(parseInt(user1Id))) {
+      user1 = await UserService.getUserById(parseInt(user1Id));
+    } else {
+      user1 = await UserService.getUsersByLastfmUsername(user1Username);
+    }
   } catch (e: any) {
     if (e instanceof TypedError && e instanceof NotFoundError) {
       // Continue. Let's check user2.
@@ -52,10 +69,11 @@ indexRouter.get("/taste-comparison", async (req: Request, res: Response) => {
   }
 
   try {
-    if (!user2Username) {
-      throw TypedError.create("User 2 not found.", 404);
+    if (user2Id && !isNaN(parseInt(user2Id))) {
+      user2 = await UserService.getUserById(parseInt(user2Id));
+    } else {
+      user2 = await UserService.getUsersByLastfmUsername(user2Username);
     }
-    user2 = await UserService.getUsersByLastfmUsername(user2Username);
   } catch (e: any) {
     if (e instanceof TypedError && e instanceof NotFoundError) {
       // Continue. We'll handle not found below.
@@ -69,6 +87,7 @@ indexRouter.get("/taste-comparison", async (req: Request, res: Response) => {
       secondsToTimeFormat: secondsToTimeFormat,
       user1,
       user2,
+      preferenceType: preferenceType,
     });
   } else {
     const users = await UserService.getAllUsers();
