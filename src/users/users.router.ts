@@ -4,6 +4,8 @@
 
 import express, { Request, Response } from "express";
 import * as UserService from "./users.service";
+import { checkApiToken } from "../auth/auth.middleware";
+
 import { User } from "./users.types";
 
 import { TypedError } from "../errors/errors.types";
@@ -19,7 +21,7 @@ export const usersRouter = express.Router();
  * Controller Definitions
  */
 
-usersRouter.get("/test", async (req: Request, res: Response) => {
+usersRouter.get("/test", checkApiToken, async (req: Request, res: Response) => {
   try {
     const message = await UserService.testEndpoint();
     res.status(200).send(message);
