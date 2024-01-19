@@ -3,6 +3,7 @@ import { PrismaClient } from "@prisma/client";
 import { TypedError } from "../errors/errors.types";
 import { handleErrorResponse } from "../utils/response.utils";
 import { getCurrentUser } from "../auth/auth.utils";
+import { checkApiToken } from "../auth/auth.middleware";
 
 import * as PlaylistService from "./playlists/playlists.service";
 import * as MusicService from "./music.service";
@@ -78,35 +79,40 @@ musicRouter.get("/playlists/", async (req: Request, res: Response) => {
 });
 
 // --- Get Tracks by Name and Artist Name ---
-musicRouter.get("/tracks/", async (req: Request, res: Response) => {
-  try {
-    const trackName = req.query.name as string;
-    const artistName = req.query.artist as string;
+musicRouter.get(
+  "/tracks/",
+  checkApiToken,
+  async (req: Request, res: Response) => {
+    try {
+      const trackName = req.query.name as string;
+      const artistName = req.query.artist as string;
 
-    if (!trackName || !artistName) {
-      throw new TypedError("Track name and artist name are required", 400);
+      if (!trackName || !artistName) {
+        throw new TypedError("Track name and artist name are required", 400);
+      }
+
+      const track = await MusicService.getTrackByNameAndArtistName(
+        trackName,
+        artistName
+      );
+
+      if (!track) {
+        throw new TypedError("No tracks found.", 404);
+      }
+
+      res.status(200).send({
+        tracks: [track],
+      });
+    } catch (e: any) {
+      handleErrorResponse(e, res);
     }
-
-    const track = await MusicService.getTrackByNameAndArtistName(
-      trackName,
-      artistName
-    );
-
-    if (!track) {
-      throw new TypedError("No tracks found.", 404);
-    }
-
-    res.status(200).send({
-      tracks: [track],
-    });
-  } catch (e: any) {
-    handleErrorResponse(e, res);
   }
-});
+);
 
 // --- Identify Track from LastfmListen ---
 musicRouter.get(
   "/lastfm-listens/:id/track",
+  checkApiToken,
   async (req: Request, res: Response) => {
     try {
       const lastfmListenIdParam = req.params.id;
@@ -139,7 +145,7 @@ musicRouter.get(
   }
 );
 
-musicRouter.get("/track-features/:trackId", async (req, res) => {
+musicRouter.get("/track-features/:trackId", checkApiToken, async (req, res) => {
   try {
     const trackIdParam = req.params.trackId;
 
