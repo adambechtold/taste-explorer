@@ -31,7 +31,7 @@ usersRouter.get("/test", checkApiToken, async (req: Request, res: Response) => {
 });
 
 // --- Get All Users ---
-usersRouter.get("/", async (req: Request, res: Response) => {
+usersRouter.get("/", checkApiToken, async (req: Request, res: Response) => {
   try {
     const users: User[] = await UserService.getAllUsers();
     const response = {
@@ -46,7 +46,7 @@ usersRouter.get("/", async (req: Request, res: Response) => {
 });
 
 // --- Get User By ID ---
-usersRouter.get("/:id", async (req: Request, res: Response) => {
+usersRouter.get("/:id", checkApiToken, async (req: Request, res: Response) => {
   try {
     // if no id, then it's get all users
 
@@ -64,7 +64,7 @@ usersRouter.get("/:id", async (req: Request, res: Response) => {
 });
 
 // --- Create User by lastfm Username ---
-usersRouter.post("/", async (req: Request, res: Response) => {
+usersRouter.post("/", checkApiToken, async (req: Request, res: Response) => {
   try {
     const lastfmUsername = req.body.lastfmUsername;
 
@@ -84,21 +84,25 @@ usersRouter.post("/", async (req: Request, res: Response) => {
 });
 
 // --- Update User's Listen History ---
-usersRouter.post("/:id/listens", async (req: Request, res: Response) => {
-  try {
-    if (!req.params.id) {
-      throw new TypedError("Missing username", 400);
-    }
-    if (isNaN(parseInt(req.params.id))) {
-      throw new TypedError("ID must be a number", 400);
-    }
+usersRouter.post(
+  "/:id/listens",
+  checkApiToken,
+  async (req: Request, res: Response) => {
+    try {
+      if (!req.params.id) {
+        throw new TypedError("Missing username", 400);
+      }
+      if (isNaN(parseInt(req.params.id))) {
+        throw new TypedError("ID must be a number", 400);
+      }
 
-    const result = await UserService.triggerUpdateListenHistoryByUserId(
-      parseInt(req.params.id)
-    );
+      const result = await UserService.triggerUpdateListenHistoryByUserId(
+        parseInt(req.params.id)
+      );
 
-    res.status(200).send(result);
-  } catch (e: any) {
-    handleErrorResponse(e, res);
+      res.status(200).send(result);
+    } catch (e: any) {
+      handleErrorResponse(e, res);
+    }
   }
-});
+);
