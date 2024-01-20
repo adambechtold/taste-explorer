@@ -16,18 +16,20 @@ export const authRouter = express.Router();
  * Redirects the user to the Spotify login page.
  */
 authRouter.get("/login/spotify", (req: Request, res: Response) => {
-  const user1 = req.query.user1 as string;
-  const user2 = req.query.user2 as string;
+  const user1username = req.query.user1username as string;
+  const user2username = req.query.user2username as string;
 
+  // Add a taste comparison object to the session if it doesn't exist
   if (!req.session.tasteComparison) {
     req.session.tasteComparison = {};
   }
 
-  if (user1) {
-    req.session.tasteComparison.user1 = user1;
+  // Add the users to the taste comparison object
+  if (user1username) {
+    req.session.tasteComparison.user1username = user1username;
   }
-  if (user2) {
-    req.session.tasteComparison.user2 = user2;
+  if (user2username) {
+    req.session.tasteComparison.user2username = user2username;
   }
 
   res.redirect(spotifyApi.getUrlToRedirectToLogin());
@@ -62,8 +64,8 @@ authRouter.get(
       await SpotifyService.handleLoginCallback(code, null, req.session.id);
 
       if (req.session.tasteComparison) {
-        const user1 = req.session.tasteComparison.user1;
-        const user2 = req.session.tasteComparison.user2;
+        const user1 = req.session.tasteComparison.user1username;
+        const user2 = req.session.tasteComparison.user2username;
 
         if (user1 && user2) {
           res.redirect(

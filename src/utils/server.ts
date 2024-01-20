@@ -13,8 +13,8 @@ import { playerRouter } from "../routes/player.routes";
 declare module "express-session" {
   interface SessionData {
     tasteComparison: {
-      user1?: string;
-      user2?: string;
+      user1username?: string;
+      user2username?: string;
     };
   }
 }
