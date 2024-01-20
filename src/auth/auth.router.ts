@@ -53,18 +53,12 @@ authRouter.get(
       );
     } else {
       /**
-       * This is here because I thought we would have people sign in, but now we don't.
-       * I'm leaving this here because a lot of services rely on the having a spotify access token 
-       * saved in the database. For example:
-       *   - Research Track Features
-       *   - Search Tracks
-
-      const user = getCurrentUser(req);
-      if (!user) {
-        throw new Error("User not found");
-      }
-
-      */
+       * Right now, the User is null because we don't have users sign in.
+       *
+       * We still do need to have user 1's access token, so we can research information from spotify
+       * If that needs to be updated. This line will have to be updated manually.
+       * Use the getCurrentUser(req) function
+       */
       await SpotifyService.handleLoginCallback(code, null, req.session.id);
 
       if (req.session.tasteComparison) {
