@@ -22,10 +22,15 @@ declare module "express-session" {
 function createServer(): Express {
   const app = express();
 
+  const sessionSecret = process.env.SESSION_SECRET;
+  if (!sessionSecret) {
+    throw new Error("No session secret provided");
+  }
+
   app.use(
     session({
       // TODO: Change this to a real secret key
-      secret: "your-secret-key", // This is a secret key to sign the session ID cookie
+      secret: sessionSecret, // This is a secret key to sign the session ID cookie
       resave: false, // This option forces the session to be saved back to the session store
       saveUninitialized: true, // This option forces a session that is "uninitialized" to be saved to the store
       cookie: { secure: process.env.NODE_ENV === "production" }, // Set secure to true if serving over HTTPS
