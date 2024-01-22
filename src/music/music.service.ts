@@ -43,7 +43,7 @@ export async function triggerUpdateListensForUser(
   // END
   lastfmUpdateTracker.onEnd(() => {
     hasFinished = true;
-    sleep(10).then(() => {
+    sleep(100).then(() => {
       // TODO: Remove this sleep. Find a more robust way of ensuring the onEnd event runs after onStart (or onStart doesn't update analysis status)
       markUserUpdatingHistoryStatus(user.id, false, new Date());
     });
@@ -52,6 +52,7 @@ export async function triggerUpdateListensForUser(
   // ERROR
   lastfmUpdateTracker.onError((error) => {
     console.error(error);
+    hasFinished = true;
     markUserUpdatingHistoryStatus(user.id, false);
   });
 

@@ -45,7 +45,7 @@ function scheduleCreateListensTask() {
 }
 
 function scheduleUpdateListeningHistory() {
-  const intervalInMinutes = 10;
+  const intervalInMinutes = 1;
   console.log(
     `Update Listening History will run every ${intervalInMinutes} minutes`
   );
