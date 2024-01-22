@@ -1,6 +1,10 @@
 import express, { Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
-import { TypedError } from "../errors/errors.types";
+import {
+  NotAuthorizedError,
+  NotFoundError,
+  TypedError,
+} from "../errors/errors.types";
 import { handleErrorResponse } from "../utils/response.utils";
 import { getCurrentUser } from "../auth/auth.utils";
 import { checkApiToken } from "../auth/auth.middleware";
@@ -190,12 +194,6 @@ musicRouter.get("/track-features/:trackId", checkApiToken, async (req, res) => {
  * Plays a track on the user's Spotify account.
  */
 musicRouter.put("/play-track/:trackId", async (req, res) => {
-  const user = getCurrentUser(req);
-
-  if (!user) {
-    throw TypedError.create("User not found", 404);
-  }
-
   const trackIdParam = req.params.trackId;
 
   if (!trackIdParam) {
@@ -208,7 +206,7 @@ musicRouter.put("/play-track/:trackId", async (req, res) => {
     throw TypedError.create("Track ID must be a number", 400);
   }
 
-  await MusicService.playTracksForUser([trackId], 0, user);
+  await MusicService.playTracks([trackId], 0, req.session.id);
 
   res.status(204).send();
 });
@@ -218,12 +216,6 @@ musicRouter.put("/play-track/:trackId", async (req, res) => {
  */
 musicRouter.put("/play-tracks", async (req, res) => {
   try {
-    const user = getCurrentUser(req);
-
-    if (!user) {
-      throw TypedError.create("User not found", 404);
-    }
-
     const trackIdsParam = req.body.trackIds as string[];
     let offsetParam = req.body.offset as string;
 
@@ -238,10 +230,28 @@ musicRouter.put("/play-tracks", async (req, res) => {
       offset = 0;
     }
 
-    await MusicService.playTracksForUser(trackIds, offset, user);
+    await MusicService.playTracks(trackIds, offset, req.session.id);
 
     res.status(204).send();
   } catch (e: any) {
+    if (e instanceof TypedError) {
+      if (e instanceof NotFoundError) {
+        if (e.message.includes("No active device found")) {
+          res.render("partials/snackbar", {
+            message:
+              "No Spotify active devices found. Start playing in another app or transfer playback to this device.",
+          });
+          return;
+        }
+      }
+      if (e instanceof NotAuthorizedError) {
+        res.render("partials/snackbar", {
+          message: "Please login to Spotify to start listening.",
+        });
+        return;
+      }
+    }
+
     handleErrorResponse(e, res);
   }
 });

@@ -2,6 +2,7 @@ import { PrismaClient } from "@prisma/client";
 import { TypedError } from "../errors/errors.types";
 import { UserWithId, UserWithLastfmAccountAndId } from "../users/users.types";
 import { LastfmListenBatchImportSize } from "../lastfm/lastfm.types";
+import { getSpotifyAccessTokenForSessionId } from "../spotify/spotify.storage";
 import { sleep } from "../utils/misc.utils";
 
 import { Track, TrackWithId } from "./music.types";
@@ -315,13 +316,16 @@ async function getSpotifyAccessToken() {
  * @param {UserWithId} user - The user for whom to play the track.
  * @throws {TypedError} - If the track is not found.
  */
-export async function playTracksForUser(
+export async function playTracks(
   trackIds: number[],
   offset: number,
-  user: UserWithId
+  sessionId: string
 ) {
-  // TODO: Consider which access token to get based on the user.
-  const accessToken = await getSpotifyAccessToken();
+  const accessToken = getSpotifyAccessTokenForSessionId(sessionId);
+
+  if (!accessToken) {
+    throw TypedError.create("No access token found for this session", 401);
+  }
 
   const prismaTracks = await prisma.track.findMany({
     where: {

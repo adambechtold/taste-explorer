@@ -13,9 +13,13 @@ setInterval(() => {
 }, 1000);
 
 window.onSpotifyWebPlaybackSDKReady = () => {
-  getLatestAccessToken().then((token) => {
-    initializeSpotifyPlayer(token);
-  });
+  getLatestAccessToken()
+    .then((token) => {
+      initializeSpotifyPlayer(token);
+    })
+    .catch((error) => {
+      console.warn(error.message);
+    });
 };
 
 function initializeSpotifyPlayer(token) {
@@ -174,8 +178,14 @@ async function transferPlayStateToDevice(deviceId) {
 
 async function getLatestAccessToken() {
   const response = await fetch("/auth/spotify/token");
-  const { token } = await response.json();
-  return token;
+  if (response.ok) {
+    const { token } = await response.json();
+    return token;
+  }
+
+  if (response.status === 401) {
+    throw Error("Spotify Access Token not found. Please login to Spotify.");
+  }
 }
 
 function setDisplayOfTransferPlaybackDialog(isVisible) {
@@ -228,6 +238,15 @@ function setIsTrackPlayingStyle(trackElement, isPlaying) {
     trackPlayingButtons.forEach(
       (button) => (button.style.visibility = isPlaying ? "hidden" : "visible")
     );
+  }
+}
+
+function displayError(message) {
+  if (typeof showSnackbar === "function") {
+    showSnackbar(message);
+    setTimeout(() => {
+      clearSnackbar();
+    }, 3000);
   }
 }
 

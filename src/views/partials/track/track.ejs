@@ -19,6 +19,8 @@
     hx-trigger="click"
     hx-put="/api/music/play-tracks"
     hx-vals='{"trackIds": [<%= trackIds.join(',') %>], "offset": <%= track.index %>}'
+    hx-swap="outerHTML"
+    hx-target="#snackbar-container"
     >
     <i class="fa-solid fa-play"></i>
     <i class="fa-brands fa-spotify"></i>

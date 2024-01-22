@@ -1,4 +1,5 @@
 import express, { Express } from "express";
+import session from "express-session";
 import cors from "cors";
 import helmet from "helmet";
 import path from "path";
@@ -9,8 +10,32 @@ import { musicRouter } from "../music/music.router";
 import { authRouter } from "../auth/auth.router";
 import { playerRouter } from "../routes/player.routes";
 
+declare module "express-session" {
+  interface SessionData {
+    tasteComparison: {
+      user1username?: string;
+      user2username?: string;
+    };
+  }
+}
+
 function createServer(): Express {
   const app = express();
+
+  const sessionSecret = process.env.SESSION_SECRET;
+  if (!sessionSecret) {
+    throw new Error("No session secret provided");
+  }
+
+  app.use(
+    session({
+      // TODO: Change this to a real secret key
+      secret: sessionSecret, // This is a secret key to sign the session ID cookie
+      resave: false, // This option forces the session to be saved back to the session store
+      saveUninitialized: true, // This option forces a session that is "uninitialized" to be saved to the store
+      cookie: { secure: process.env.NODE_ENV === "production" }, // Set secure to true if serving over HTTPS
+    })
+  );
 
   app.set("view engine", "ejs");
   app.set("views", path.join(__dirname, "../views"));

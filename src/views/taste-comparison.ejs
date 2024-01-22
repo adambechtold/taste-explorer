@@ -37,8 +37,14 @@
       ></div>
       <% } %>
       <div id="playlist-container"></div>
-      <%- include('partials/transfer-playback') %>
+      <!-- prettier-ignore -->
+      <% if (sessionHasSpotifyAccessToken) { %> 
+        <%- include('partials/transfer-playback') %> 
+      <% } else { %> 
+        <%- include('partials/login-to-spotify-button', { spotifyLoginRedirectURL }) %>
+      <% } %>
     </div>
+    <%- include('partials/snackbar') %>
   </body>
   <%- include('partials/footer') %>
 </html>

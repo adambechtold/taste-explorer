@@ -1,0 +1,18 @@
+#snackbar-container {
+  visibility: hidden;
+  max-width: 300px;
+
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+
+  padding: 1rem;
+
+  position: fixed;
+  z-index: 10;
+  bottom: 2.5rem;
+  left: 50%;
+  transform: translate(-50%, 0);
+}
