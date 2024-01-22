@@ -26,7 +26,10 @@
 
 .venn-child-1::after {
   content: "";
+<<<<<<< HEAD
   background-color: white;
+=======
+>>>>>>> e06efa0 (so the venn diagram is unstyled until a preference type is selected)
   position: absolute;
   height: 100%;
   width: 100%;
