@@ -1,6 +1,7 @@
 import express, { Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
-import { TypedError } from "../errors/errors.types";
+
+import { TypedError, NotFoundError } from "../errors/errors.types";
 import { handleErrorResponse } from "../utils/response.utils";
 
 import { secondsToTimeFormat } from "../utils/datetime.utils";
@@ -10,15 +11,74 @@ import {
   isValidPreferenceType,
 } from "../music/playlists/playlists.types";
 import * as PlaylistService from "../music/playlists/playlists.service";
+import { UserWithLastfmAccountAndId } from "../users/users.types";
+import { getUserById, getUsersByLastfmUsername } from "../users/users.service";
 
 const prisma = new PrismaClient();
 
 export const playerRouter = express.Router();
 
+playerRouter.get("/select-playlist", async (req: Request, res: Response) => {
+  const user1Username = req.query.user1 as string;
+  const user2Username = req.query.user2 as string;
+  const user1Id = req.query.user1Id as string;
+  const user2Id = req.query.user2Id as string;
+  const preferenceType = req.query.preferenceType as string;
+
+  let user1: UserWithLastfmAccountAndId | null = null;
+  let user2: UserWithLastfmAccountAndId | null = null;
+
+  if (preferenceType) {
+    if (!isValidPreferenceType(preferenceType)) {
+      res.status(400).send("Invalid preference type.");
+      return;
+    }
+  }
+
+  try {
+    if (user1Id && !isNaN(parseInt(user1Id))) {
+      user1 = await getUserById(parseInt(user1Id));
+    } else {
+      user1 = await getUsersByLastfmUsername(user1Username);
+    }
+  } catch (e: any) {
+    if (e instanceof TypedError && e instanceof NotFoundError) {
+      // continue
+    } else {
+      handleErrorResponse(e, res);
+    }
+  }
+
+  try {
+    if (user2Id && !isNaN(parseInt(user2Id))) {
+      user2 = await getUserById(parseInt(user2Id));
+    } else {
+      user2 = await getUsersByLastfmUsername(user2Username);
+    }
+  } catch (e: any) {
+    if (e instanceof TypedError && e instanceof NotFoundError) {
+      // continue
+    } else {
+      handleErrorResponse(e, res);
+    }
+  }
+
+  if (!user1 || !user2) {
+    res.status(404).send("User not found.");
+    return;
+  }
+
+  res.render("partials/select-playlist", {
+    user1,
+    user2,
+    preferenceType,
+  });
+});
+
 playerRouter.get("/playlist", async (req: Request, res: Response) => {
   try {
-    const userId1 = parseInt(req.query.userId1 as string);
-    const userId2 = parseInt(req.query.userId2 as string);
+    const userId1 = parseInt(req.query.user1Id as string);
+    const userId2 = parseInt(req.query.user2Id as string);
     const preferenceType = req.query.preferenceType as string;
 
     if (isNaN(userId1) || isNaN(userId2)) {

@@ -13,6 +13,18 @@ a {
   text-decoration: none;
 }
 
+button {
+  font-family: inherit;
+  padding: 0.5rem;
+  border: none;
+  border-radius: 0.3rem;
+}
+
+button.applied {
+  background-color: var(--primary-color);
+  color: white;
+}
+
 .content-container {
   display: flex;
   flex-direction: column;
@@ -29,7 +41,7 @@ a {
 
 .bordered-container {
   border: 1px solid var(--primary-color);
-  border-radius: 5px;
+  border-radius: 0.3rem;
   padding: 20px;
 }
 
@@ -179,7 +191,7 @@ a {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
+  gap: 0.8rem;
 }
 
 .track-duration-container {
@@ -200,19 +212,20 @@ a {
   flex-direction: row;
   align-items: center;
   justify-content: space-around;
-  width: 100%;
-  max-width: 200px;
-  min-width: 150px;
+  gap: 0.4rem;
 
   button.track-controls-button {
-    font-size: 2rem;
-    background: none;
+    background-color: transparent !important;
     color: inherit;
     border: none;
     padding: 0;
     outline: inherit;
     cursor: pointer;
   }
+}
+
+.track-controls-icon {
+  height: 2rem;
 }
 
 .track-progress-bar {
@@ -239,4 +252,11 @@ a {
     left: 50%;
     transform: translate(-50%, 0);
   }
+}
+
+.header-container {
+  display: flex;
+  flex-direction: column;
+  align-items: start;
+  justify-content: center;
 }

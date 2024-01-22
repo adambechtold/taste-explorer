@@ -88,13 +88,9 @@ function initializeSpotifyPlayer(token) {
       return;
     }
 
-    if (state.paused) {
-      isPlaying = false;
-      document.getElementById("toggle-play-pause").innerHTML = "▶︎";
-    } else {
-      isPlaying = true;
-      document.getElementById("toggle-play-pause").innerHTML = "⏸︎";
-    }
+    // Update Play/Pause Button
+    isPlaying = !state.paused;
+    setMusicPlayerIsPlayingState(isPlaying);
 
     // Update Track Progress
     updateProgress(state.position, state.duration);
@@ -119,7 +115,7 @@ function initializeSpotifyPlayer(token) {
 
       if (trackInPlaylist) {
         // show that the currently playing track is playing
-        setIsPlayingStyle(trackInPlaylist, true);
+        setIsTrackPlayingStyle(trackInPlaylist, true);
 
         // any other tracks that are shown as playing should be toggled off
         const isPlayingTracks = document.querySelectorAll(".track-playing");
@@ -131,7 +127,7 @@ function initializeSpotifyPlayer(token) {
               return;
             }
             // toggle off the track playing styling
-            setIsPlayingStyle(track, false);
+            setIsTrackPlayingStyle(track, false);
           });
         }
       }
@@ -142,15 +138,15 @@ function initializeSpotifyPlayer(token) {
 }
 
 function connectPlayerToUI(player) {
-  document.getElementById("toggle-play-pause").onclick = () => {
+  document.getElementById("toggle-play-pause-button").onclick = () => {
     player.togglePlay();
   };
 
-  document.getElementById("next-track").onclick = () => {
+  document.getElementById("next-track-button").onclick = () => {
     player.nextTrack();
   };
 
-  document.getElementById("previous-track").onclick = () => {
+  document.getElementById("previous-track-button").onclick = () => {
     player.previousTrack();
   };
 }
@@ -217,7 +213,7 @@ function setDisplayOfMusicPlayer(isVisible) {
   }
 }
 
-function setIsPlayingStyle(trackElement, isPlaying) {
+function setIsTrackPlayingStyle(trackElement, isPlaying) {
   const trackPlayingButtons =
     trackElement.querySelectorAll(".track-button-play");
   const isPlayingImages = trackElement.querySelectorAll(".is-playing-image");
@@ -251,6 +247,15 @@ function displayError(message) {
     setTimeout(() => {
       clearSnackbar();
     }, 3000);
+  }
+}
+
+function setMusicPlayerIsPlayingState(isPlaying) {
+  const togglePlayPause = document.getElementById("toggle-play-pause-img");
+  if (isPlaying) {
+    togglePlayPause.src = "/images/icons/icon-pause.svg";
+  } else {
+    togglePlayPause.src = "/images/icons/icon-play.svg";
   }
 }
 

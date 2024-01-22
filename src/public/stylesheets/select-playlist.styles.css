@@ -4,6 +4,8 @@
   align-items: center;
   justify-content: center;
   padding: 20px;
+  margin-left: 4rem;
+  margin-right: 5rem;
   gap: 1rem;
 
   .playlist-options-container {
@@ -11,13 +13,73 @@
     flex-direction: row;
     align-items: center;
     justify-content: center;
-    gap: 1rem;
+    max-width: 300px;
+  }
+
+  .venn-left {
+    z-index: 1;
+    transform: translate(39%, 0);
+
+    img {
+      width: 13rem;
+      height: 13rem;
+    }
+
+    .label {
+      position: absolute;
+      top: 50%;
+      right: 50%;
+      max-width: 6rem;
+      word-wrap: break-word;
+      transform: translate(20%, -50%);
+      cursor: pointer;
+    }
+  }
+
+  .venn-middle {
+    position: relative;
+    z-index: 2;
+    transform: translate(2%, 0%);
+
+    img {
+      height: 11.1rem;
+      transform: scale(1.015);
+    }
+
+    .label {
+      position: absolute;
+      top: 50%;
+      right: 50%;
+      max-width: 5rem;
+      word-wrap: break-word;
+      transform: translate(50%, -50%);
+      z-index: 3;
+      cursor: pointer;
+    }
+  }
+
+  .venn-right {
+    position: relative;
+    z-index: 1;
+    transform: translate(-37.2%, 0.4%);
+
+    img {
+      width: 13rem;
+      height: 13rem;
+    }
+
+    .label {
+      position: absolute;
+      top: 50%;
+      right: 50%;
+      max-width: 6rem;
+      word-wrap: break-word;
+      transform: translate(75%, -50%);
+      cursor: pointer;
+    }
   }
 }
 
-.select-playlist-container .header-container {
-  display: flex;
-  flex-direction: column;
-  align-items: start;
-  justify-content: center;
+.venn-active-label {
+  color: white;
 }

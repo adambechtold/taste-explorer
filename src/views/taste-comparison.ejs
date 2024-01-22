@@ -1,3 +1,19 @@
+<!-- prettier-ignore -->
+<% 
+  const suffix = `?user1Id=${user1.id}&user2Id=${user2.id}`;
+
+  const playlistUrl = `/player/playlist${suffix}`;
+  const playlistSelectorUrl = `/player/select-playlist${suffix}`; 
+  const pageUrl = `/taste-comparison${suffix}`;
+
+  const getUrl = (baseUrl, preferenceType) => {
+    if (typeof preferenceType === 'undefined') {
+      return baseUrl;
+    }
+    return `${baseUrl}&preferenceType=${preferenceType}`;
+    } 
+%>
+
 <!DOCTYPE html>
 <html lang="en">
   <%- include('partials/head') %>
@@ -6,7 +22,20 @@
   <body>
     <%- include('partials/header') %>
     <div class="content-container">
-      <%- include('partials/select-playlist', { user1, user2 }) %>
+      <div
+        hx-get="<%= getUrl(playlistSelectorUrl, preferenceType) %>"
+        hx-swap="innerHTML"
+        hx-trigger="load"
+      ></div>
+      <!-- prettier-ignore -->
+      <% if (typeof preferenceType != 'undefined') { %>
+      <div
+        hx-get="<%= getUrl(playlistUrl, preferenceType) %>"
+        hx-trigger="load"
+        hx-target="#playlist-container"
+        hx-swap="innerHTML"
+      ></div>
+      <% } %>
       <div id="playlist-container"></div>
       <!-- prettier-ignore -->
       <% if (sessionHasSpotifyAccessToken) { %> 

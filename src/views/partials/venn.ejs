@@ -1,0 +1,27 @@
+<!-- prettier-ignore -->
+<% 
+  /**
+   * Inputs
+   * - isLeftActive
+   * - isMiddleActive
+   * - isRightActive
+  */
+  let leftStyleClasses = "";
+  if (typeof isLeftActive !== "undefined" && isLeftActive) {
+    leftStyleClasses += " venn-active";
+  }
+  if (typeof isMiddleActive !== "undefined" && isMiddleActive) {
+    leftStyleClasses += " venn-after-active";
+  }
+
+  let rightStyleClasses = "";
+  if (typeof isRightActive !== "undefined" && isRightActive) {
+    rightStyleClasses += " venn-active";
+  }
+
+%>
+
+<div class="venn-parent">
+  <div class="venn-child venn-child-1 <%= leftStyleClasses %>"></div>
+  <div class="venn-child venn-child-2 <%= rightStyleClasses %>"></div>
+</div>

@@ -1,31 +1,93 @@
-<link rel="stylesheet" href="/stylesheets/select-playlist.styles.css" />
-<div class="select-playlist-container bordered-container">
+<!-- prettier-ignore -->
+<% 
+  const suffix = `?user1Id=${user1.id}&user2Id=${user2.id}`; 
+  const playlistUrl = `/player/playlist${suffix}`; 
+  const playlistSelectorUrl = `/player/select-playlist${suffix}`; 
+  const pageUrl = `/taste-comparison${suffix}`; 
+
+  const getUrl = (baseUrl, preferenceType) => { 
+    if (typeof preferenceType === 'undefined') { 
+      return baseUrl; 
+    } 
+  
+    return `${baseUrl}&preferenceType=${preferenceType}`; 
+  } 
+
+  const isRightActive = preferenceType === 'USER2-ONLY'; 
+  const isLeftActive = preferenceType === 'USER1-ONLY'; 
+  const isMiddleActive = preferenceType ==='BOTH'; 
+%>
+
+<div class="select-playlist-container bordered-container" id="select-playlist" >
   Generate a playlist for...
+  <div style="position: absolute">
+    <%- include('venn', { isLeftActive, isRightActive, isMiddleActive }) %>
+  </div>
   <div class="playlist-options-container">
-    <button
-      hx-get="/player/playlist?userId1=<%= user1.id  %>=1&userId2=<%= user2.id %>&preferenceType=USER1-ONLY"
-      hx-trigger="click"
-      hx-target="#playlist-container"
-      hx-swap="innerHTML"
-    >
-      <%= user1.lastfmAccount.username %>
-    </button>
-    <button
-      hx-get="/player/playlist?userId1=<%= user1.id  %>=1&userId2=<%= user2.id %>&preferenceType=BOTH"
-      hx-trigger="click"
-      hx-target="#playlist-container"
-      hx-swap="innerHTML"
-    >
-      both
-    </button>
-    <button
-      hx-get="/player/playlist?userId1=<%= user1.id  %>=1&userId2=<%= user2.id %>&preferenceType=USER2-ONLY"
-      hx-trigger="click"
-      hx-target="#playlist-container"
-      hx-swap="innerHTML"
-    >
-      <%= user2.lastfmAccount.username %>
-    </button>
+      <div id="left-trigger-div">
+        <div
+          id="left-trigger-update-select-playlist"
+          hx-get="<%= getUrl(playlistSelectorUrl, "USER1-ONLY") %>"
+          hx-trigger="click-left-select-playlist"
+          hx-target="#select-playlist"
+          hx-swap="outerHTML"
+        ></div>
+        <div
+          id="left-trigger-update-playlist"
+          hx-get="<%= getUrl(playlistUrl, 'USER1-ONLY') %>"
+          hx-trigger="click-left-update-playlist"
+          hx-target="#playlist-container"
+          hx-push-url="<%= getUrl(pageUrl, 'USER1-ONLY') %>"
+          hx-swap="innerHTML"
+          class="venn-left"
+        >
+          <span class="label <%= isLeftActive ? "venn-active-label" : "" %>"><%= user1.lastfmAccount.username %></span>
+          <img src="/shapes/venn-left.svg" alt="left" />
+        </div>
+      </div>
+      <div id="middle-trigger-div">
+        <div
+          id="middle-trigger-update-select-playlist"
+          hx-get="<%= getUrl(playlistSelectorUrl, "BOTH") %>"
+          hx-trigger="click-middle-select-playlist"
+          hx-target="#select-playlist"
+          hx-swap="outerHTML"
+        ></div>
+        <div
+          id="middle-trigger-update-playlist"
+          hx-get="<%= getUrl(playlistUrl, 'BOTH') %>"
+          hx-trigger="click-middle-update-playlist"
+          hx-target="#playlist-container"
+          hx-swap="innerHTML"
+          hx-push-url="<%= getUrl(pageUrl, 'BOTH') %>"
+          class="venn-middle"
+        >
+          <span class="label <%= isMiddleActive ? "venn-active-label" : "" %>">overlap</span>
+          <img src="/shapes/venn-middle.svg" alt="middle" />
+        </div>
+      </div>
+      <div id="right-trigger-div">
+        <div
+          id="right-trigger-update-select-playlist"
+          hx-get="<%= getUrl(playlistSelectorUrl, "USER2-ONLY") %>"
+          hx-trigger="click-right-select-playlist"
+          hx-target="#select-playlist"
+          hx-swap="outerHTML"
+        ></div>
+        <div 
+          id="right-trigger-update-playlist"
+          hx-get="<%= getUrl(playlistUrl, "USER2-ONLY") %>" 
+          hx-trigger="click-right-update-playlist"
+          hx-target="#playlist-container" 
+          hx-swap="innerHTML" 
+          hx-push-url="<%= getUrl(pageUrl, 'USER2-ONLY') %>" 
+          class="venn-right" 
+        >
+          <span class="label <%= isRightActive ? "venn-active-label" : "" %>"><%= user2.lastfmAccount.username %></span>
+          <img src="/shapes/venn-right.svg" alt="right" />
+      </div>
+    </div>
   </div>
   <a href="/">Compare Different Users</a>
 </div>
+<script src="/scripts/select-playlist.js"></script>
