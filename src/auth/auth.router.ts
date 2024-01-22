@@ -87,7 +87,6 @@ authRouter.get(
  */
 authRouter.get("/spotify/token", async (req: Request, res: Response) => {
   try {
-    // TODO: Consider abstracting this into the Spotify service.
     const token = getSpotifyAccessTokenForSessionId(req.session.id);
 
     if (!token) {
