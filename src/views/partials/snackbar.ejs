@@ -1,0 +1,12 @@
+<script src="/scripts/snackbar.js"></script>
+<link rel="stylesheet" href="/stylesheets/snackbar.styles.css" />
+<div
+  id="snackbar-container"
+  class="elevated bordered-container"
+  style="<%= typeof message === 'undefined' ? 'visibility: hidden' : 'visibility: visible' %>"
+>
+  <div id="snackbar-message">
+    <% if (typeof message != "undefined") { %> <%= message %> <% } %>
+  </div>
+  <button id="snackbar-dismiss-button">Dismiss</button>
+</div>

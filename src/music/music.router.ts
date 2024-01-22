@@ -1,6 +1,10 @@
 import express, { Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
-import { TypedError } from "../errors/errors.types";
+import {
+  NotAuthorizedError,
+  NotFoundError,
+  TypedError,
+} from "../errors/errors.types";
 import { handleErrorResponse } from "../utils/response.utils";
 import { getCurrentUser } from "../auth/auth.utils";
 
@@ -224,6 +228,24 @@ musicRouter.put("/play-tracks", async (req, res) => {
 
     res.status(204).send();
   } catch (e: any) {
+    if (e instanceof TypedError) {
+      if (e instanceof NotFoundError) {
+        if (e.message.includes("No active device found")) {
+          res.render("partials/snackbar", {
+            message:
+              "No Spotify active devices found. Start playing in another app or transfer playback to this device.",
+          });
+          return;
+        }
+      }
+      if (e instanceof NotAuthorizedError) {
+        res.render("partials/snackbar", {
+          message: "Please login to Spotify to start listening.",
+        });
+        return;
+      }
+    }
+
     handleErrorResponse(e, res);
   }
 });
