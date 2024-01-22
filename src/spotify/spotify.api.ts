@@ -61,7 +61,8 @@ export default class SpotifyApi {
   }
 
   getRedirectUrl() {
-    return "http://localhost:4000/auth" + this.getCallbackEndpoint();
+    const baseURL = process.env.BASE_URL || "http://localhost:4000";
+    return baseURL + "/auth" + this.getCallbackEndpoint();
   }
 
   getUrlToRedirectToLogin() {
