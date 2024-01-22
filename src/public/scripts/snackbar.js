@@ -16,8 +16,6 @@ function attachSnackbarCloseButton() {
     });
 }
 
-window.attachSnackbarCloseButton = attachSnackbarCloseButton;
-
 document.addEventListener("DOMContentLoaded", function () {
   attachSnackbarCloseButton();
 });
