@@ -3,7 +3,11 @@
 <div
   id="snackbar-container"
   class="elevated bordered-container"
-  style="<%= typeof message === 'undefined' ? 'visibility: hidden' : 'visibility: visible' %>"
+  <% if (typeof message !== 'undefined') { %>
+    style="visibility: visible"
+  <% } else { %>
+    style="visibility: hidden"
+  <% } %>
 >
   <div id="snackbar-message">
     <% if (typeof message != "undefined") { %> <%= message %> <% } %>
