@@ -184,12 +184,6 @@ musicRouter.get("/track-features/:trackId", async (req, res) => {
  * Plays a track on the user's Spotify account.
  */
 musicRouter.put("/play-track/:trackId", async (req, res) => {
-  const user = getCurrentUser(req);
-
-  if (!user) {
-    throw TypedError.create("User not found", 404);
-  }
-
   const trackIdParam = req.params.trackId;
 
   if (!trackIdParam) {
@@ -202,7 +196,7 @@ musicRouter.put("/play-track/:trackId", async (req, res) => {
     throw TypedError.create("Track ID must be a number", 400);
   }
 
-  await MusicService.playTracksForUser([trackId], 0, user);
+  await MusicService.playTracks([trackId], 0, req.session.id);
 
   res.status(204).send();
 });
@@ -212,12 +206,6 @@ musicRouter.put("/play-track/:trackId", async (req, res) => {
  */
 musicRouter.put("/play-tracks", async (req, res) => {
   try {
-    const user = getCurrentUser(req);
-
-    if (!user) {
-      throw TypedError.create("User not found", 404);
-    }
-
     const trackIdsParam = req.body.trackIds as string[];
     let offsetParam = req.body.offset as string;
 
@@ -232,7 +220,7 @@ musicRouter.put("/play-tracks", async (req, res) => {
       offset = 0;
     }
 
-    await MusicService.playTracksForUser(trackIds, offset, user);
+    await MusicService.playTracks(trackIds, offset, req.session.id);
 
     res.status(204).send();
   } catch (e: any) {
