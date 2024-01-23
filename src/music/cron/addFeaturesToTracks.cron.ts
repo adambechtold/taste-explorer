@@ -11,6 +11,8 @@ import { pauseTask } from "../../utils/cron.utils";
 const prisma = new PrismaClient({ log: ["error"] });
 const logger = new Logger("addFeaturesToTracks");
 
+const showProgress = false;
+
 export async function addFeaturesToTracks(task: cron.ScheduledTask) {
   const tracks = await getNextTracksToResearch();
   logger.log(
@@ -47,22 +49,24 @@ export async function addFeaturesToTracks(task: cron.ScheduledTask) {
     tracksAnalyzed: numTrackAnalyzed,
   } = await getCoverage();
 
-  logger.log("============================================================");
-  logger.log(`Added features to ${tracksWithFeatures.length} tracks`);
-  console.table({
-    "Total Number of Tracks:": totalTracks,
-    "Tracks With Features": numTracksWithFeatures,
-    "Percent Coverage with Features": `${(
-      (numTracksWithFeatures / totalTracks) *
-      100
-    ).toFixed(4)}%`,
-    "Tracks Analyzed": numTrackAnalyzed,
-    "Percent of Tracks Analyzed": `${(
-      (numTrackAnalyzed / totalTracks) *
-      100
-    ).toFixed(4)}%`,
-  });
-  logger.log("============================================================");
+  if (showProgress) {
+    logger.log("============================================================");
+    logger.log(`Added features to ${tracksWithFeatures.length} tracks`);
+    console.table({
+      "Total Number of Tracks:": totalTracks,
+      "Tracks With Features": numTracksWithFeatures,
+      "Percent Coverage with Features": `${(
+        (numTracksWithFeatures / totalTracks) *
+        100
+      ).toFixed(4)}%`,
+      "Tracks Analyzed": numTrackAnalyzed,
+      "Percent of Tracks Analyzed": `${(
+        (numTrackAnalyzed / totalTracks) *
+        100
+      ).toFixed(4)}%`,
+    });
+    logger.log("============================================================");
+  }
 }
 
 async function getCoverage() {
