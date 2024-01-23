@@ -4,7 +4,7 @@ import { UserWithId, UserWithLastfmAccountAndId } from "../users/users.types";
 import { LastfmListenBatchImportSize } from "../lastfm/lastfm.types";
 import { getSpotifyAccessTokenForSessionId } from "../spotify/spotify.storage";
 import { sleep } from "../utils/misc.utils";
-import { log } from "../utils/log.utils";
+import { Logger } from "../utils/log.utils";
 
 import { Track, TrackWithId } from "./music.types";
 
@@ -78,6 +78,8 @@ export async function triggerUpdateListensForUser(
 export async function getTrackFromLastfmListenId(
   lastfmListenId: number
 ): Promise<Track | null> {
+  const logger = new Logger("getTrackFromLastfmListenId");
+
   // Find Existing Listen
   const listen = await prisma.listen.findUnique({
     where: {
@@ -132,7 +134,7 @@ export async function getTrackFromLastfmListenId(
   } catch (error) {
     if (error instanceof TypedError) {
       if (error.status === 404) {
-        console.log(
+        logger.log(
           "track not found. Marking lastfm listen as analyzed, as well as any other listens with the same track name and artist name"
         );
         const result = await prisma.lastfmListen.updateMany({
@@ -169,7 +171,7 @@ export async function getTrackFromLastfmListenId(
         analyzedAt: new Date(),
       },
     });
-    console.log(
+    logger.log(
       `Lastfm Listen ${lastfmListenId}'s track was not found in Spotify. Marked ${result.count} listens as analyzed.`
     );
     throw TypedError.create("Track not found in the database or Spotify.", 404);
@@ -183,7 +185,7 @@ export async function getTrackFromLastfmListenId(
         true
       );
 
-    log(
+    logger.log(
       `Linked ${result.count} listens to track ${track.name} while researching lastfmListen #${lastfmListenId}.`
     );
 
@@ -205,6 +207,8 @@ export async function getTrackByNameAndArtistName(
   trackName: string,
   artistName: string
 ): Promise<TrackWithId | null> {
+  const logger = new Logger("createListens");
+
   // Find Track and Artist in Database
   const exactMatchTrack = await MusicStorage.findTrackExactMatch(
     trackName,
@@ -212,7 +216,7 @@ export async function getTrackByNameAndArtistName(
   );
 
   if (exactMatchTrack) {
-    log("Found exact match in database.");
+    logger.log("Found exact match in database.");
     return exactMatchTrack;
   }
 
@@ -223,7 +227,7 @@ export async function getTrackByNameAndArtistName(
   );
 
   if (previousMatchTrack) {
-    log("Found previous match in database.");
+    logger.log("Found previous match in database.");
     return previousMatchTrack;
   }
 
@@ -240,7 +244,7 @@ export async function getTrackByNameAndArtistName(
     await Promise.all(track.artists.map((a) => MusicStorage.upsertArtist(a)));
     const prismaTrack = await MusicStorage.upsertTrack(track);
 
-    log(
+    logger.log(
       `Found track in spotify: ${track.name} by ${track.artists
         .map((a) => a.name)
         .join(", ")}`

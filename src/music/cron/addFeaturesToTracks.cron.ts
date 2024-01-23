@@ -4,21 +4,22 @@ import { TooManyRequestsError } from "../../errors/errors.types";
 import { TrackWithId } from "../music.types";
 import * as MusicService from "../music.service";
 import { convertPrismaTrackAndArtistsToTrack } from "../music.utils";
-import { log } from "../../utils/log.utils";
+import { Logger } from "../../utils/log.utils";
 
 import { pauseTask } from "../../utils/cron.utils";
 
 const prisma = new PrismaClient({ log: ["error"] });
+const logger = new Logger("addFeaturesToTracks");
 
 export async function addFeaturesToTracks(task: cron.ScheduledTask) {
   const tracks = await getNextTracksToResearch();
-  log(
+  logger.log(
     "researching tracks",
     tracks.map((track) => track.spotifyId)
   );
 
   if (tracks.length === 0) {
-    log("no more tracks to research");
+    logger.log("no more tracks to research");
     pauseTask(task, 60 * 5); // pause for 5 minutes
     return;
   }
@@ -29,13 +30,13 @@ export async function addFeaturesToTracks(task: cron.ScheduledTask) {
   } catch (error: any) {
     if (error instanceof TooManyRequestsError) {
       const retryAfter = error.retryAfter ? error.retryAfter : 5 * 60;
-      log(
+      logger.log(
         `...too many requests, pausing research task for ${retryAfter} seconds`
       );
       pauseTask(task, retryAfter);
       return;
     }
-    log("Something went wrong. Stopping Task.");
+    logger.log("Something went wrong. Stopping Task.");
     console.error(error);
     task.stop();
   }
@@ -46,8 +47,8 @@ export async function addFeaturesToTracks(task: cron.ScheduledTask) {
     tracksAnalyzed: numTrackAnalyzed,
   } = await getCoverage();
 
-  log("============================================================");
-  log(`Added features to ${tracksWithFeatures.length} tracks`);
+  logger.log("============================================================");
+  logger.log(`Added features to ${tracksWithFeatures.length} tracks`);
   console.table({
     "Total Number of Tracks:": totalTracks,
     "Tracks With Features": numTracksWithFeatures,
@@ -61,7 +62,7 @@ export async function addFeaturesToTracks(task: cron.ScheduledTask) {
       100
     ).toFixed(4)}%`,
   });
-  log("============================================================");
+  logger.log("============================================================");
 }
 
 async function getCoverage() {

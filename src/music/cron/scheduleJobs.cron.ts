@@ -6,12 +6,23 @@ import {
   markAllUsersAsNotUpdating,
 } from "./updateListeningHistory.cron";
 import { addFeaturesToTracks } from "./addFeaturesToTracks.cron";
+import { Logger } from "../../utils/log.utils";
 
 const tasksMap = new Map<string, () => void>([
   ["createListens", scheduleCreateListensTask],
   ["updateListeningHistory", scheduleUpdateListeningHistory],
   ["addFeaturesToTracks", scheduleAddFeaturesToTrack],
 ]);
+
+const [
+  createListenLogger,
+  updateListenHistoryLogger,
+  addFeaturesToTracksLogger,
+] = ["createListens", "updateListeningHistory", "addFeaturesToTracks"].map(
+  (channel) => {
+    return new Logger(channel);
+  }
+);
 
 function main() {
   const args = process.argv.slice(2);
@@ -35,7 +46,7 @@ main();
 
 function scheduleCreateListensTask() {
   const intervalInSeconds = process.env.CREATE_LISTENS_INTERVAL_IN_SECONDS || 5;
-  console.log(
+  createListenLogger.log(
     `Research Next Lastfm Listen will run every ${intervalInSeconds} seconds`
   );
   let researchListensTask: cron.ScheduledTask;
@@ -47,7 +58,7 @@ function scheduleCreateListensTask() {
 function scheduleUpdateListeningHistory() {
   const intervalInSeconds =
     process.env.UPDATE_LISTENING_HISTORY_INTERVAL_IN_SECONDS || 5;
-  console.log(
+  updateListenHistoryLogger.log(
     `Update Listening History will run every ${intervalInSeconds} seconds`
   );
   markAllUsersAsNotUpdating();
@@ -61,7 +72,7 @@ function scheduleUpdateListeningHistory() {
 function scheduleAddFeaturesToTrack() {
   const intervalInMinutes =
     process.env.ADD_FEATURES_TO_TRACKS_INTERVAL_IN_MINUTES || 5;
-  console.log(
+  addFeaturesToTracksLogger.log(
     `Add Features To Tracks will run every ${intervalInMinutes} minutes`
   );
   let addFeaturesToTracksTask: cron.ScheduledTask;
