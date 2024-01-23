@@ -42,7 +42,7 @@ WHERE
 --
 -- Portion of songs that are mismatched
 --
--- Number of Listenes whose Track's Name does not exactly match the Lastfm Listen's Track Name
+-- Number of Listens whose Track's Name does not exactly match the Lastfm Listen's Track Name
 -- 2024.01.23 - 95,815
 
 SELECT
