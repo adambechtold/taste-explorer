@@ -1,5 +1,6 @@
 -- Number of LastfmListens that could be analyzed using data we already have
 -- 2024.01.23 - 128,858
+
 SELECT
 	count(*)
 FROM
@@ -29,6 +30,7 @@ WHERE
 
 -- Number of LastfmListens not yet analyzed
 -- 2024.01.23 - 643,111
+
 SELECT
 	count(*)
 FROM
@@ -37,6 +39,24 @@ WHERE
 	analyzedAt IS NULL;
 
 
--- Effect - 20% reduction in the number of Spotify API requests
--- 📍 Position - The portion of spotify api request avoided will grow over time
+--
+-- Portion of songs that are mismatched
+--
+-- Number of Listenes whose Track's Name does not exactly match the Lastfm Listen's Track Name
+-- 2024.01.23 - 95,815
 
+SELECT
+	count(*)
+FROM
+	LastfmListen
+	JOIN `Listen` ON `Listen`.lastfmListenId = LastfmListen.id
+	JOIN Track ON Track.id = `Listen`.id
+WHERE
+	trackName != Track. `name`;
+
+-- Total Number of Listens
+-- 2024.01.23 - 1,039,043
+SELECT
+	count(*)
+FROM
+	`Listen`;
