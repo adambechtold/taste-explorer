@@ -4,6 +4,7 @@ import { UserWithId, UserWithLastfmAccountAndId } from "../users/users.types";
 import { LastfmListenBatchImportSize } from "../lastfm/lastfm.types";
 import { getSpotifyAccessTokenForSessionId } from "../spotify/spotify.storage";
 import { sleep } from "../utils/misc.utils";
+import { log } from "../utils/log.utils";
 
 import { Track, TrackWithId } from "./music.types";
 
@@ -182,7 +183,7 @@ export async function getTrackFromLastfmListenId(
         true
       );
 
-    console.log(
+    log(
       `Linked ${result.count} listens to track ${track.name} while researching lastfmListen #${lastfmListenId}.`
     );
 
@@ -205,38 +206,28 @@ export async function getTrackByNameAndArtistName(
   artistName: string
 ): Promise<TrackWithId | null> {
   // Find Track and Artist in Database
-  const artists = await prisma.artist.findMany({
-    select: {
-      id: true,
-    },
-    where: {
-      name: artistName,
-    },
-  });
+  const exactMatchTrack = await MusicStorage.findTrackExactMatch(
+    trackName,
+    artistName
+  );
 
-  const prismaTrack = await prisma.track.findFirst({
-    where: {
-      name: trackName,
-      artists: {
-        some: {
-          id: {
-            in: artists.map((artist) => artist.id),
-          },
-        },
-      },
-    },
-    include: {
-      artists: true,
-    },
-  });
-
-  if (prismaTrack) {
-    return MusicUtils.convertPrismaTrackAndArtistsToTrack(
-      prismaTrack,
-      prismaTrack.artists
-    );
+  if (exactMatchTrack) {
+    log("Found exact match in database.");
+    return exactMatchTrack;
   }
 
+  // Have we ever searched for this track before?
+  const previousMatchTrack = await MusicStorage.findTrackPreviousLastfmSearch(
+    trackName,
+    artistName
+  );
+
+  if (previousMatchTrack) {
+    log("Found previous match in database.");
+    return previousMatchTrack;
+  }
+
+  // Track not found in the database. Search Spotify.
   try {
     const accessToken = await getSpotifyAccessToken();
 
@@ -249,6 +240,11 @@ export async function getTrackByNameAndArtistName(
     await Promise.all(track.artists.map((a) => MusicStorage.upsertArtist(a)));
     const prismaTrack = await MusicStorage.upsertTrack(track);
 
+    log(
+      `Found track in spotify: ${track.name} by ${track.artists
+        .map((a) => a.name)
+        .join(", ")}`
+    );
     return {
       id: prismaTrack.id,
       ...track,

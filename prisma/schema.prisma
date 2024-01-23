@@ -65,7 +65,7 @@ model LastfmListen {
 
   @@index([userId], map: "LastfmListen_userId")
   @@index([trackName, artistName], map: "LastfmListen_trackName_artistName")
-  @@index([isBeingAnalyzed], map: "LastfmListen_isBeingAnalyzed")
+  @@index([isBeingAnalyzed, analyzedAt], map: "LastfmListen_isBeingAnalyzed_analyzedAt")
 }
 
 model Listen {

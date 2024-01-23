@@ -81,6 +81,9 @@ ${track ? "Track Found" : "Track Not Found"}`);
 }
 
 async function getProgress() {
+  console.time("getProgress");
+  // Insight - the slowest part of this is the total count of lastfmListens.
+  //           the others are pretty fast
   const [
     numberOfLastfmListens,
     numberOfListens,
@@ -94,6 +97,7 @@ async function getProgress() {
       },
     }),
   ]);
+  console.timeEnd("getProgress");
 
   return {
     "Total Lastfm Listens": numberOfLastfmListens,
