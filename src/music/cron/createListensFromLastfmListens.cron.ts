@@ -11,7 +11,8 @@ import { LastfmListen } from "@prisma/client";
 import { TooManyRequestsError } from "../../errors/errors.types";
 
 const prisma = new PrismaClient({ log: ["error"] });
-//const separator = "=".repeat(60);
+const separator = "=".repeat(60);
+const showProgress = false;
 
 // uncomment for debugging
 // createListensFromLastfmListens();
@@ -52,32 +53,34 @@ export async function createListensFromLastfmListens(
       return;
     }
 
-    /* REMOVED BECAUSE IT TAKES TOO LONG
-    const progress = await getProgress();
-    console.log(`
+    markAnalysisStatus(nextLastfmListen.id, false);
+
+    if (showProgress) {
+      const progress = await getProgress();
+      console.log(`
 ${separator}
 Something went wrong while researching lastfm listen id ${nextLastfmListen.id}, ${nextLastfmListen.trackName} by ${nextLastfmListen.artistName}
 ${error}`);
 
-    console.table(progress);
-    console.log(separator);
-    */
-    markAnalysisStatus(nextLastfmListen.id, false);
+      console.table(progress);
+      console.log(separator);
+    }
+
     return;
   }
 
-  /* REMOVED BECAUSE IT TAKES TOO LONG
-  const progress = await getProgress();
+  if (showProgress) {
+    const progress = await getProgress();
 
-  console.log(`
+    console.log(`
 ${separator}
 Completed Research for Lastfm Listen Id: ${nextLastfmListen.id}: ${
-    nextLastfmListen.trackName
-  } by ${nextLastfmListen.artistName}
+      nextLastfmListen.trackName
+    } by ${nextLastfmListen.artistName}
 ${track ? "Track Found" : "Track Not Found"}`);
-  console.table(progress);
-  console.log(separator);
- */
+    console.table(progress);
+    console.log(separator);
+  }
 }
 
 async function getProgress() {
