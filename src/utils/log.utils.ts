@@ -1,7 +1,13 @@
-export class Logger {
-  channel: string = "default";
+type Channel =
+  | "default"
+  | "updateListeningHistory"
+  | "createListens"
+  | "addFeaturesToTracks";
 
-  constructor(channel: string | undefined = undefined) {
+export class Logger {
+  channel: Channel = "default";
+
+  constructor(channel: Channel | undefined = undefined) {
     if (channel) {
       this.channel = channel;
     }
@@ -11,5 +17,17 @@ export class Logger {
     const date: any = new Date();
     const time = date.toISOString();
     console.log(`[${time}] - ${this.channel}: `, ...args);
+  }
+
+  error(...args: any[]) {
+    const date: any = new Date();
+    const time = date.toISOString();
+    console.error(`[${time}] - ${this.channel}: `, ...args);
+  }
+
+  warn(...args: any[]) {
+    const date: any = new Date();
+    const time = date.toISOString();
+    console.warn(`[${time}] - ${this.channel}: `, ...args);
   }
 }

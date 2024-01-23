@@ -14,21 +14,16 @@ const tasksMap = new Map<string, () => void>([
   ["addFeaturesToTracks", scheduleAddFeaturesToTrack],
 ]);
 
-const [
-  createListenLogger,
-  updateListenHistoryLogger,
-  addFeaturesToTracksLogger,
-] = ["createListens", "updateListeningHistory", "addFeaturesToTracks"].map(
-  (channel) => {
-    return new Logger(channel);
-  }
-);
+const logger = new Logger();
+const createListenLogger = new Logger("createListens");
+const updateListenHistoryLogger = new Logger("updateListeningHistory");
+const addFeaturesToTracksLogger = new Logger("addFeaturesToTracks");
 
 function main() {
   const args = process.argv.slice(2);
 
   if (args.length === 0) {
-    console.log("No tasks specified, exiting");
+    logger.log("No tasks specified, exiting");
     return;
   }
 
@@ -37,7 +32,7 @@ function main() {
     if (task) {
       task();
     } else {
-      console.warn(`Unknown task: ${arg}`);
+      logger.warn(`Unknown task: ${arg}`);
     }
   });
 }

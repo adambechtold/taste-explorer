@@ -26,6 +26,7 @@ const prisma = new PrismaClient({ log: ["error"] });
 export async function triggerUpdateListensForUser(
   user: UserWithId
 ): Promise<LastfmListenBatchImportSize> {
+  const logger = new Logger("updateListeningHistory");
   if (!user.lastfmAccount) {
     throw new TypedError(
       `Cannot trigger update listens for user without lastfm account.`,
@@ -52,7 +53,7 @@ export async function triggerUpdateListensForUser(
 
   // ERROR
   lastfmUpdateTracker.onError((error) => {
-    console.error(error);
+    logger.error(error);
     hasFinished = true;
     markUserUpdatingHistoryStatus(user.id, false);
   });
@@ -78,7 +79,7 @@ export async function triggerUpdateListensForUser(
 export async function getTrackFromLastfmListenId(
   lastfmListenId: number
 ): Promise<Track | null> {
-  const logger = new Logger("getTrackFromLastfmListenId");
+  const logger = new Logger("createListens");
 
   // Find Existing Listen
   const listen = await prisma.listen.findUnique({
@@ -105,7 +106,7 @@ export async function getTrackFromLastfmListenId(
       );
     } else {
       // This should never happen. All Listens should have a Track.
-      console.error(`Listen ${listen.id} has no track.`);
+      logger.error(`Listen ${listen.id} has no track.`);
     }
   }
 
@@ -153,7 +154,7 @@ export async function getTrackFromLastfmListenId(
             analyzedAt: new Date(),
           },
         });
-        console.log(`Marked ${result.count} listens as analyzed.`);
+        logger.log(`Marked ${result.count} listens as analyzed.`);
       } else {
         throw error;
       }
@@ -258,7 +259,7 @@ export async function getTrackByNameAndArtistName(
       throw error;
     }
 
-    console.error(
+    logger.error(
       `Track ${trackName} by ${artistName} not found in Spotify.\n`,
       error
     );
