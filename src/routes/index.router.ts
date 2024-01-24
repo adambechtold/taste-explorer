@@ -11,6 +11,7 @@ import { secondsToTimeFormat } from "../utils/datetime.utils";
 import { NotFoundError, TypedError } from "../errors/errors.types";
 import { handleErrorResponse } from "../utils/response.utils";
 import { UserWithLastfmAccountAndId } from "../users/users.types";
+import { checkApiToken } from "../auth/auth.middleware";
 
 export const indexRouter = express.Router();
 
@@ -125,34 +126,38 @@ indexRouter.get("/taste-comparison", async (req: Request, res: Response) => {
   }
 });
 
-indexRouter.get("/debug", async (req: Request, res: Response) => {
-  const user = getCurrentUser(req);
-  let spotifyAccessToken: SpotifyAccessToken | null = null;
-  let isSpotifyAuthorized = false;
+indexRouter.get(
+  "/debug",
+  checkApiToken,
+  async (req: Request, res: Response) => {
+    const user = getCurrentUser(req);
+    let spotifyAccessToken: SpotifyAccessToken | null = null;
+    let isSpotifyAuthorized = false;
 
-  if (user) {
-    spotifyAccessToken = await SpotifyService.getAccessToken(user);
+    if (user) {
+      spotifyAccessToken = await SpotifyService.getAccessToken(user);
 
-    if (spotifyAccessToken) {
-      if (spotifyAccessToken.expiresAt < new Date()) {
-        spotifyAccessToken = await SpotifyService.refreshAccessToken(
-          spotifyAccessToken,
-          user
-        );
+      if (spotifyAccessToken) {
+        if (spotifyAccessToken.expiresAt < new Date()) {
+          spotifyAccessToken = await SpotifyService.refreshAccessToken(
+            spotifyAccessToken,
+            user
+          );
+        }
+
+        isSpotifyAuthorized = true;
       }
-
-      isSpotifyAuthorized = true;
     }
-  }
 
-  res.render("debug", {
-    user,
-    spotify: {
-      isAuthorized: isSpotifyAuthorized,
-      accessToken: spotifyAccessToken?.token,
-    },
-  });
-});
+    res.render("debug", {
+      user,
+      spotify: {
+        isAuthorized: isSpotifyAuthorized,
+        accessToken: spotifyAccessToken?.token,
+      },
+    });
+  }
+);
 
 function sortUsersByLastfmUsername(users: UserWithLastfmAccountAndId[]) {
   return users.sort((a, b) => {
