@@ -8,6 +8,8 @@ const prisma = new PrismaClient({ log: ["error"] });
 const logger = new Logger("updateListeningHistory");
 
 const maximumNumberOfUsersUpdatedInParallel = 1;
+let waitCount = 0;
+const MAX_WAITS = 5;
 
 /**
  * Continuously fetches listening history for all users.
@@ -18,10 +20,19 @@ export async function updateListenHistory(task: cron.ScheduledTask) {
   const numberOfUsersBeingUpdated = await getNumberOfUsersBeingUpdated();
 
   if (numberOfUsersBeingUpdated >= maximumNumberOfUsersUpdatedInParallel) {
-    logger.log(
-      `...${numberOfUsersBeingUpdated} users are being updated, skipping this run`
-    );
-    return;
+    if (waitCount >= MAX_WAITS) {
+      logger.log(
+        `... we have waited too many times. The job is likely stuck. Marking all users as not updating and continuing.`
+      );
+      await markAllUsersAsNotUpdating();
+      waitCount = 0;
+    } else {
+      logger.log(
+        `... ${numberOfUsersBeingUpdated} users are already being updated. Waiting...`
+      );
+      waitCount++;
+      return;
+    }
   }
 
   const user = await getNextUserToUpdate();
