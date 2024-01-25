@@ -40,32 +40,20 @@ export async function triggerUpdateListensForUser(
     userWithLastfmAccount
   );
 
-  let hasFinished = false;
-
   // END
   lastfmUpdateTracker.onEnd(() => {
-    hasFinished = true;
-    sleep(100).then(() => {
-      // TODO: Remove this sleep. Find a more robust way of ensuring the onEnd event runs after onStart (or onStart doesn't update analysis status)
-      markUserUpdatingHistoryStatus(user.id, false, new Date());
-    });
+    markUserUpdatingHistoryStatus(user.id, false, new Date());
   });
 
   // ERROR
   lastfmUpdateTracker.onError((error) => {
     logger.error(error);
-    hasFinished = true;
-    sleep(100).then(() => {
-      markUserUpdatingHistoryStatus(user.id, false);
-    });
+    markUserUpdatingHistoryStatus(user.id, false);
   });
 
   // START
   return new Promise((resolve, reject) => {
     lastfmUpdateTracker.onStart((size) => {
-      if (!hasFinished) {
-        markUserUpdatingHistoryStatus(user.id, true);
-      }
       resolve(size);
     });
   });
