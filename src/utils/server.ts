@@ -3,6 +3,8 @@ import session from "express-session";
 import cors from "cors";
 import helmet from "helmet";
 import path from "path";
+import swaggerUi from "swagger-ui-express";
+import YAML from "yamljs";
 
 import { indexRouter } from "../routes/index.router";
 import { usersRouter } from "../users/users.router";
@@ -22,6 +24,7 @@ declare module "express-session" {
 function createServer(): Express {
   const app = express();
 
+  // Secure Sessions
   const sessionSecret = process.env.SESSION_SECRET;
   if (!sessionSecret) {
     throw new Error("No session secret provided");
@@ -37,10 +40,12 @@ function createServer(): Express {
     })
   );
 
+  // Host Views
   app.set("view engine", "ejs");
   app.set("views", path.join(__dirname, "../views"));
   app.use(express.static(path.join(__dirname, "../public")));
 
+  // Middleware
   app.use(
     helmet({
       contentSecurityPolicy: {
@@ -63,11 +68,18 @@ function createServer(): Express {
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
 
+  // Set Up Routes
   app.use("/", indexRouter);
   app.use("/player", playerRouter);
   app.use("/api/users", usersRouter);
   app.use("/api/music", musicRouter);
   app.use("/auth", authRouter);
+
+  // Host Swagger Docs
+  const swaggerDocument = YAML.load(
+    path.join(__dirname, "../../documentation/api.spec.yaml")
+  );
+  app.use("/admin/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
   return app;
 }

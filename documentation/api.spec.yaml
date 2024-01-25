@@ -1,6 +1,6 @@
 openapi: "3.0.0"
 info:
-  version: 1.0.0
+  version: 0.1.0
   title: Music Taste Explorer
   description: >-
     "Create playlists to explore users's musical taste differences and similarities."
@@ -17,6 +17,70 @@ tags:
   - name: authentication
     description: Operations related to authentication.
 paths:
+  /api/users:
+    get:
+      summary: Get Users
+      description: Get all users
+      operationId: getUsers
+      tags:
+        - users
+      security:
+        - ApiKeyAuth: []
+      responses:
+        "200":
+          description: A list of users
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  users:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/User"
+    post:
+      summary: Create User by Lastfm Username
+      description: Create a user by their lastfm username. The operation idempotent based on the username. You can't create multiple users with the same username.
+      operationId: createUserByLastfmUsername
+      tags:
+        - users
+      requestBody:
+        description: The lastfm username of the user to create
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                lastfmUsername:
+                  type: string
+      security:
+        - ApiKeyAuth: []
+      responses:
+        "200":
+          description: A user object
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "400":
+          description: Invalid username supplied
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Invalid API Key or no API Key supplied
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "409":
+          description: User already exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
   /api/users/{userId}:
     get:
       summary: Get User by Id
@@ -31,6 +95,8 @@ paths:
           required: true
           schema:
             type: integer
+      security:
+        - ApiKeyAuth: []
       responses:
         "200":
           description: A user object
@@ -318,6 +384,11 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
 components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: x-api-token
   schemas:
     User:
       type: object
