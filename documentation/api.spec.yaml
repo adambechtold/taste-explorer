@@ -3,8 +3,7 @@ info:
   version: 0.1.0
   title: Music Taste Explorer
   description: >-
-    Create playlists to explore users's musical taste differences and similarities.
-  termsOfService: adambechtold.xyz
+    Create playlists to explore differences and similarities in users' musical tastes.
   contact:
     name: Adam Bechtold
 servers:
