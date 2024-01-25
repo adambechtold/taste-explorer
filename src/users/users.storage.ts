@@ -1,6 +1,8 @@
 import { PrismaClient, User } from "@prisma/client";
+import { Logger } from "../utils/log.utils";
 
 const prisma = new PrismaClient({ log: ["error"] });
+const logger = new Logger("updateListeningHistory");
 
 export async function markUserUpdatingHistoryStatus(
   userId: number,
@@ -8,6 +10,11 @@ export async function markUserUpdatingHistoryStatus(
   newLastUpdatedHistoryAt?: Date
 ) {
   return prisma.$transaction(async (tx) => {
+    logger.log(
+      `Marking user ${userId} as ${
+        isUpdating ? "updating" : "not updating"
+      } listening history`
+    );
     const users =
       (await tx.$queryRaw`SELECT * FROM User WHERE id = ${userId} FOR UPDATE`) as User[];
 
