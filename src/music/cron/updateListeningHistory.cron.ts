@@ -9,20 +9,10 @@ const logger = new Logger("updateListeningHistory");
 
 const maximumNumberOfUsersUpdatedInParallel = 1;
 
-export async function markAllUsersAsNotUpdating() {
-  await prisma.user.updateMany({
-    where: {
-      isUpdatingListeningHistory: true,
-    },
-    data: {
-      isUpdatingListeningHistory: false,
-    },
-  });
-}
-
 /**
+ * Continuously fetches listening history for all users.
  *
- * @param {cron.ScheduledTask} task
+ * @param {cron.ScheduledTask} task - The cron task that is running this function
  */
 export async function updateListenHistory(task: cron.ScheduledTask) {
   const numberOfUsersBeingUpdated = await getNumberOfUsersBeingUpdated();
@@ -51,8 +41,27 @@ export async function updateListenHistory(task: cron.ScheduledTask) {
 }
 
 /**
+ * Updates all users in the database to set their `isUpdatingListeningHistory` field to false.
+ * This function is typically used to reset the updating status of all users.
  *
- * @returns the number of users that are currently being updated
+ * @returns {Promise<void>} A promise that resolves when the update operation is complete.
+ * @throws {Prisma.PrismaClientKnownRequestError} If the update operation fails.
+ */
+export async function markAllUsersAsNotUpdating() {
+  await prisma.user.updateMany({
+    where: {
+      isUpdatingListeningHistory: true,
+    },
+    data: {
+      isUpdatingListeningHistory: false,
+    },
+  });
+}
+
+/**
+ * Get the number of users that are currently being updated
+ *
+ * @returns {Promise<number>} A promise that resolves with the number of users being updated
  */
 function getNumberOfUsersBeingUpdated(): Promise<number> {
   return prisma.user.count({
@@ -62,6 +71,14 @@ function getNumberOfUsersBeingUpdated(): Promise<number> {
   });
 }
 
+/**
+ * Retrieves the next user from the database who is not currently being updated.
+ * The user is selected based on the `lastUpdatedListeningHistoryAt` field, with the user who was updated the longest time ago being selected first.
+ * This function uses a transaction to ensure that the same user is not selected by multiple concurrent operations.
+ *
+ * @returns {Promise<User | null>} A promise that resolves with the next user to update, or null if there are no more users to update.
+ * @throws {Prisma.PrismaClientKnownRequestError} If the query fails.
+ */
 export async function getNextUserToUpdate(): Promise<User | null> {
   return await prisma.$transaction(async (tx) => {
     const users = (await tx.$queryRaw`
