@@ -190,27 +190,6 @@ musicRouter.get("/track-features/:trackId", checkApiToken, async (req, res) => {
   }
 });
 
-/* Play Track
- * Plays a track on the user's Spotify account.
- */
-musicRouter.put("/play-track/:trackId", async (req, res) => {
-  const trackIdParam = req.params.trackId;
-
-  if (!trackIdParam) {
-    throw TypedError.create("Track ID is required", 400);
-  }
-
-  const trackId = parseInt(trackIdParam);
-
-  if (isNaN(trackId)) {
-    throw TypedError.create("Track ID must be a number", 400);
-  }
-
-  await MusicService.playTracks([trackId], 0, req.session.id);
-
-  res.status(204).send();
-});
-
 /* Play Tracks
  * Plays a list of tracks on the user's Spotify account.
  */
