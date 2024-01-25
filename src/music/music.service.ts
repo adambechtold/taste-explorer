@@ -355,6 +355,7 @@ export async function playTracks(
  * @param {string} deviceId - The ID of the device to transfer playback to.
  * @param {UserWithId} user - The user for whom to transfer playback.
  * @throws {TypedError} - If the user does not have a spotify account.
+ * Not documented in the OpenAPI spec.
  */
 export async function transferPlaybackToUserDevice(
   deviceId: string,

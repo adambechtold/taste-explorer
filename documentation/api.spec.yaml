@@ -130,6 +130,8 @@ paths:
           required: true
           schema:
             type: integer
+      security:
+        - SessionAuth: []
       responses:
         "204":
           description: Track played successfully
@@ -174,6 +176,8 @@ paths:
                   type: integer
                   description: The offset to start playing the tracks at.
                   default: 0
+      security:
+        - SessionAuth: []
       responses:
         "204":
           description: Tracks played successfully
@@ -185,44 +189,6 @@ paths:
                 $ref: "#/components/schemas/Error"
         "404":
           description: Track not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-        "500":
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-  /api/music/transfer-playback:
-    put:
-      summary: Transfer Playback
-      description: Transfer playback to the given device
-      operationId: transferPlayback
-      tags:
-        - music
-      requestBody:
-        description: The device to transfer playback to
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                deviceId:
-                  type: string
-      responses:
-        "204":
-          description: Playback transferred successfully
-        "400":
-          description: Invalid ID supplied
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-        "404":
-          description: Device not found
           content:
             application/json:
               schema:
@@ -290,6 +256,8 @@ paths:
           required: false
           schema:
             type: string
+      security:
+        - ApiKeyAuth: []
       responses:
         "200":
           description: Track(s) that fit the query
@@ -323,7 +291,7 @@ paths:
   /api/music/lastfm-listens/{id}/track:
     get:
       summary: Get the Track from last.fm Listen
-      description: Get the track information the last.fm listen
+      description: Get the track information the last.fm listen. If the track is not found, it will be created by searching Spotify.
       operationId: getTrackFromLastfmListen
       tags:
         - music
@@ -334,6 +302,8 @@ paths:
           required: true
           schema:
             type: integer
+      security:
+        - ApiKeyAuth: []
       responses:
         "200":
           description: A track object
@@ -356,11 +326,13 @@ paths:
   /auth/spotify/token:
     get:
       summary: Get Spotify Access Token
-      description: Get a Spotify access token based on the currently signed in user.
+      description: Get a Spotify temporary access token for the current session.
       operationId: getSpotifyAccessToken
       tags:
         - music
         - authentication
+      security:
+        - SessionAuth: []
       responses:
         "200":
           description: A Spotify access token
@@ -389,6 +361,10 @@ components:
       type: apiKey
       in: header
       name: x-api-token
+    SessionAuth:
+      type: apiKey
+      in: cookie
+      name: connect.id
   schemas:
     User:
       type: object

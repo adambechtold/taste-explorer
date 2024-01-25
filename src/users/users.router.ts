@@ -84,6 +84,7 @@ usersRouter.post("/", checkApiToken, async (req: Request, res: Response) => {
 });
 
 // --- Update User's Listen History ---
+// Not Documented in Public Spec
 usersRouter.post(
   "/:id/listens",
   checkApiToken,
