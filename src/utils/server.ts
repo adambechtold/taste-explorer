@@ -3,7 +3,6 @@ import session from "express-session";
 import cors from "cors";
 import helmet from "helmet";
 import path from "path";
-import swaggerUi from "swagger-ui-express";
 import YAML from "yamljs";
 
 import { indexRouter } from "../routes/index.router";
@@ -56,10 +55,12 @@ function createServer(): Express {
             "https://unpkg.com",
             "https://sdk.scdn.co",
             "https://kit.fontawesome.com",
+            "https://cdn.redoc.ly",
           ],
           imgSrc: ["'self'", "https://i.scdn.co", "https://media.giphy.com"],
           frameSrc: ["'self'", "https://sdk.scdn.co"],
           connectSrc: ["'self'", "https://ka-f.fontawesome.com"],
+          workerSrc: ["'self'", "blob:"],
         },
       },
     })
@@ -75,11 +76,25 @@ function createServer(): Express {
   app.use("/api/music", musicRouter);
   app.use("/auth", authRouter);
 
-  // Host Swagger Docs
   const swaggerDocument = YAML.load(
     path.join(__dirname, "../../documentation/api.spec.yaml")
   );
-  app.use("/admin/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+
+  /* Host Swagger UI Docs
+    reinstall swagger-ui-express before using
+    app.use("/admin/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+    */
+
+  // Host Redoc
+  app.get("/admin/api-docs.json", (req, res) => {
+    console.log("server json");
+    res.setHeader("Content-Type", "application/json");
+    res.send(swaggerDocument);
+  });
+
+  app.get("/admin/api-docs", (req, res) => {
+    res.render("api-docs");
+  });
 
   return app;
 }

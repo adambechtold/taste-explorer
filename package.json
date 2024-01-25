@@ -52,7 +52,7 @@
     "express-session": "^1.17.3",
     "helmet": "^7.1.0",
     "node-cron": "^3.0.3",
-    "swagger-ui-express": "^5.0.0",
+    "redoc": "^2.1.3",
     "yamljs": "^0.3.0"
   }
 }
