@@ -1,5 +1,5 @@
 import { PrismaClient } from "@prisma/client";
-import { TypedError } from "../errors/errors.types";
+import { NotFoundError, TypedError } from "../errors/errors.types";
 
 import { getAccountInfo } from "../lastfm/lastfm.service";
 import { User, UserWithId, UserWithLastfmAccountAndId } from "./users.types";
@@ -99,6 +99,9 @@ export async function createUserByLastfmUsername(
     };
   } catch (e) {
     console.error(e);
+    if (e instanceof TypedError) {
+      throw e;
+    }
     throw new TypedError(
       `Could not create user for lastfm username ${lastfmUsername}`,
       500

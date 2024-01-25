@@ -12,6 +12,7 @@ import {
   dateToUnixTimestamp,
   unixTimestampToDate,
 } from "../utils/datetime.utils";
+import { TypedError } from "../errors/errors.types";
 
 import { Prisma, PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
@@ -25,9 +26,13 @@ export async function getAccountInfo(
 
     return lastfmAccount;
   } catch (e) {
+    if (e instanceof TypedError) {
+      throw e;
+    }
     console.error(e);
-    throw new Error(
-      `Could not create user for lastfm username: ${lastfmUsername}`
+    throw TypedError.create(
+      `Could not create user for lastfm username: ${lastfmUsername}`,
+      500
     );
   }
 }

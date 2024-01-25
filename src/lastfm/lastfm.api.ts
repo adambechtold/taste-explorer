@@ -53,6 +53,9 @@ export async function getAccountInfo(
 
     return (await response.json()) as LastfmAccountInfoResponse;
   } catch (e: any) {
+    if (e instanceof TypedError) {
+      throw e;
+    }
     console.error(e);
     throw new TypedError(
       `Failed to get account info for user: ${lastfmUsername}`,
