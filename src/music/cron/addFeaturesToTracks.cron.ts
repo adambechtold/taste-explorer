@@ -11,14 +11,22 @@ import { pauseTask } from "../../utils/cron.utils";
 const prisma = new PrismaClient({ log: ["error"] });
 const logger = new Logger("addFeaturesToTracks");
 
-const showProgress = false;
+const SHOW_PROGRESS = false;
 
+/**
+ * This function is a task that adds features to tracks in the database.
+ * It fetches the next tracks to research, adds features to them using the MusicService, and handles any errors that occur.
+ * If there are no more tracks to research, it pauses the task for 5 minutes.
+ * If the MusicService throws a TooManyRequestsError, it pauses the task for the duration specified in the error, or 5 minutes if no duration is specified.
+ * If any other error occurs, it logs the error and stops the task.
+ *
+ * @param {cron.ScheduledTask} task - The task that is running this function.
+ * @returns {Promise<void>} A promise that resolves when the function has completed.
+ * @throws {TooManyRequestsError} If the MusicService throws a TooManyRequestsError.
+ */
 export async function addFeaturesToTracks(task: cron.ScheduledTask) {
   const tracks = await getNextTracksToResearch();
-  logger.log(
-    "researching tracks",
-    tracks.map((track) => track.spotifyId)
-  );
+  logger.log(`researching ${tracks.length} tracks`);
 
   if (tracks.length === 0) {
     logger.log("no more tracks to research");
@@ -39,17 +47,17 @@ export async function addFeaturesToTracks(task: cron.ScheduledTask) {
       return;
     }
     logger.log("Something went wrong. Stopping Task.");
-    console.error(error);
+    logger.error(error);
     task.stop();
   }
 
-  const {
-    totalTracks,
-    tracksWithFeatures: numTracksWithFeatures,
-    tracksAnalyzed: numTrackAnalyzed,
-  } = await getCoverage();
+  if (SHOW_PROGRESS) {
+    const {
+      totalTracks,
+      tracksWithFeatures: numTracksWithFeatures,
+      tracksAnalyzed: numTrackAnalyzed,
+    } = await getCoverage();
 
-  if (showProgress) {
     logger.log("============================================================");
     logger.log(`Added features to ${tracksWithFeatures.length} tracks`);
     console.table({
@@ -69,6 +77,13 @@ export async function addFeaturesToTracks(task: cron.ScheduledTask) {
   }
 }
 
+/**
+ * Retrieves the total number of tracks, the number of tracks with features, and the number of tracks analyzed from the database.
+ * This function is used to calculate the coverage of track features and analysis in the database.
+ *
+ * @returns {Promise<{totalTracks: number, tracksWithFeatures: number, tracksAnalyzed: number}>} A promise that resolves with an object containing the total number of tracks, the number of tracks with features, and the number of tracks analyzed.
+ * @throws {Prisma.PrismaClientKnownRequestError} If the query fails.
+ */
 async function getCoverage() {
   const [totalTracks, tracksWithFeatures, tracksAnalyzed] = await Promise.all([
     prisma.track.count(),
