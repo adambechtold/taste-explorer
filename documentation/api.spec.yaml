@@ -117,7 +117,7 @@ paths:
                 $ref: "#/components/schemas/Error"
   /api/music/play-tracks:
     put:
-      summary: Play the Given Tracks
+      summary: Play Tracks
       description: Plays the provided tracks. This will always affect user 1 (per-user control coming soon).
       operationId: playTracks
       tags:
@@ -248,8 +248,8 @@ paths:
                 $ref: "#/components/schemas/Error"
   /api/music/lastfm-listens/{id}/track:
     get:
-      summary: Get the Track from last.fm Listen
-      description: Get the track information the last.fm listen. If the track is not found, it will be created by searching Spotify.
+      summary: Get Track from last.fm Listen
+      description: Get the Track for a given last.fm listen. If the track is not found in the database, it will be created by searching Spotify.
       operationId: getTrackFromLastfmListen
       tags:
         - music
@@ -293,7 +293,6 @@ paths:
       description: Get a Spotify temporary access token for the current session.
       operationId: getSpotifyAccessToken
       tags:
-        - music
         - authentication
       security:
         - SessionAuth: []
