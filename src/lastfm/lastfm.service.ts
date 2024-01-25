@@ -32,6 +32,12 @@ export async function getAccountInfo(
   }
 }
 
+/**
+ * Trigger an update of the user's listening history
+ *
+ * @param {UserWithLastfmAccountAndId} user - The user to update
+ * @returns {Promise<LastfmListensEventEmitter>} - An event emitter that emits events as the update progresses
+ */
 export async function updateUserListeningHistory(
   user: UserWithLastfmAccountAndId
 ): Promise<LastfmListensEventEmitter> {
@@ -68,6 +74,15 @@ export async function updateUserListeningHistory(
   return updateTracker;
 }
 
+/**
+ * Fetches all listens for the given lastfm account that have not been previously fetched.
+ *
+ * @param {LastfmAccount} lastfmAccount  - The lastfm account to fetch listens for
+ * @param {LastfmListensEventEmitter} updateTracker - An event emitter that emits events as the update progresses
+ * @param {Date?} from - The date to start fetching listens from. (Default: undefined)
+ *
+ * @returns {Promise<void>} - A promise that resolves when all listens have been fetched.
+ */
 export async function getAllListens(
   lastfmAccount: LastfmAccount,
   updateTracker: LastfmListensEventEmitter,
