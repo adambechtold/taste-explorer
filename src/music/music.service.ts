@@ -238,7 +238,7 @@ export async function getTrackByNameAndArtistName(
   try {
     const accessToken = await getSpotifyAccessToken();
 
-    const track = await SpotifyService.getTrackFromTrackAndArtist(
+    const track = await SpotifyService.getTrack(
       accessToken,
       trackName,
       artistName

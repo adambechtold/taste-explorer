@@ -91,7 +91,16 @@ export async function refreshAccessToken(
   );
 }
 
-export async function getTrackFromTrackAndArtist(
+/**
+ * Get the Spotify Track for the given track and artist name.
+ *
+ * @param {SpotifyAccessToken} accessToken - The access token for the Spotify API.
+ * @param {string} trackName - The name of the track to fetch.
+ * @param {string} artistName - The name of the artist of the track to fetch.
+ * @returns {Promise<Track>} - A promise that resolves to the fetched track.
+ * @throws {TypedError} - Will throw an error if no tracks are found for the given track and artist name.
+ */
+export async function getTrack(
   accessToken: SpotifyAccessToken,
   trackName: string,
   artistName: string
@@ -108,19 +117,6 @@ export async function getTrackFromTrackAndArtist(
   }
 
   const selectedTrack = tracks[0];
-
-  const includeFeatures = false;
-  if (includeFeatures) {
-    const trackFeaturesResponse = await spotifyApi.getTracksFeatures([
-      selectedTrack.spotifyId,
-    ]);
-    const selectedTrackFeatures = trackFeaturesResponse.audio_features[0];
-
-    selectedTrack.features =
-      SpotifyStorage.convertSpotifyTrackFeaturesResponseToTrackFeatures(
-        selectedTrackFeatures
-      );
-  }
 
   return selectedTrack;
 }
