@@ -182,6 +182,25 @@ export default class SpotifyApi {
   }
 
   /**
+   * Set the shuffle state for the user's playback.
+   *
+   * @param {boolean} isShuffle - The desired shuffle state.
+   * @returns {Promise<void>} - A promise that resolves when the shuffle state has been successfully set.
+   * @throws {Error} - Will throw an error if the operation fails.
+   */
+  async setShuffleState(isShuffle: boolean): Promise<void> {
+    if (!this.accessToken) {
+      throw new Error("No access token set");
+    }
+
+    if (this.accessToken.expiresAt < new Date()) {
+      this.accessToken = await this.refreshAccessToken();
+    }
+
+    return setShuffleState(this.accessToken, isShuffle);
+  }
+
+  /**
    * Transfer Playback to the provided Device ID.
    *
    * This will only work is the new device is active
@@ -406,6 +425,38 @@ export async function startOrResumePlaybackState(
         response.status
       );
     }
+    throw TypedError.create(
+      "Error modifying playback " + response.statusText,
+      response.status
+    );
+  }
+
+  return;
+}
+
+/**
+ * Sets the shuffle state for the user's playback.
+ *
+ * @param {SpotifyAccessToken} accessToken - The access token for the Spotify API.
+ * @param {boolean} isShuffle - The desired shuffle state.
+ * @throws Will throw an error if the response status is not 204.
+ * @returns {Promise<void>} A Promise that resolves when the shuffle state has been successfully set.
+ */
+async function setShuffleState(
+  accessToken: SpotifyAccessToken,
+  isShuffle: boolean
+) {
+  const response = await fetch(
+    "https://api.spotify.com/v1/me/player/shuffle?state=" + isShuffle,
+    {
+      method: "PUT",
+      headers: {
+        Authorization: "Bearer " + accessToken.token,
+      },
+    }
+  );
+
+  if (response.status !== 204) {
     throw TypedError.create(
       "Error modifying playback " + response.statusText,
       response.status
