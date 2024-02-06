@@ -163,7 +163,12 @@ export async function addFeaturesToTracks(
 }
 
 /**
- * Play the Specified Track for the Given User
+ * Plays a list of tracks on Spotify.
+ *
+ * @param {SpotifyAccessToken} accessToken - The access token for the Spotify API.
+ * @param {TrackWithId[]} tracks - An array of tracks to be played.
+ * @param {number} [offset=0] - The index of the first track to be played.
+ * @returns {Promise<PlayResponse>} A Promise that resolves to the response from the Spotify API.
  */
 export async function playTracks(
   accessToken: SpotifyAccessToken,
@@ -175,6 +180,7 @@ export async function playTracks(
   let trackUris = tracks.map((track) => `spotify:track:${track.spotifyId}`);
   trackUris = trackUris.slice(offset);
 
+  await spotifyApi.setShuffleState(false);
   const playResponse = await spotifyApi.startOrResumePlaybackState(trackUris);
 
   return playResponse;
