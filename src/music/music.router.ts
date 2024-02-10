@@ -221,6 +221,11 @@ musicRouter.put("/play-tracks", async (req, res) => {
               "No Spotify active devices found. Start playing in another app or transfer playback to this device.",
           });
           return;
+        } else {
+          res.render("partials/snackbar", {
+            message: "Not Found Error: " + e.message,
+          });
+          return;
         }
       }
       if (e instanceof NotAuthorizedError) {
@@ -230,8 +235,9 @@ musicRouter.put("/play-tracks", async (req, res) => {
         return;
       }
     }
-
-    handleErrorResponse(e, res);
+    res.render("partials/snackbar", {
+      message: "Error: " + e.message,
+    });
   }
 });
 
