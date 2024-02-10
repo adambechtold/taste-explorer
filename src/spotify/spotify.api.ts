@@ -456,7 +456,7 @@ async function setShuffleState(
     }
   );
 
-  if (response.status !== 204) {
+  if (response.status < 200 || response.status >= 300) {
     throw TypedError.create(
       "Error modifying playback " + response.statusText,
       response.status
