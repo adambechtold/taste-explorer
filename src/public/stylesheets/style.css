@@ -260,3 +260,34 @@ button.applied {
   align-items: start;
   justify-content: center;
 }
+
+#spinner {
+  margin: 2rem;
+  border: 8px solid #f3f3f3; /* Light grey */
+  border-top: 8px solid var(--primary-color); /* Blue */
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
+  animation: spin 1s linear infinite;
+}
+
+#spinner.show-spinner {
+  display: block;
+}
+
+#spinner.hide-spinner {
+  display: none;
+}
+
+#spinner.htmx-request {
+  display: block !important;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}

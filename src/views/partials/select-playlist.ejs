@@ -39,6 +39,7 @@
           hx-target="#playlist-container"
           hx-push-url="<%= getUrl(pageUrl, 'USER1-ONLY') %>"
           hx-swap="innerHTML"
+          hx-indicator="#spinner"
           class="venn-left"
         >
           <span class="label <%= isLeftActive ? "venn-active-label" : "" %>"><%= user1.lastfmAccount.username %></span>
@@ -60,6 +61,7 @@
           hx-target="#playlist-container"
           hx-swap="innerHTML"
           hx-push-url="<%= getUrl(pageUrl, 'BOTH') %>"
+          hx-indicator="#spinner"
           class="venn-middle"
         >
           <span class="label <%= isMiddleActive ? "venn-active-label" : "" %>">overlap</span>
@@ -81,6 +83,7 @@
           hx-target="#playlist-container" 
           hx-swap="innerHTML" 
           hx-push-url="<%= getUrl(pageUrl, 'USER2-ONLY') %>" 
+          hx-indicator="#spinner"
           class="venn-right" 
         >
           <span class="label <%= isRightActive ? "venn-active-label" : "" %>"><%= user2.lastfmAccount.username %></span>

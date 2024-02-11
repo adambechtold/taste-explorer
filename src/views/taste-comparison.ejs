@@ -37,6 +37,10 @@
       ></div>
       <% } %>
       <div id="playlist-container"></div>
+      <div
+        id="spinner"
+        class="<%= typeof preferenceType !== 'undefined' ? 'show-spinner' : 'hide-spinner' %>"
+      ></div>
       <!-- prettier-ignore -->
       <% if (sessionHasSpotifyAccessToken) { %> 
         <%- include('partials/transfer-playback') %> 
