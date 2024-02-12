@@ -5,7 +5,7 @@
 - [ ] Requires a [last.fm](https://www.last.fm) account
 - [ ] Requires a [spotify](https://spotify.com) account
 
-![wireframe](./documentation/assets/wireframe.png)
+![screenshot](./documentation/assets/taste-comparison.screenshot.png)
 
 # Development
 
@@ -37,12 +37,20 @@ Update...
 - [ ] Last.fm API Key
 - [ ] Last.fm Shared Secret
 
-Update the `DATABASE_URL` if you want to connect to a remote database.
+Update the `DATABASE_URL` if you want to connect to a remote database. The `DATABASE_URL` included in `.env.example` is configured to use the Dockerized database included in the `docker-compose.yml` file.
+
+- [Resource | last.fm | Create API Account](https://developer.spotify.com/documentation/web-api/tutorials/getting-started)
+  - Consideration | last.fm api accounts are very easy to get. Just fill out a quick form.
+- [Resource | Spotify | Getting started with the Web API](https://developer.spotify.com/documentation/web-api/tutorials/getting-started)
 
 ### 3 | Run Web Server
 
 ```sh
+# If you have your own database running and modified DATABASE_URL in step 2
 npm run dev
+
+# If you want to use the pre-configured Dockerized database for local development
+npm run dev:local
 ```
 
 ### 4 | Run Cron Jobs
@@ -84,3 +92,15 @@ npm run test
 ```
 
 The Dockerized database for tests will start running and tests will be executed.
+
+# FAQ
+
+## Why aren't styles loading?
+
+Sometimes, the browser doesn't allow non-SSL-protected resources to load, even from localhost.
+
+The fastest way to get around this is to simply forward traffic through a service like VS Code port forwarding. ngrok is another common service for this.
+
+(If you know a better way around this, let me know!)
+
+![load-stylesheets](./documentation/assets/load-stylesheets-with-port-forwarding.png)
