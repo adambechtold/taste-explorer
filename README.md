@@ -36,6 +36,7 @@ Update...
 - [ ] Spotify Client Password
 - [ ] Last.fm API Key
 - [ ] Last.fm Shared Secret
+- [ ] Session Secret
 
 Update the `DATABASE_URL` if you want to connect to a remote database. The `DATABASE_URL` included in `.env.example` is configured to use the Dockerized database included in the `docker-compose.yml` file.
 
