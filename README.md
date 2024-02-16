@@ -44,7 +44,13 @@ Update the `DATABASE_URL` if you want to connect to a remote database. The `DATA
   - Consideration | last.fm api accounts are very easy to get. Just fill out a quick form.
 - [Resource | Spotify | Getting started with the Web API](https://developer.spotify.com/documentation/web-api/tutorials/getting-started)
 
-### 3 | Run Web Server
+### 3 | Apply Database Schema
+
+```sh
+npx prisma migrate dev # This will apply to the database specified in the DATABASE_URL of your .env
+```
+
+### 4 | Run Web Server
 
 ```sh
 # If you have your own database running and modified DATABASE_URL in step 2
@@ -54,7 +60,7 @@ npm run dev
 npm run dev:local
 ```
 
-### 4 | Run Cron Jobs
+### 5 | Optional | Run Cron Jobs to Start Collecting New Data
 
 Start the cron jobs that track listening history and research additional information about tracks.
 
