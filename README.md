@@ -2,8 +2,11 @@
 
 **Compare your music preferences to your friends** starting with the ability to create playlists that with just your music, just your friend's music, or music you've both loved.
 
-- [ ] Requires a [last.fm](https://www.last.fm) account
-- [ ] Requires a [spotify](https://spotify.com) account
+## [Try it Now](https://music.adambechtold.xyz)
+You'll just need...
+
+- [ ] ...a [last.fm](https://www.last.fm) account
+- [ ] ...a [spotify](https://spotify.com) account
 
 ![screenshot](./documentation/assets/taste-comparison.screenshot.png)
 
