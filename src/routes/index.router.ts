@@ -4,6 +4,7 @@ import { getCurrentUser } from "../auth/auth.utils";
 import * as UserService from "../users/users.service";
 import * as SpotifyService from "../spotify/spotify.service";
 import { getSpotifyAccessTokenForSessionId } from "../spotify/spotify.storage";
+import { preLoadAllPlaylists } from "../music/playlists/playlists.service";
 
 import { SpotifyAccessToken } from "../auth/auth.types";
 import { isValidPreferenceType } from "../music/playlists/playlists.types";
@@ -100,6 +101,10 @@ indexRouter.get("/taste-comparison", async (req: Request, res: Response) => {
   spotifyLoginUrl += "?" + params.toString();
 
   if (user1 && user2) {
+    // request all possible playlists for these users
+    preLoadAllPlaylists(user1, user2);
+
+    // render the comparison page
     res.render("taste-comparison", {
       secondsToTimeFormat: secondsToTimeFormat,
       user1,
