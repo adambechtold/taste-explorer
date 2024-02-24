@@ -1,5 +1,7 @@
 import * as MusicStorage from "../music.storage";
 import { Artist as PrismaArtist } from "@prisma/client";
+import { Playlist } from "../playlists/playlists.types";
+import { convertPrismaTrackAndArtistsToTrack } from "../music.utils";
 
 async function populateWithArtists(): Promise<PrismaArtist[]> {
   const artist1 = await MusicStorage.upsertArtist({
@@ -36,4 +38,15 @@ export async function populateWithTracks() {
   });
 
   return [track1, track2, track3];
+}
+
+export async function getExamplePlaylist(): Promise<Playlist> {
+  const prismaTracks = await populateWithTracks();
+  const tracks = prismaTracks.map((prismaTrack) => ({
+    ...convertPrismaTrackAndArtistsToTrack(prismaTrack, prismaTrack.artists),
+  }));
+
+  return {
+    tracks: { items: tracks },
+  };
 }

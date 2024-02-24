@@ -4,6 +4,7 @@ import { getCurrentUser } from "../auth/auth.utils";
 import * as UserService from "../users/users.service";
 import * as SpotifyService from "../spotify/spotify.service";
 import { getSpotifyAccessTokenForSessionId } from "../spotify/spotify.storage";
+import { preLoadAllPlaylists } from "../music/playlists/playlists.service";
 
 import { SpotifyAccessToken } from "../auth/auth.types";
 import { isValidPreferenceType } from "../music/playlists/playlists.types";
@@ -21,14 +22,14 @@ indexRouter.get("/", async (req: Request, res: Response) => {
 
   if (user1Username || user2Username) {
     res.redirect(
-      `/taste-comparison?user1=${user1Username}&user2=${user2Username}`
+      `/taste-comparison?user1=${user1Username}&user2=${user2Username}`,
     );
     return;
   }
 
   const users = await UserService.getAllUsers();
   const usersWithLastfmAccounts = users.filter(
-    (user) => !!user.lastfmAccount && !!user.lastfmAccount.username
+    (user) => !!user.lastfmAccount && !!user.lastfmAccount.username,
   ) as UserWithLastfmAccountAndId[];
 
   res.render("configure-comparison", {
@@ -85,7 +86,7 @@ indexRouter.get("/taste-comparison", async (req: Request, res: Response) => {
   }
 
   const hasSpotifyAccessToken = getSpotifyAccessTokenForSessionId(
-    req.sessionID
+    req.sessionID,
   );
 
   // Construct the Spotify login URL. This helps us return to the right page after logging in.
@@ -100,6 +101,10 @@ indexRouter.get("/taste-comparison", async (req: Request, res: Response) => {
   spotifyLoginUrl += "?" + params.toString();
 
   if (user1 && user2) {
+    // request all possible playlists for these users
+    preLoadAllPlaylists(user1, user2);
+
+    // render the comparison page
     res.render("taste-comparison", {
       secondsToTimeFormat: secondsToTimeFormat,
       user1,
@@ -111,7 +116,7 @@ indexRouter.get("/taste-comparison", async (req: Request, res: Response) => {
   } else {
     const users = await UserService.getAllUsers();
     const usersWithLastfmAccounts = users.filter(
-      (user) => !!user.lastfmAccount && !!user.lastfmAccount.username
+      (user) => !!user.lastfmAccount && !!user.lastfmAccount.username,
     ) as UserWithLastfmAccountAndId[];
 
     res.render("configure-comparison", {
@@ -141,7 +146,7 @@ indexRouter.get(
         if (spotifyAccessToken.expiresAt < new Date()) {
           spotifyAccessToken = await SpotifyService.refreshAccessToken(
             spotifyAccessToken,
-            user
+            user,
           );
         }
 
@@ -156,7 +161,7 @@ indexRouter.get(
         accessToken: spotifyAccessToken?.token,
       },
     });
-  }
+  },
 );
 
 function sortUsersByLastfmUsername(users: UserWithLastfmAccountAndId[]) {
