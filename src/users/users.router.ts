@@ -48,8 +48,6 @@ usersRouter.get("/", checkApiToken, async (req: Request, res: Response) => {
 // --- Get User By ID ---
 usersRouter.get("/:id", checkApiToken, async (req: Request, res: Response) => {
   try {
-    // if no id, then it's get all users
-
     // check if id is a number
     if (isNaN(parseInt(req.params.id))) {
       throw new TypedError("ID must be a number", 400);
