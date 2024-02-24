@@ -2,7 +2,8 @@ import { LRUCache } from "lru-cache";
 import { Playlist, PreferenceType } from "./playlists.types";
 
 function sizeCalculation(playlist: Playlist) {
-  return playlist.tracks.items.length;
+  const hasTracks = playlist.tracks.items.length > 0;
+  return hasTracks ? playlist.tracks.items.length : 1;
 }
 
 export class PlaylistCache {
