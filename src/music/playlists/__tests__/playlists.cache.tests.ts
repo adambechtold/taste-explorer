@@ -37,6 +37,14 @@ describe("Playlist Cache", () => {
         expect(cache.get("foo")).toBeUndefined();
         expect(cache.get("baz")).toEqual(playlist);
       });
+
+      it("can store an empty playlist", async () => {
+        const cache = new PlaylistCache();
+        const playlist = await getExamplePlaylist();
+        playlist.tracks.items = [];
+        cache.set("foo", playlist);
+        expect(cache.get("foo")).toEqual(playlist);
+      });
     });
 
     describe("cache size limit", () => {
