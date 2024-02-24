@@ -34,13 +34,13 @@
         hx-trigger="load"
         hx-target="#playlist-container"
         hx-swap="innerHTML"
+        hx-indicator="#playlist-wrapper"
       ></div>
       <% } %>
-      <div id="playlist-container"></div>
-      <div
-        id="spinner"
-        class="<%= typeof preferenceType !== 'undefined' ? 'show-spinner' : 'hide-spinner' %>"
-      ></div>
+      <div id="playlist-wrapper">
+        <div class="spinner hide-spinner"></div>
+        <div id="playlist-container"></div>
+      </div>
       <!-- prettier-ignore -->
       <% if (sessionHasSpotifyAccessToken) { %> 
         <%- include('partials/transfer-playback') %> 

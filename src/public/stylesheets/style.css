@@ -261,7 +261,15 @@ button.applied {
   justify-content: center;
 }
 
-#spinner {
+#playlist-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.spinner {
   margin: 2rem;
   border: 8px solid #f3f3f3; /* Light grey */
   border-top: 8px solid var(--primary-color); /* Blue */
@@ -271,16 +279,18 @@ button.applied {
   animation: spin 1s linear infinite;
 }
 
-#spinner.show-spinner {
-  display: block;
-}
-
-#spinner.hide-spinner {
+.hide-spinner {
   display: none;
 }
 
-#spinner.htmx-request {
-  display: block !important;
+#playlist-wrapper.htmx-request {
+  .spinner {
+    display: block !important;
+  }
+
+  #playlist-container {
+    display: none !important;
+  }
 }
 
 @keyframes spin {
