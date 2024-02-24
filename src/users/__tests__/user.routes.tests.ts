@@ -5,8 +5,11 @@ import { clearEntireDatabase } from "../../utils/test.utils";
 
 const app = createServer();
 
+const API_KEY = process.env.API_SECRET || "test";
+const API_KEY_HEADER = "x-api-token";
+
 /* Test User Routes
-  * Create User Route 
+  * Create User Route
   * - [ ] Can Create User with Valid Lastfm Username
   * - [ ] Cannot Create User with Invalid Lastfm Username
   * - [ ] Create Duplicate User does not add new user to db
@@ -20,7 +23,7 @@ const app = createServer();
 
   * Get All Users
   * - [ ] Can Get All Users
-  
+
   * Update User Listening History
   * - [ ] Can Update User Listening History of existing user
   * - [X] Cannot Update User Listening History of non-existing user
@@ -50,14 +53,24 @@ describe("User Routes", () => {
 
   describe("Get User Routes", () => {
     describe("Given: no users exist in the database", () => {
+      it("it should require an API key", async () => {
+        await supertest(app).get(`/api/users`).expect(401);
+      });
+
       it("it should return a 404 if asked for a specific user", async () => {
         const id = 1;
-        await supertest(app).get(`/api/users/${id}`).expect(404);
+        await supertest(app)
+          .get(`/api/users/${id}`)
+          .set(API_KEY_HEADER, API_KEY)
+          .expect(404);
       });
 
       it("it should provide an error message if provided an invalid id", async () => {
         const id = "invalidId";
-        await supertest(app).get(`/api/users/${id}`).expect(400);
+        await supertest(app)
+          .get(`/api/users/${id}`)
+          .set(API_KEY_HEADER, API_KEY)
+          .expect(400);
         expect(consoleError).not.toHaveBeenCalled();
       });
     });
@@ -65,19 +78,29 @@ describe("User Routes", () => {
 
   describe("Create User Routes", () => {
     describe("Given: no users exist in the database", () => {
+      it("it should require an API key", async () => {
+        await supertest(app).post(`/api/users`).expect(401);
+        expect(consoleError).not.toHaveBeenCalled();
+      });
+
       it("it should raise an error if no lastfmUsername is provided", async () => {
-        await supertest(app).post(`/api/users`).expect(400);
+        await supertest(app)
+          .post(`/api/users`)
+          .set(API_KEY_HEADER, API_KEY)
+          .expect(400);
         expect(consoleError).not.toHaveBeenCalled();
       });
 
       it("it should raise an error if other arguments are provided, but not lastfmUsername", async () => {
         await supertest(app)
           .post(`/api/users`)
+          .set(API_KEY_HEADER, API_KEY)
           .send({ username: "test" })
           .expect(400);
         expect(consoleError).not.toHaveBeenCalled();
         await supertest(app)
           .post(`/api/users`)
+          .set(API_KEY_HEADER, API_KEY)
           .send({ lastfm: { username: "test" } })
           .expect(400);
         expect(consoleError).not.toHaveBeenCalled();
@@ -91,18 +114,31 @@ describe("User Routes", () => {
         await createUserByLastfmUsername("atomicGravy");
       });
 
+      it("it should require an API key", async () => {
+        await supertest(app).post(`/api/users/9999999/listens`).expect(401);
+      });
+
       it("it should raise an error if it provides the id of a user that doesn't exist", async () => {
-        await supertest(app).post(`/api/users/9999999/listens`).expect(404);
+        await supertest(app)
+          .post(`/api/users/9999999/listens`)
+          .set(API_KEY_HEADER, API_KEY)
+          .expect(404);
         expect(consoleError).toHaveBeenCalled();
       });
 
       it("it should raise an error if it provides an invalid id (string)", async () => {
-        await supertest(app).post(`/api/users/invalidId/listens`).expect(400);
+        await supertest(app)
+          .post(`/api/users/invalidId/listens`)
+          .set(API_KEY_HEADER, API_KEY)
+          .expect(400);
         expect(consoleError).not.toHaveBeenCalled();
       });
 
       it("it should raise an error if no user is provided", async () => {
-        await supertest(app).post(`/api/users/listens`).expect(404);
+        await supertest(app)
+          .post(`/api/users/listens`)
+          .set(API_KEY_HEADER, API_KEY)
+          .expect(404);
         expect(consoleError).not.toHaveBeenCalled();
       });
     });
