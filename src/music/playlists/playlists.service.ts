@@ -48,15 +48,19 @@ export async function getPlaylist(
   preferenceType: PreferenceType,
 ): Promise<Playlist> {
   const key = PlaylistCache.createKey([user1.id, user2.id], preferenceType);
+  const cachedPlaylist = playlistCache.get(key);
+
+  if (cachedPlaylist) {
+    return cachedPlaylist;
+  }
+
   const alternativeKey = PlaylistCache.createKey(
     [user2.id, user1.id],
     reversePreferenceType(preferenceType),
   );
-
-  const cachedPlaylist = playlistCache.get(key, alternativeKey);
-
-  if (cachedPlaylist) {
-    return cachedPlaylist;
+  const cachedPlaylistInverse = playlistCache.get(alternativeKey);
+  if (cachedPlaylistInverse) {
+    return cachedPlaylistInverse;
   }
 
   const tracksMatchingPreferenceType = await getTrackIdsByPreferenceType(

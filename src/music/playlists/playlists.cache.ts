@@ -33,22 +33,8 @@ export class PlaylistCache {
    * @param {string | undefined} alternativeKey - The alternative key. This parameter is optional.
    * @returns {Playlist | undefined} The playlist if found, or undefined if not found.
    */
-  get(
-    key: string,
-    alternativeKey: string | undefined = undefined
-  ): Playlist | undefined {
-    const primaryKeyResult = this.cache.get(key);
-    if (primaryKeyResult) {
-      return primaryKeyResult;
-    }
-
-    // if the primary key is not found, try the alternative key
-    if (alternativeKey) {
-      const alternativeKeyResult = this.cache.get(alternativeKey);
-      if (alternativeKeyResult) {
-        return alternativeKeyResult;
-      }
-    }
+  get(key: string): Playlist | undefined {
+    return this.cache.get(key);
   }
 
   set(key: string, playlist: Playlist) {
