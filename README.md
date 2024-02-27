@@ -3,6 +3,7 @@
 **Compare your music preferences to your friends** starting with the ability to create playlists that with just your music, just your friend's music, or music you've both loved.
 
 ## [Try it Now](https://music.adambechtold.xyz)
+
 You'll just need...
 
 - [ ] ...a [last.fm](https://www.last.fm) account
@@ -54,7 +55,13 @@ Update the `DATABASE_URL` if you want to connect to a remote database. The `DATA
 npx prisma migrate dev # This will apply to the database specified in the DATABASE_URL of your .env
 ```
 
-### 4 | Run Web Server
+### 4 | Optional | Seed Database
+
+You can download a sample data set of 4 listeners here: [music.adambechtold.xyz/api/setup/seed.zip](music.adambechtold.xyz/api/setup/seed.zip)
+
+It contains a series of `.dump` files which you can load into your database using the method of your choice. If you're having trouble with this, comment on this [issue](https://github.com/adambechtold/taste-explorer/issues/23).
+
+### 5 | Run Web Server
 
 ```sh
 # If you have your own database running and modified DATABASE_URL in step 2
@@ -64,7 +71,7 @@ npm run dev
 npm run dev:local
 ```
 
-### 5 | Optional | Run Cron Jobs to Start Collecting New Data
+### 6 | Optional | Run Cron Jobs to Start Collecting New Data
 
 Start the cron jobs that track listening history and research additional information about tracks.
 
@@ -77,7 +84,7 @@ npx ts-node src/music/cron/scheduleJobs.cron.ts \
 
 Consider running these in separate `screen` instances.
 
-### 6 | Optional | Check out the Admin API
+### 7 | Optional | Check out the Admin API
 
 - 📝 Documentation - [Admin API](music.adambechtold.xyz/admin/api-docs/)
 
