@@ -57,7 +57,7 @@ npx prisma migrate dev # This will apply to the database specified in the DATABA
 
 ### 4 | Optional | Seed Database
 
-You can download a sample data set of 4 listeners here: [music.adambechtold.xyz/api/setup/seed.zip](music.adambechtold.xyz/api/setup/seed.zip)
+You can download a sample data set of 4 listeners here: [music.adambechtold.xyz/api/setup/seed.zip](https://music.adambechtold.xyz/api/setup/seed.zip)
 
 It contains a series of `.dump` files which you can load into your database using the method of your choice. If you're having trouble with this, comment on this [issue](https://github.com/adambechtold/taste-explorer/issues/23).
 
