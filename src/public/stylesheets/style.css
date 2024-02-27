@@ -260,3 +260,44 @@ button.applied {
   align-items: start;
   justify-content: center;
 }
+
+#playlist-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.spinner {
+  margin: 2rem;
+  border: 8px solid #f3f3f3; /* Light grey */
+  border-top: 8px solid var(--primary-color); /* Blue */
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
+  animation: spin 1s linear infinite;
+}
+
+.hide-spinner {
+  display: none;
+}
+
+#playlist-wrapper.htmx-request {
+  .spinner {
+    display: block !important;
+  }
+
+  #playlist-container {
+    display: none !important;
+  }
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
