@@ -1,12 +1,11 @@
-import { PrismaClient } from "@prisma/client";
+import { LastfmListen, PrismaClient, Prisma } from "@prisma/client";
 import { TypedError } from "../errors/errors.types";
 import { UserWithId, UserWithLastfmAccountAndId } from "../users/users.types";
 import { LastfmListenBatchImportSize } from "../lastfm/lastfm.types";
 import { getSpotifyAccessTokenForSessionId } from "../spotify/spotify.storage";
-import { sleep } from "../utils/misc.utils";
 import { Logger } from "../utils/log.utils";
 
-import { Track, TrackWithId } from "./music.types";
+import { TrackWithId } from "./music.types";
 
 import * as LastfmService from "../lastfm/lastfm.service";
 import * as SpotifyService from "../spotify/spotify.service";
@@ -60,128 +59,82 @@ export async function triggerUpdateListensForUser(
 }
 
 /**
- * Retrieves a track given its last.fm listen.
+ * Links Last.fm listens to a track by its ID.
  *
- * @param {number} lastfmListenId - The Id of the last.fm listen.
- * @returns {Promise<Track | null>} - A promise that resolves with the track or "null" if not found.
- * @throws {TypedError} - If the last.fm listen is not found.
+ * @param {LastfmListen[]} lastfmListens - An array of Last.fm listens.
+ * @param {number} trackId - The ID of the track to link the listens to.
+ * @param {boolean} overwrite - If true, existing listens for the Last.fm listens will be overwritten.
+ * @returns {Promise<Prisma.BatchPayload>} - A promise that resolves to a Prisma BatchPayload object representing the result of the update operation(s).
  */
-export async function getTrackFromLastfmListenId(
-  lastfmListenId: number
-): Promise<Track | null> {
-  const logger = new Logger("createListens");
+export async function linkLastfmListensToTrackById(
+  lastfmListens: LastfmListen[],
+  trackId: number,
+  overwrite: boolean
+): Promise<Prisma.BatchPayload> {
+  let numberOfUpdates = 0;
 
-  // Find Existing Listen
-  const listen = await prisma.listen.findUnique({
+  // get existing listens for these last.fm listens
+  const existingListens = await prisma.listen.findMany({
     where: {
-      lastfmListenId: lastfmListenId,
+      lastfmListenId: {
+        in: lastfmListens.map((listen) => listen.id),
+      },
     },
   });
 
-  // If Found, Return Corresponding Track
-  if (listen) {
-    const prismaTrack = await prisma.track.findUnique({
-      where: {
-        id: listen.trackId,
-      },
-      include: {
-        artists: true,
-      },
-    });
+  // get the set that does not already have listens
+  const lastfmListensWithoutListens = lastfmListens.filter(
+    (lastfmListen) =>
+      !existingListens.some(
+        (existingListen) => existingListen.lastfmListenId === lastfmListen.id
+      )
+  );
 
-    if (prismaTrack) {
-      return MusicUtils.convertPrismaTrackAndArtistsToTrack(
-        prismaTrack,
-        prismaTrack.artists
-      );
-    } else {
-      // This should never happen. All Listens should have a Track.
-      logger.error(`Listen ${listen.id} has no track.`);
-    }
+  // create listens for these
+  const createListenResult = await prisma.listen.createMany({
+    data: lastfmListensWithoutListens.map((lastfmListen) => ({
+      trackId,
+      userId: lastfmListen.userId,
+      lastfmListenId: lastfmListen.id,
+      listenedAt: lastfmListen.listenedAt,
+    })),
+  });
+
+  numberOfUpdates += createListenResult.count;
+
+  // if not overwrite, then we  can end here
+  if (!overwrite) {
+    return {
+      count: numberOfUpdates,
+    };
   }
 
-  // If Not Found, Get Track Information from Lastfm Listen
-  const lastfmListens = await prisma.lastfmListen.findMany({
-    select: {
-      trackName: true,
-      artistName: true,
-    },
+  // get the set of last.fm listens that have already been analyzed
+  const lastfmListensPreviouslyAnalyzed = lastfmListens.filter((lastfmListen) =>
+    existingListens.some(
+      (existingListen) => existingListen.lastfmListenId === lastfmListen.id
+    )
+  );
+
+  // update the track for these
+  const listensCreated = await prisma.lastfmListen.updateMany({
     where: {
-      id: lastfmListenId,
+      id: {
+        in: lastfmListensPreviouslyAnalyzed.map(
+          (lastfmListen) => lastfmListen.id
+        ),
+      },
+    },
+    data: {
+      analyzedAt: new Date(),
     },
   });
 
-  if (!lastfmListens) {
-    throw new TypedError("Lastfm Listen not found", 404);
-  }
+  numberOfUpdates += listensCreated.count;
 
-  // Use Search to Find the Track
-  let track: TrackWithId | null = null;
-  try {
-    track = await getTrackByNameAndArtistName(
-      lastfmListens[0].trackName,
-      lastfmListens[0].artistName
-    );
-  } catch (error) {
-    if (error instanceof TypedError) {
-      if (error.status === 404) {
-        logger.log(
-          "track not found. Marking lastfm listen as analyzed, as well as any other listens with the same track name and artist name"
-        );
-        const result = await prisma.lastfmListen.updateMany({
-          where: {
-            OR: [
-              { id: lastfmListenId },
-              {
-                AND: [
-                  { trackName: lastfmListens[0].trackName },
-                  { artistName: lastfmListens[0].artistName },
-                ],
-              },
-            ],
-          },
-          data: {
-            analyzedAt: new Date(),
-          },
-        });
-        logger.log(`Marked ${result.count} listens as analyzed.`);
-      } else {
-        throw error;
-      }
-    }
-    throw error;
-  }
-
-  if (!track) {
-    const result = await prisma.lastfmListen.updateMany({
-      where: {
-        trackName: lastfmListens[0].trackName,
-        artistName: lastfmListens[0].artistName,
-      },
-      data: {
-        analyzedAt: new Date(),
-      },
-    });
-    logger.log(
-      `Lastfm Listen ${lastfmListenId}'s track was not found in Spotify. Marked ${result.count} listens as analyzed.`
-    );
-    throw TypedError.create("Track not found in the database or Spotify.", 404);
-  } else {
-    // Link all last.fm listens with the same track name and artist name to this track
-    const result =
-      await LastfmService.linkTrackIdToAllLastfmListensWithTrackNameAndArtistName(
-        track.id,
-        lastfmListens[0].trackName,
-        lastfmListens[0].artistName,
-        true
-      );
-
-    logger.log(
-      `Linked ${result.count} listens to track ${track.name} while researching lastfmListen #${lastfmListenId}.`
-    );
-
-    return track;
-  }
+  return {
+    count: numberOfUpdates,
+  };
 }
 
 /**
@@ -224,6 +177,7 @@ export async function getTrackByNameAndArtistName(
 
   // Track not found in the database. Search Spotify.
   try {
+    logger.log(`Searching spotify for ${trackName} by ${artistName}`);
     const accessToken = await getSpotifyAccessToken();
 
     const track = await SpotifyService.getTrack(
@@ -231,6 +185,11 @@ export async function getTrackByNameAndArtistName(
       trackName,
       artistName
     );
+
+    if (!track) {
+      logger.error(`No track found for ${trackName} by ${artistName}`);
+      return null;
+    }
 
     await Promise.all(track.artists.map((a) => MusicStorage.upsertArtist(a)));
     const prismaTrack = await MusicStorage.upsertTrack(track);
@@ -285,6 +244,12 @@ export async function addFeaturesToTracks(
   );
 }
 
+/**
+ * This asynchronous function retrieves a Spotify access token.
+ *
+ * @throws {TypedError} When no access token is found for the user.
+ * @returns {Promise<string>} A promise that resolves to the Spotify access token.
+ */
 async function getSpotifyAccessToken() {
   // Track not found in the database. Search Spotify.
   const accessToken = await SpotifyService.getAccessToken({
