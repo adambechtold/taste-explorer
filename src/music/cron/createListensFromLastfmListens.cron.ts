@@ -239,3 +239,21 @@ export async function getNextLastfmListenToResearchBasedOnFrequencyOfListens() {
     };
   });
 }
+
+/**
+ * Updates all last.fm listens in the database to set their `isBeingAnalyzed` field to false.
+ * This function is typically used to reset the updating status of all last.fm listens.
+ *
+ * @returns {Promise<void>} A promise that resolves when the update operation is complete.
+ * @throws {Prisma.PrismaClientKnownRequestError} If the update operation fails.
+ */
+export async function markAllLastfmListensAsNotUpdating() {
+  await prisma.lastfmListen.updateMany({
+    where: {
+      isBeingAnalyzed: true,
+    },
+    data: {
+      isBeingAnalyzed: false,
+    },
+  });
+}

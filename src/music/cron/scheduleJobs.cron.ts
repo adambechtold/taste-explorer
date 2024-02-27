@@ -1,6 +1,9 @@
-import cron, { schedule } from "node-cron";
+import cron from "node-cron";
 
-import { createListensFromLastfmListens } from "./createListensFromLastfmListens.cron";
+import {
+  createListensFromLastfmListens,
+  markAllLastfmListensAsNotUpdating,
+} from "./createListensFromLastfmListens.cron";
 import {
   updateListenHistory,
   markAllUsersAsNotUpdating,
@@ -45,6 +48,7 @@ function scheduleCreateListensTask() {
     `Research Next Lastfm Listen will run every ${intervalInSeconds} seconds`
   );
   let researchListensTask: cron.ScheduledTask;
+  markAllLastfmListensAsNotUpdating();
   researchListensTask = cron.schedule(`*/${intervalInSeconds} * * * * *`, () =>
     createListensFromLastfmListens(researchListensTask)
   );
