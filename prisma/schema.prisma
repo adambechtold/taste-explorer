@@ -147,14 +147,15 @@ model Artist {
 }
 
 model SpotifyTrackSearchQueue {
-  id         Int       @id @default(autoincrement())
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
-  trackName  String
-  artistName String
-  searchedAt DateTime?
-  trackId    Int?
-  Track      Track?    @relation(fields: [trackId], references: [id])
+  id              Int       @id @default(autoincrement())
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  trackName       String
+  artistName      String
+  searchedAt      DateTime?
+  isBeingSearched Boolean   @default(false)
+  trackId         Int?
+  Track           Track?    @relation(fields: [trackId], references: [id])
 
   // we could create this index, but it's not clear that we would 
   // ever need to search for a track by its id
