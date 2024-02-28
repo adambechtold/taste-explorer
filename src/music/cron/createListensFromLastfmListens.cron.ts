@@ -13,7 +13,7 @@ const logger = new Logger("createListens");
 const prisma = new PrismaClient({ log: ["error"] });
 
 // uncomment for debugging
-// createListensFromLastfmListens();
+//createListensFromLastfmListens();
 
 export async function createListensFromLastfmListens(
   task: cron.ScheduledTask | undefined = undefined
@@ -66,7 +66,11 @@ export async function createListensFromLastfmListens(
       false
     );
   } else {
-    logger.log(`no track found for ${trackName} by ${artistName}`);
+    logger.log(
+      `no track found for ${trackName} by ${artistName} in the database. Storing in spotify research queue.`
+    );
+
+    await MusicService.storeTrackForSpotifyLookup(trackName, artistName);
   }
 
   // 4 - mark the analysis time

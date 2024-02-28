@@ -140,7 +140,7 @@ export async function linkLastfmListensToTrackById(
 /**
  * Get a track given its name and artist name.
  *
- * If the track is not found in the database already, search spotify and add it to the database.
+ * If the track is not found in the database already, return null.
  *
  * @param {string} trackName
  * @param {string} artistName
@@ -175,44 +175,40 @@ export async function getTrackByNameAndArtistName(
     return previousMatchTrack;
   }
 
-  // Track not found in the database. Search Spotify.
+  return null;
+}
+
+/**
+ * This asynchronous function stores a track for Spotify lookup.
+ *
+ * @param {string} trackName - The name of the track.
+ * @param {string} artistName - The name of the artist.
+ * @throws {Prisma.PrismaClientKnownRequestError} When a Prisma Client error occurs, except for the "P2002" error which is handled internally.
+ * @returns {Promise<void>} A promise that resolves when the operation is complete.
+ */
+export async function storeTrackForSpotifyLookup(
+  trackName: string,
+  artistName: string
+) {
+  const logger = new Logger("createListens");
   try {
-    logger.log(`Searching spotify for ${trackName} by ${artistName}`);
-    const accessToken = await getSpotifyAccessToken();
-
-    const track = await SpotifyService.getTrack(
-      accessToken,
-      trackName,
-      artistName
-    );
-
-    if (!track) {
-      logger.error(`No track found for ${trackName} by ${artistName}`);
-      return null;
-    }
-
-    await Promise.all(track.artists.map((a) => MusicStorage.upsertArtist(a)));
-    const prismaTrack = await MusicStorage.upsertTrack(track);
-
-    logger.log(
-      `Found track in spotify: ${track.name} by ${track.artists
-        .map((a) => a.name)
-        .join(", ")}`
-    );
-    return {
-      id: prismaTrack.id,
-      ...track,
-    };
+    await prisma.spotifyTrackSearchQueue.create({
+      data: {
+        trackName,
+        artistName,
+      },
+    });
   } catch (error) {
-    if (error instanceof TypedError) {
-      throw error;
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === "P2002") {
+        // ignore duplicate
+        logger.log(
+          `Duplicate track search request. Ignoring. trackName: ${trackName}, artistName: ${artistName}`
+        );
+        return;
+      }
     }
-
-    logger.error(
-      `Track ${trackName} by ${artistName} not found in Spotify.\n`,
-      error
-    );
-    return null;
+    throw error;
   }
 }
 
