@@ -89,8 +89,7 @@ export async function searchSpotifyForTracks(
  * @returns {Promise<TrackWithId>} A promise that resolves to the stored or existing track, including its ID.
  * @throws {Prisma.PrismaClientKnownRequestError} When a Prisma Client error occurs.
  */
-// TODO: Test this function
-async function getNextQueryToExecute(): Promise<SpotifyTrackSearchQueue | null> {
+export async function getNextQueryToExecute(): Promise<SpotifyTrackSearchQueue | null> {
   return prisma.$transaction(async (tx) => {
     const query = await tx.$queryRaw<SpotifyTrackSearchQueue[] | null>`
       SELECT * FROM SpotifyTrackSearchQueue

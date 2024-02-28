@@ -190,24 +190,21 @@ export async function storeTrackForSpotifyLookup(
   trackName: string,
   artistName: string
 ) {
-  const logger = new Logger("createListens");
   try {
-    await prisma.spotifyTrackSearchQueue.create({
-      data: {
+    await prisma.spotifyTrackSearchQueue.upsert({
+      where: {
+        trackName_artistName: {
+          trackName,
+          artistName,
+        },
+      },
+      update: {},
+      create: {
         trackName,
         artistName,
       },
     });
   } catch (error) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      if (error.code === "P2002") {
-        // ignore duplicate
-        logger.log(
-          `Duplicate track search request. Ignoring. trackName: ${trackName}, artistName: ${artistName}`
-        );
-        return;
-      }
-    }
     throw error;
   }
 }
