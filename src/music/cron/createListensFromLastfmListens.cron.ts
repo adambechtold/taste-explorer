@@ -13,7 +13,7 @@ const logger = new Logger("createListens");
 const prisma = new PrismaClient({ log: ["error"] });
 
 // uncomment for debugging
-createListensFromLastfmListens();
+// createListensFromLastfmListens();
 
 export async function createListensFromLastfmListens(
   task: cron.ScheduledTask | undefined = undefined
