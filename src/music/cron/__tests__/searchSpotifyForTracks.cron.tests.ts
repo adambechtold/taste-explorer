@@ -51,6 +51,7 @@ describe("Search Spotify for Tracks", () => {
         expect(nextResult).not.toBeNull();
         expect(nextResult?.searchedAt).toBeNull();
         expect(nextResult?.id).not.toEqual(result?.id);
+        expect(nextResult?.isBeingSearched).toBe(true);
       });
     });
   });
