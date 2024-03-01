@@ -105,6 +105,25 @@ describe("Search Spotify for Tracks", () => {
       });
     });
   });
+
+  describe("mark all spotify searches as not being searched", () => {
+    describe("Given: there are queries in the queue and some are marked as being searched", () => {
+      beforeEach(async () => {
+        await prisma.spotifyTrackSearchQueue.deleteMany({});
+        await populateWithSpotifyTrackSearches(2);
+      });
+
+      it("marks all queries as not being searched", async () => {
+        await SearchSpotify.markAllSpotifySearchesAsNotBeingSearched();
+
+        const queries = await prisma.spotifyTrackSearchQueue.findMany();
+
+        queries.forEach((query) => {
+          expect(query.isBeingSearched).toBe(false);
+        });
+      });
+    });
+  });
 });
 
 /**

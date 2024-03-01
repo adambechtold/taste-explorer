@@ -195,8 +195,7 @@ export async function updateQueryStatusAfterSearch(
  *
  * @returns {Promise<void>} A promise that resolves when the operation is complete.
  */
-// TODO: Test this function
-export async function markAllSpotifySearchesAsNotSearching() {
+export async function markAllSpotifySearchesAsNotBeingSearched() {
   await prisma.spotifyTrackSearchQueue.updateMany({
     where: {
       isBeingSearched: true,

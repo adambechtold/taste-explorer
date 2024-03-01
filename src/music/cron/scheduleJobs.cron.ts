@@ -12,7 +12,7 @@ import { addFeaturesToTracks } from "./addFeaturesToTracks.cron";
 import { Logger } from "../../utils/log.utils";
 import {
   searchSpotifyForTracks,
-  markAllSpotifySearchesAsNotSearching,
+  markAllSpotifySearchesAsNotBeingSearched,
 } from "./searchSpotifyForTracks.cron";
 
 const tasksMap = new Map<string, () => void>([
@@ -103,7 +103,7 @@ function scheduleSearchSpotifyForTracks() {
   );
 
   let searchSpotifyForTracksTask: cron.ScheduledTask;
-  markAllSpotifySearchesAsNotSearching();
+  markAllSpotifySearchesAsNotBeingSearched();
   searchSpotifyForTracksTask = cron.schedule(
     `*/${intervalInSeconds} * * * * *`,
     () => searchSpotifyForTracks(searchSpotifyForTracksTask)
