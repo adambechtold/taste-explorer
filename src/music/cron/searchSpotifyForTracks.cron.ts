@@ -176,8 +176,7 @@ async function storeOrReturnTrack(track: Track): Promise<TrackWithId> {
  * @param {TrackWithId | null} track - The track found by the search operation, or null if no track was found.
  * @returns {Promise<void>} A promise that resolves when the operation is complete.
  */
-// TODO: Test this function
-async function updateQueryStatusAfterSearch(
+export async function updateQueryStatusAfterSearch(
   query: SpotifyTrackSearchQueue,
   track: TrackWithId | null
 ) {
