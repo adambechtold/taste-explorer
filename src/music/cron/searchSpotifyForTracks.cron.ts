@@ -24,7 +24,7 @@ const logger = new Logger("searchSpotifyForTracks");
  * @returns {Promise<void>} A promise that resolves when the operation is complete.
  */
 export async function searchSpotifyForTracks(
-  task: cron.ScheduledTask | undefined = undefined,
+  task: cron.ScheduledTask | undefined = undefined
 ) {
   const nextQuery = await getNextQueryToExecute();
 
@@ -55,7 +55,7 @@ export async function searchSpotifyForTracks(
   } else {
     // store the track in the database
     logger.log(
-      `track found for ${trackName} by ${artistName} in Spotify. Storing in database.`,
+      `track found for ${trackName} by ${artistName} in Spotify. Storing in database.`
     );
     const trackWithId = await storeOrReturnTrack(track);
 
@@ -71,10 +71,10 @@ export async function searchSpotifyForTracks(
     const updatedListenCount = await linkLastfmListensToTrackById(
       listens,
       trackWithId.id,
-      false,
+      false
     );
     logger.log(
-      `linked ${updatedListenCount.count} last.fm listens to track ${trackName} by ${artistName}`,
+      `linked ${updatedListenCount.count} last.fm listens to track ${trackName} by ${artistName}`
     );
 
     // link the track to the query
@@ -118,7 +118,6 @@ export async function getNextQueryToExecute(): Promise<SpotifyTrackSearchQueue |
  * @returns {Promise<TrackWithId>} A promise that resolves to the stored or existing track, including its ID.
  * @throws {Prisma.PrismaClientKnownRequestError} When a Prisma Client error occurs.
  */
-// TODO: Test this function
 export async function storeOrReturnTrack(track: Track): Promise<TrackWithId> {
   const existingTrack = await prisma.track.findFirst({
     where: {
@@ -132,7 +131,7 @@ export async function storeOrReturnTrack(track: Track): Promise<TrackWithId> {
   if (existingTrack) {
     return convertPrismaTrackAndArtistsToTrack(
       existingTrack,
-      existingTrack.artists,
+      existingTrack.artists
     );
   }
 
@@ -149,7 +148,7 @@ export async function storeOrReturnTrack(track: Track): Promise<TrackWithId> {
         update: {},
         create: artist,
       });
-    }),
+    })
   );
 
   const newTrack = await prisma.track.create({
@@ -178,7 +177,7 @@ export async function storeOrReturnTrack(track: Track): Promise<TrackWithId> {
  */
 export async function updateQueryStatusAfterSearch(
   query: SpotifyTrackSearchQueue,
-  track: TrackWithId | null,
+  track: TrackWithId | null
 ) {
   await prisma.spotifyTrackSearchQueue.update({
     where: { id: query.id },
