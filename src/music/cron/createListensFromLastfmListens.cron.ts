@@ -1,28 +1,26 @@
 import cron from "node-cron";
-import { PrismaClient } from "@prisma/client";
+import { LastfmListen, PrismaClient } from "@prisma/client";
 import { PrismaTransactionClient } from "../../utils/prisma.types";
 import { Logger } from "../../utils/log.utils";
 
 import { pauseTask } from "../../utils/cron.utils";
 
 import * as MusicService from "../music.service";
-import { Track } from "../music.types";
-import { LastfmListen } from "@prisma/client";
+import { TrackWithId } from "../music.types";
 import { TooManyRequestsError } from "../../errors/errors.types";
 
 const logger = new Logger("createListens");
 const prisma = new PrismaClient({ log: ["error"] });
-const separator = "=".repeat(60);
-const showProgress = false;
 
 // uncomment for debugging
-// createListensFromLastfmListens();
+//createListensFromLastfmListens();
 
 export async function createListensFromLastfmListens(
   task: cron.ScheduledTask | undefined = undefined
 ) {
-  const nextLastfmListen = await getNextLastfmListenToResearch();
-  if (nextLastfmListen === null) {
+  // 1 - get the next last.fm listens to research
+  const nextLastfmListens = await getNextLastfmListensToResearch();
+  if (nextLastfmListens.length === 0) {
     logger.log(
       `no more last.fm listens to research. Pausing for 5 minutes. It will run at ${new Date(
         Date.now() + 5 * 60 * 1000
@@ -32,15 +30,19 @@ export async function createListensFromLastfmListens(
     return;
   }
 
+  // 2 - get the track from the database
+  const { trackName, artistName } = nextLastfmListens[0];
+
   logger.log(
-    "researching lastfm listen id",
-    nextLastfmListen.id,
-    `track: ${nextLastfmListen.trackName} by ${nextLastfmListen.artistName}`
+    `research ${nextLastfmListens.length} last.fm listens for ${trackName} by ${artistName}`
   );
-  let track: Track | null = null;
+
+  let track: TrackWithId | null = null;
   try {
-    track = await MusicService.getTrackFromLastfmListenId(nextLastfmListen.id);
-    await markAnalysisStatus(nextLastfmListen.id, false);
+    track = await MusicService.getTrackByNameAndArtistName(
+      trackName,
+      artistName
+    );
   } catch (error) {
     if (error instanceof TooManyRequestsError) {
       const retryAfter = error.retryAfter ? error.retryAfter : 5 * 60;
@@ -49,84 +51,106 @@ export async function createListensFromLastfmListens(
           Date.now() + retryAfter * 1000
         ).toISOString()}}`
       );
-      markAnalysisStatus(nextLastfmListen.id, false);
       if (task) pauseTask(task, retryAfter);
       return;
+    } else {
+      throw error;
     }
-
-    markAnalysisStatus(nextLastfmListen.id, false);
-
-    if (showProgress) {
-      const progress = await getProgress();
-      console.log(`
-${separator}
-Something went wrong while researching lastfm listen id ${nextLastfmListen.id}, ${nextLastfmListen.trackName} by ${nextLastfmListen.artistName}
-${error}`);
-
-      console.table(progress);
-      console.log(separator);
-    }
-
-    return;
   }
 
-  if (showProgress) {
-    const progress = await getProgress();
+  // 3 - link track to the last.fm listens
+  if (track) {
+    await MusicService.linkLastfmListensToTrackById(
+      nextLastfmListens,
+      track.id,
+      false
+    );
+  } else {
+    logger.log(
+      `no track found for ${trackName} by ${artistName} in the database. Storing in spotify research queue.`
+    );
 
-    console.log(`
-${separator}
-Completed Research for Lastfm Listen Id: ${nextLastfmListen.id}: ${
-      nextLastfmListen.trackName
-    } by ${nextLastfmListen.artistName}
-${track ? "Track Found" : "Track Not Found"}`);
-    console.table(progress);
-    console.log(separator);
+    await MusicService.storeTrackForSpotifyLookup(trackName, artistName);
   }
+
+  // 4 - mark the analysis time
+  await markAnalyzedAt(
+    nextLastfmListens.map((l) => l.id),
+    null
+  );
+
+  // 5 - mark the last.fm listens as analyzed
+  await markIsBeingAnalyzed(
+    nextLastfmListens.map((l) => l.id),
+    false
+  );
 }
 
-async function getProgress() {
-  console.time("getProgress");
-  // Insight - the slowest part of this is the total count of lastfmListens.
-  //           the others are pretty fast
-  const [
-    numberOfLastfmListens,
-    numberOfListens,
-    numberOfLastfmListensNotAnalyzed,
-  ] = await Promise.all([
-    prisma.lastfmListen.count(),
-    prisma.listen.count(),
-    prisma.lastfmListen.count({
+// ================== UTILS TO FIND THE NEXT ITEM TO RESEARCH =========================
+/**
+ * Retrieves the next last.fm listens to research from the database.
+ *
+ * We get the oldest last.fm listen that have not been analyzed yet and then all of the other last.fm listens
+ * with the same trackName and artistName that have not been analyzed yet.
+ *
+ * @returns {Promise<LastfmListen[] | null>} A promise that resolves with the next last.fm listen to research, or null if there are no more last.fm listens to research.
+ * @throws {Prisma.PrismaClientKnownRequestError} If the database query fails.
+ */
+export async function getNextLastfmListensToResearch(): Promise<
+  LastfmListen[]
+> {
+  return prisma.$transaction(async (tx) => {
+    const nextLastfmListen = await tx.lastfmListen.findFirst({
       where: {
+        isBeingAnalyzed: false,
         analyzedAt: null,
       },
-    }),
-  ]);
-  console.timeEnd("getProgress");
+      orderBy: {
+        id: "asc",
+      },
+    });
 
-  return {
-    "Total Lastfm Listens": numberOfLastfmListens,
-    "Total Listens": numberOfListens,
-    "Remaining Lastfm Listens": numberOfLastfmListensNotAnalyzed,
-    "Percent of LastfmListens with Listens": `${(
-      (numberOfListens / numberOfLastfmListens) *
-      100
-    ).toFixed(4)}%`,
-    "Percent of LastfmListens Analyzed": `${(
-      ((numberOfLastfmListens - numberOfLastfmListensNotAnalyzed) /
-        numberOfLastfmListens) *
-      100
-    ).toFixed(4)}%`,
-  };
+    const nextLastfmListens = await tx.$queryRaw<LastfmListen[]>`
+      SELECT 
+        * 
+      FROM 
+        LastfmListen
+      WHERE 
+        trackName = ${nextLastfmListen?.trackName}
+        AND artistName = ${nextLastfmListen?.artistName}
+        AND isBeingAnalyzed = false
+        AND analyzedAt IS NULL
+      FOR UPDATE SKIP LOCKED`;
+
+    // mark the next lastfm listens as being analyzed
+    await markIsBeingAnalyzed(
+      nextLastfmListens.map((l) => l.id),
+      true,
+      tx
+    );
+
+    return nextLastfmListens;
+  });
 }
 
-const markAnalysisStatus = async (
-  lastfmId: number,
+/**
+ * This asynchronous function updates the analysis status of Last.fm listens.
+ *
+ * @param {number[]} lastfmIds - The ID of the Last.fm listen.
+ * @param {boolean} status - The new analysis status to be set.
+ * @param {PrismaTransactionClient} [tx=prisma] - The Prisma Transaction Client, default is `prisma`.
+ * @returns {Promise<LastfmListen[]>} - A promise that resolves to the updated Last.fm listens.
+ */
+const markIsBeingAnalyzed = async (
+  lastfmIds: number[],
   status: boolean,
   tx: PrismaTransactionClient = prisma
 ) => {
-  return await tx.lastfmListen.update({
+  return await tx.lastfmListen.updateMany({
     where: {
-      id: lastfmId,
+      id: {
+        in: lastfmIds,
+      },
     },
     data: {
       isBeingAnalyzed: status,
@@ -134,108 +158,44 @@ const markAnalysisStatus = async (
   });
 };
 
-// ================== UTILS TO FIND THE NEXT ITEM TO RESEARCH =========================
-export async function getNextLastfmListenToResearch() {
-  return prisma.$transaction(async (tx) => {
-    let nextLastfmListens = (await tx.$queryRaw`
-      SELECT 
-        * 
-      FROM 
-        LastfmListen 
-      WHERE 
-        isBeingAnalyzed = false
-        AND analyzedAt IS NULL
-      ORDER BY 
-        id ASC
-      LIMIT 1
-      FOR UPDATE SKIP LOCKED`) as LastfmListen[];
-
-    if (nextLastfmListens.length === 0) {
-      return null;
-    }
-
-    let nextLastfmListen = nextLastfmListens[0];
-
-    nextLastfmListen = await tx.lastfmListen.update({
-      where: {
-        id: nextLastfmListen.id,
-      },
-      data: {
-        isBeingAnalyzed: true,
-      },
-    });
-
-    return nextLastfmListen;
+/**
+ * Updates the 'analyzedAt' field for multiple Last.fm listens.
+ *
+ * @param {number[]} lastfmListenIds - An array of Last.fm listen IDs.
+ * @param {Date | null} timestamp - The timestamp to set as the 'analyzedAt' value. If null, the current date and time is used.
+ * @param {PrismaTransactionClient} [tx=prisma] - The Prisma Transaction Client, default is `prisma`.
+ * @returns {Promise<Prisma.BatchPayload>} - A promise that resolves to a Prisma BatchPayload object representing the result of the update operation.
+ */
+const markAnalyzedAt = async (
+  lastfmListenIds: number[],
+  timestamp: Date | null,
+  tx: PrismaTransactionClient = prisma
+) => {
+  const analyzedAt = timestamp ? timestamp : new Date();
+  return await tx.lastfmListen.updateMany({
+    where: {
+      id: { in: lastfmListenIds },
+    },
+    data: {
+      analyzedAt,
+    },
   });
-}
+};
 
-export async function getNextLastfmListenToResearchBasedOnFrequencyOfListens() {
-  logger.log("get next lastfm listen to research");
-  return prisma.$transaction(async (tx) => {
-    const lastfmTracks = (await tx.$queryRaw`
-      SELECT 
-        track,
-        min(lastfmId) AS minLastfmId, 
-        count(lastfmId) AS listenCount, 
-        isBeingAnalyzed
-      FROM (
-        SELECT 
-          Listen.id AS listenId,
-          concat(trackName, ' by ', artistName) AS track,
-          trackName,
-          artistName,
-          LastfmListen.id AS lastfmId,
-          isBeingAnalyzed
-        FROM 
-          LastfmListen
-        LEFT JOIN Listen ON Listen.lastfmListenId = LastfmListen.id
-        WHERE Listen.id IS NULL
-        AND
-        LastfmListen.analyzedAt IS NULL
-        AND
-        LastfmListen.isBeingAnalyzed = FALSE
-      ) AS tracksWithoutListens
-    GROUP BY 
-      track 
-    ORDER BY 
-      listenCount DESC,
-      minLastfmId ASC
-    LIMIT 1
-    FOR UPDATE SKIP LOCKED`) as {
-      listenId: number;
-      track: string;
-      minLastfmId: number;
-      isBeingAnalyzed: boolean;
-    }[];
-
-    if (lastfmTracks.length === 0) {
-      return null;
-    }
-
-    const lastfmListenId = Number(lastfmTracks[0].minLastfmId);
-    logger.log("I'll search for lastfm listen id", lastfmListenId);
-
-    await tx.$executeRaw`UPDATE LastfmListen SET isBeingAnalyzed = true WHERE id = ${Number(
-      lastfmListenId
-    )}`;
-
-    const lastfmListen = await tx.lastfmListen.findUnique({
-      where: {
-        id: lastfmListenId,
-      },
-    });
-
-    if (!lastfmListen) {
-      throw new Error(
-        `lastfm listen with id ${lastfmTracks[0].minLastfmId} not found`
-      );
-    }
-
-    return {
-      trackName: lastfmListen.trackName,
-      artistName: lastfmListen.artistName,
-      lastfmId: lastfmListenId,
-      isBeingAnalyzed: lastfmListen.isBeingAnalyzed,
-    };
+/**
+ * Updates all last.fm listens in the database to set their `isBeingAnalyzed` field to false.
+ * This function is typically used to reset the updating status of all last.fm listens.
+ *
+ * @returns {Promise<void>} A promise that resolves when the update operation is complete.
+ * @throws {Prisma.PrismaClientKnownRequestError} If the update operation fails.
+ */
+export async function markAllLastfmListensAsNotUpdating() {
+  await prisma.lastfmListen.updateMany({
+    where: {
+      isBeingAnalyzed: true,
+    },
+    data: {
+      isBeingAnalyzed: false,
+    },
   });
 }

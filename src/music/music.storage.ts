@@ -5,6 +5,7 @@ import {
   Listen as PrismaListen,
 } from "@prisma/client";
 import { Artist, Track, TrackWithId } from "./music.types";
+
 import * as MusicUtils from "./music.utils";
 
 const prisma = new PrismaClient();

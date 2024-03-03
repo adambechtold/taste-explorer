@@ -113,42 +113,6 @@ musicRouter.get(
   }
 );
 
-// --- Identify Track from LastfmListen ---
-musicRouter.get(
-  "/lastfm-listens/:id/track",
-  checkApiToken,
-  async (req: Request, res: Response) => {
-    try {
-      const lastfmListenIdParam = req.params.id;
-
-      if (!lastfmListenIdParam) {
-        throw new TypedError("Listen ID is required", 400);
-      }
-
-      const lastfmListenId = parseInt(lastfmListenIdParam);
-
-      if (isNaN(lastfmListenId)) {
-        throw new TypedError("Listen ID must be a number", 400);
-      }
-
-      const track = await MusicService.getTrackFromLastfmListenId(
-        lastfmListenId
-      );
-
-      if (!track) {
-        throw new TypedError(
-          "Could not find track in database or spotify",
-          404
-        );
-      }
-
-      res.status(200).send(track);
-    } catch (e: any) {
-      handleErrorResponse(e, res);
-    }
-  }
-);
-
 musicRouter.get("/track-features/:trackId", checkApiToken, async (req, res) => {
   try {
     const trackIdParam = req.params.trackId;

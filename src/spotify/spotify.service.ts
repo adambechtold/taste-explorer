@@ -46,9 +46,13 @@ export async function handleLoginCallback(
  * @returns {Promise<AccessToken | null>} A promise that resolves to the access token for the user, or null if no access token is found.
  */
 export async function getAccessToken(
-  user: UserWithId
+  user: UserWithId | undefined = undefined
 ): Promise<SpotifyAccessToken | null> {
-  const currentToken = await SpotifyStorage.getSpotifyAccessTokenForUser(user);
+  let userObj = user ? user : { id: 1 }; // TODO: remove this default user
+
+  const currentToken = await SpotifyStorage.getSpotifyAccessTokenForUser(
+    userObj
+  );
 
   if (!currentToken) {
     return null;
@@ -59,7 +63,7 @@ export async function getAccessToken(
 
   if (refreshedAccessToken.token !== currentToken.token) {
     SpotifyStorage.storeSpotifyAccessTokenForUser(
-      user,
+      userObj,
       refreshedAccessToken.token,
       refreshedAccessToken.refreshToken,
       refreshedAccessToken.expiresAt
