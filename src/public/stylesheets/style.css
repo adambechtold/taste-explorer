@@ -159,6 +159,30 @@ button.applied {
   }
 }
 
+.marquee-container {
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.marquee-text {
+  white-space: nowrap;
+  overflow: hidden;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-self: space-between;
+  gap: 2rem;
+}
+
+@keyframes marquee {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
 /* Music Player */
 .music-player-container {
   position: fixed;

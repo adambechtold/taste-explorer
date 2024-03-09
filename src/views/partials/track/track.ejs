@@ -8,9 +8,9 @@
       trackName: track.name, 
       artistName: track.artists.map(artist => artist.name).join(', ')
     }); %>
-  <div class="track-information">
-    <div class="track-title"><%= track.name %></div>
-    <div class="track-artist">
+  <div class="track-information marquee-container">
+    <div class="track-title marquee-text"><%= track.name %></div>
+    <div class="track-artist marquee-text">
       <%= track.artists.map(artist => artist.name).join(', ') %>
     </div>
   </div>
