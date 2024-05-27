@@ -2,7 +2,7 @@
 
 **Compare your music preferences to your friends** starting with the ability to create playlists that with just your music, just your friend's music, or music you've both loved.
 
-## [Try it Now](https://music.adambechtold.xyz)
+## [Click Here to Try it Now](https://music.adambechtold.xyz)
 
 You'll just need...
 
