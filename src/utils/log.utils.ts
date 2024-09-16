@@ -2,7 +2,8 @@ type Channel =
   | "default"
   | "updateListeningHistory"
   | "createListens"
-  | "addFeaturesToTracks";
+  | "addFeaturesToTracks"
+  | "searchSpotifyForTracks";
 
 export class Logger {
   channel: Channel = "default";
