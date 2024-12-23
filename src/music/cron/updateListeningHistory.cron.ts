@@ -22,13 +22,13 @@ export async function updateListenHistory(task: cron.ScheduledTask) {
   if (numberOfUsersBeingUpdated >= maximumNumberOfUsersUpdatedInParallel) {
     if (waitCount >= MAX_WAITS) {
       logger.log(
-        `... we have waited too many times. The job is likely stuck. Marking all users as not updating and continuing.`
+        `... we have waited too many times. The job is likely stuck. Marking all users as not updating and continuing.`,
       );
       await markAllUsersAsNotUpdating();
       waitCount = 0;
     } else {
       logger.log(
-        `... ${numberOfUsersBeingUpdated} users are already being updated. Waiting...`
+        `... ${numberOfUsersBeingUpdated} users are already being updated. Waiting...`,
       );
       waitCount++;
       return;

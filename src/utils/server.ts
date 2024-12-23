@@ -36,7 +36,7 @@ function createServer(): Express {
       resave: false, // This option forces the session to be saved back to the session store
       saveUninitialized: true, // This option forces a session that is "uninitialized" to be saved to the store
       cookie: { secure: process.env.NODE_ENV === "production" }, // Set secure to true if serving over HTTPS
-    })
+    }),
   );
 
   // Host Views
@@ -63,7 +63,7 @@ function createServer(): Express {
           workerSrc: ["'self'", "blob:"],
         },
       },
-    })
+    }),
   );
   app.use(cors());
   app.use(express.json());
@@ -77,7 +77,7 @@ function createServer(): Express {
   app.use("/auth", authRouter);
 
   const swaggerDocument = YAML.load(
-    path.join(__dirname, "../../documentation/api.spec.yaml")
+    path.join(__dirname, "../../documentation/api.spec.yaml"),
   );
 
   /* Host Swagger UI Docs

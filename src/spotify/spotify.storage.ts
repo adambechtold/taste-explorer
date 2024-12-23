@@ -20,7 +20,7 @@ export async function storeSpotifyAccessTokenForUser(
   user: UserWithId,
   accessToken: string,
   refreshToken: string,
-  expiresAt: Date
+  expiresAt: Date,
 ): Promise<SpotifyAccessToken> {
   const userIdService = getUserIdService(user);
   const response = await prisma.accessToken.upsert({
@@ -54,7 +54,7 @@ export async function storeSpotifyAccessTokenForUser(
  * @throws {Error} Will throw an error if the database operation fails.
  */
 export async function getSpotifyAccessTokenForUser(
-  user: UserWithId
+  user: UserWithId,
 ): Promise<SpotifyAccessToken | null> {
   const userIdService = getUserIdService(user);
 
@@ -92,7 +92,7 @@ const spotifyAccessTokensStorage = new Map<
  */
 export function storeSpotifyAccessTokenForSessionId(
   sessionId: SessionTokenId,
-  accessToken: SpotifyAccessToken
+  accessToken: SpotifyAccessToken,
 ): SpotifyAccessToken {
   spotifyAccessTokensStorage.set(sessionId, accessToken);
   return accessToken;
@@ -104,7 +104,7 @@ export function storeSpotifyAccessTokenForSessionId(
  * @returns {SpotifyAccessToken | null} - The access token that was stored, or null if no access token was found.
  */
 export function getSpotifyAccessTokenForSessionId(
-  sessionId: SessionTokenId
+  sessionId: SessionTokenId,
 ): SpotifyAccessToken | null {
   const accessToken = spotifyAccessTokensStorage.get(sessionId);
 
@@ -116,7 +116,7 @@ export function getSpotifyAccessTokenForSessionId(
 }
 
 export function convertSpotifyTrackFeaturesResponseToTrackFeatures(
-  response: SpotifyAudioFeaturesResponse
+  response: SpotifyAudioFeaturesResponse,
 ): TrackFeatures {
   return {
     acousticness: response.acousticness,

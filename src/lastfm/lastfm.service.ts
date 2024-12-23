@@ -18,7 +18,7 @@ import { Prisma, PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 export async function getAccountInfo(
-  lastfmUsername: string
+  lastfmUsername: string,
 ): Promise<LastfmAccount> {
   try {
     const lastfmResponse = await LastfmApi.getAccountInfo(lastfmUsername);
@@ -32,7 +32,7 @@ export async function getAccountInfo(
     console.error(e);
     throw TypedError.create(
       `Could not create user for lastfm username: ${lastfmUsername}`,
-      500
+      500,
     );
   }
 }
@@ -44,7 +44,7 @@ export async function getAccountInfo(
  * @returns {Promise<LastfmListensEventEmitter>} - An event emitter that emits events as the update progresses
  */
 export async function updateUserListeningHistory(
-  user: UserWithLastfmAccountAndId
+  user: UserWithLastfmAccountAndId,
 ): Promise<LastfmListensEventEmitter> {
   const updateTracker = new LastfmListensEventEmitter();
   updateTracker.onListens((listens) => {
@@ -69,7 +69,7 @@ export async function updateUserListeningHistory(
       console.log("last listen was at", lastListen.listenedAt);
     }
     const findTracksFrom = unixTimestampToDate(
-      dateToUnixTimestamp(lastListen.listenedAt) + 1
+      dateToUnixTimestamp(lastListen.listenedAt) + 1,
     );
     getAllListens(user.lastfmAccount, updateTracker, findTracksFrom);
     return updateTracker;
@@ -91,7 +91,7 @@ export async function updateUserListeningHistory(
 export async function getAllListens(
   lastfmAccount: LastfmAccount,
   updateTracker: LastfmListensEventEmitter,
-  from?: Date
+  from?: Date,
 ) {
   const pageSize = 200;
 
@@ -103,11 +103,11 @@ export async function getAllListens(
     lastfmAccount.username,
     1,
     pageSize,
-    from
+    from,
   );
 
   const totalNumberOfPages = parseInt(
-    response.recenttracks["@attr"].totalPages
+    response.recenttracks["@attr"].totalPages,
   );
 
   // indicate that the service has started
@@ -123,7 +123,7 @@ export async function getAllListens(
       : 1;
   if (process.env.VERBOSE === "true") {
     console.log(
-      "we'll fetch pages " + lastPageNumber + " to " + firstPageNumber
+      "we'll fetch pages " + lastPageNumber + " to " + firstPageNumber,
     );
   }
 
@@ -136,7 +136,7 @@ export async function getAllListens(
       lastfmAccount.username,
       i,
       pageSize,
-      from
+      from,
     );
 
     if (process.env.VERBOSE === "true") {
@@ -144,7 +144,7 @@ export async function getAllListens(
     }
     const lastfmListens = createLastfmListensFromRecentTracks(
       response,
-      lastfmAccount
+      lastfmAccount,
     );
 
     updateTracker.emitListens(lastfmListens);
@@ -170,7 +170,7 @@ export async function linkTrackIdToAllLastfmListensWithTrackNameAndArtistName(
   trackId: number,
   trackName: string,
   artistName: string,
-  overwrite: boolean = false
+  overwrite: boolean = false,
 ): Promise<Prisma.BatchPayload> {
   const matchingListens = await prisma.lastfmListen.findMany({
     select: {

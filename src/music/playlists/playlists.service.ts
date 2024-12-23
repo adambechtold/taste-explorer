@@ -45,7 +45,7 @@ type LikedTracksQueryResponse = {
 export async function getPlaylist(
   user1: UserWithId,
   user2: UserWithId,
-  preferenceType: PreferenceType
+  preferenceType: PreferenceType,
 ): Promise<Playlist> {
   const key = PlaylistCache.createKey([user1.id, user2.id], preferenceType);
   const cachedPlaylist = playlistCache.get(key);
@@ -56,7 +56,7 @@ export async function getPlaylist(
 
   const alternativeKey = PlaylistCache.createKey(
     [user2.id, user1.id],
-    reversePreferenceType(preferenceType)
+    reversePreferenceType(preferenceType),
   );
   const cachedPlaylistInverse = playlistCache.get(alternativeKey);
   if (cachedPlaylistInverse) {
@@ -66,7 +66,7 @@ export async function getPlaylist(
   const tracksMatchingPreferenceType = await getTrackIdsByPreferenceType(
     user1,
     user2,
-    preferenceType
+    preferenceType,
   );
 
   const tracks = (
@@ -112,7 +112,7 @@ export async function getPlaylist(
  */
 export async function preLoadAllPlaylists(
   user1: UserWithId,
-  user2: UserWithId
+  user2: UserWithId,
 ): Promise<void> {
   const preferenceTypes: PreferenceType[] = [
     "BOTH",
@@ -123,7 +123,7 @@ export async function preLoadAllPlaylists(
   return Promise.all(
     preferenceTypes.map(async (preferenceType) => {
       await getPlaylist(user1, user2, preferenceType);
-    })
+    }),
   ).then(() => {}); // Do nothing. The .then() is necessary to return a Promise<void> instead of Promise<void[]>
 }
 
@@ -143,7 +143,7 @@ export async function preLoadAllPlaylists(
 const getTrackIdsByPreferenceType = async (
   user1: UserWithId,
   user2: UserWithId,
-  preferenceType: PreferenceType
+  preferenceType: PreferenceType,
 ): Promise<LikedTracksQueryResponse> => {
   const likedTrackThreshold = 3;
   const limit = MAX_TRACKS_PER_PLAYLIST;

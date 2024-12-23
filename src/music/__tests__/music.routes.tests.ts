@@ -59,7 +59,7 @@ describe("Music Routes", () => {
 
         await saveExampleListens(
           user1 as UserWithLastfmAccountAndId,
-          user2 as UserWithLastfmAccountAndId
+          user2 as UserWithLastfmAccountAndId,
         );
       });
 
@@ -134,7 +134,7 @@ describe("Music Routes", () => {
         expect(response.body.tracks.items.length).toBe(1);
         expect(response.body.tracks.items[0]).toHaveProperty(
           "name",
-          "Both Like"
+          "Both Like",
         );
       });
 
@@ -153,7 +153,7 @@ describe("Music Routes", () => {
         expect(response.body.tracks.items.length).toBe(1);
         expect(response.body.tracks.items[0]).toHaveProperty(
           "name",
-          "User 1 Only"
+          "User 1 Only",
         );
       });
 
@@ -172,12 +172,12 @@ describe("Music Routes", () => {
         expect(response.body.tracks.items.length).toBe(1);
         expect(response.body.tracks.items[0]).toHaveProperty(
           "name",
-          "User 2 Only"
+          "User 2 Only",
         );
         expect(response.body.tracks.items[0]).toHaveProperty("artists");
         expect(response.body.tracks.items[0].artists[0]).toHaveProperty(
           "name",
-          "Artist1"
+          "Artist1",
         );
       });
     });
@@ -186,7 +186,7 @@ describe("Music Routes", () => {
 
 async function saveExampleListens(
   user1: UserWithLastfmAccountAndId,
-  user2: UserWithLastfmAccountAndId
+  user2: UserWithLastfmAccountAndId,
 ) {
   const artist = await prisma.artist.create({
     data: {
@@ -254,7 +254,7 @@ async function saveExampleListens(
 const storeExampleListen = async (
   user: UserWithLastfmAccountAndId,
   trackId: number,
-  date: Date
+  date: Date,
 ): Promise<Listen> => {
   return prisma.listen.create({
     data: {

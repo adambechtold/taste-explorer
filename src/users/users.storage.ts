@@ -7,13 +7,13 @@ const logger = new Logger("updateListeningHistory");
 export async function markUserUpdatingHistoryStatus(
   userId: number,
   isUpdating: boolean,
-  newLastUpdatedHistoryAt?: Date
+  newLastUpdatedHistoryAt?: Date,
 ) {
   return prisma.$transaction(async (tx) => {
     logger.log(
       `Marking user ${userId} as ${
         isUpdating ? "updating" : "not updating"
-      } listening history`
+      } listening history`,
     );
     const users =
       (await tx.$queryRaw`SELECT * FROM User WHERE id = ${userId} FOR UPDATE`) as User[];

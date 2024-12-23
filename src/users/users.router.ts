@@ -71,9 +71,8 @@ usersRouter.post("/", checkApiToken, async (req: Request, res: Response) => {
       throw new TypedError(message, 400);
     }
 
-    const user: User = await UserService.createUserByLastfmUsername(
-      lastfmUsername
-    );
+    const user: User =
+      await UserService.createUserByLastfmUsername(lastfmUsername);
 
     res.status(200).send(user);
   } catch (e: any) {
@@ -96,12 +95,12 @@ usersRouter.post(
       }
 
       const result = await UserService.triggerUpdateListenHistoryByUserId(
-        parseInt(req.params.id)
+        parseInt(req.params.id),
       );
 
       res.status(200).send(result);
     } catch (e: any) {
       handleErrorResponse(e, res);
     }
-  }
+  },
 );

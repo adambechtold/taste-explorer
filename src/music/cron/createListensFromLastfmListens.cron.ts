@@ -19,14 +19,14 @@ const showProgress = false;
 // createListensFromLastfmListens();
 
 export async function createListensFromLastfmListens(
-  task: cron.ScheduledTask | undefined = undefined
+  task: cron.ScheduledTask | undefined = undefined,
 ) {
   const nextLastfmListen = await getNextLastfmListenToResearch();
   if (nextLastfmListen === null) {
     logger.log(
       `no more last.fm listens to research. Pausing for 5 minutes. It will run at ${new Date(
-        Date.now() + 5 * 60 * 1000
-      ).toISOString()}`
+        Date.now() + 5 * 60 * 1000,
+      ).toISOString()}`,
     );
     if (task) pauseTask(task, 5 * 60);
     return;
@@ -35,7 +35,7 @@ export async function createListensFromLastfmListens(
   logger.log(
     "researching lastfm listen id",
     nextLastfmListen.id,
-    `track: ${nextLastfmListen.trackName} by ${nextLastfmListen.artistName}`
+    `track: ${nextLastfmListen.trackName} by ${nextLastfmListen.artistName}`,
   );
   let track: Track | null = null;
   try {
@@ -46,8 +46,8 @@ export async function createListensFromLastfmListens(
       const retryAfter = error.retryAfter ? error.retryAfter : 5 * 60;
       logger.log(
         `...too many requests, pausing research task for ${retryAfter} seconds. It will run at ${new Date(
-          Date.now() + retryAfter * 1000
-        ).toISOString()}}`
+          Date.now() + retryAfter * 1000,
+        ).toISOString()}}`,
       );
       markAnalysisStatus(nextLastfmListen.id, false);
       if (task) pauseTask(task, retryAfter);
@@ -122,7 +122,7 @@ async function getProgress() {
 const markAnalysisStatus = async (
   lastfmId: number,
   status: boolean,
-  tx: PrismaTransactionClient = prisma
+  tx: PrismaTransactionClient = prisma,
 ) => {
   return await tx.lastfmListen.update({
     where: {
@@ -216,7 +216,7 @@ export async function getNextLastfmListenToResearchBasedOnFrequencyOfListens() {
     logger.log("I'll search for lastfm listen id", lastfmListenId);
 
     await tx.$executeRaw`UPDATE LastfmListen SET isBeingAnalyzed = true WHERE id = ${Number(
-      lastfmListenId
+      lastfmListenId,
     )}`;
 
     const lastfmListen = await tx.lastfmListen.findUnique({
@@ -227,7 +227,7 @@ export async function getNextLastfmListenToResearchBasedOnFrequencyOfListens() {
 
     if (!lastfmListen) {
       throw new Error(
-        `lastfm listen with id ${lastfmTracks[0].minLastfmId} not found`
+        `lastfm listen with id ${lastfmTracks[0].minLastfmId} not found`,
       );
     }
 

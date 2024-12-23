@@ -113,7 +113,7 @@ playerRouter.get("/playlist", async (req: Request, res: Response) => {
     const playlist = await PlaylistService.getPlaylist(
       user1,
       user2,
-      preferenceType as PreferenceType
+      preferenceType as PreferenceType,
     );
 
     const tracks = playlist.tracks.items.map((item, index) => {

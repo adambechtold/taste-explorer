@@ -55,7 +55,7 @@ async function researchTracks() {
     lastfmListenIds[0],
     "and the highest is",
     lastfmListenIds[lastfmListenIds.length - 1],
-    ":"
+    ":",
   );
 
   let numberResearched = 0;
@@ -70,7 +70,7 @@ async function researchTracks() {
     try {
       console.log("...researching lastfmListen no:", lastfmListenIds[0]);
       const response = await fetch(
-        `http://localhost:4000/api/music/lastfm-listens/${lastfmListenIds[0]}/track`
+        `http://localhost:4000/api/music/lastfm-listens/${lastfmListenIds[0]}/track`,
       );
 
       if (!response.ok) {
@@ -86,8 +86,8 @@ async function researchTracks() {
         setTimeout(makeRequest, getTimeBetweenRequests());
         console.log(
           `.........percent coverage: ${(await getPercentCoverage()).toFixed(
-            4
-          )}%`
+            4,
+          )}%`,
         );
       } else {
         console.log("Complete!");

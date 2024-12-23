@@ -3,7 +3,7 @@ import { TrackWithId } from "./music.types";
 
 export function convertPrismaTrackAndArtistsToTrack(
   prismaTrack: PrismaTrack,
-  prismaArtists: PrismaArtist[]
+  prismaArtists: PrismaArtist[],
 ): TrackWithId {
   const {
     name,

@@ -60,7 +60,7 @@ function initializeSpotifyPlayer(token) {
   player.addListener("ready", ({ device_id }) => {
     thisDeviceId = device_id;
     document.getElementById(
-      "music-player-transfer-playback-container"
+      "music-player-transfer-playback-container",
     ).onclick = () => {
       player.activateElement();
 
@@ -98,12 +98,12 @@ function initializeSpotifyPlayer(token) {
     // Update Track Information
     if (state.track_window.current_track) {
       const trackAlbumImage = document.getElementById(
-        "music-player-track-image"
+        "music-player-track-image",
       );
       const trackName = document.getElementById("music-player-track-name");
       const trackArtist = document.getElementById("music-player-track-artist");
       const trackInPlaylist = document.getElementById(
-        `track-spotify-${state.track_window.current_track.id}`
+        `track-spotify-${state.track_window.current_track.id}`,
       );
 
       trackAlbumImage.src =
@@ -195,7 +195,7 @@ function setDisplayOfTransferPlaybackDialog(isVisible) {
       .style.removeProperty("display");
   } else {
     document.getElementById(
-      "music-player-transfer-playback-container"
+      "music-player-transfer-playback-container",
     ).style.display = "none";
   }
 }
@@ -236,7 +236,7 @@ function setIsTrackPlayingStyle(trackElement, isPlaying) {
 
   if (trackPlayingButtons.length > 0) {
     trackPlayingButtons.forEach(
-      (button) => (button.style.visibility = isPlaying ? "hidden" : "visible")
+      (button) => (button.style.visibility = isPlaying ? "hidden" : "visible"),
     );
   }
 }

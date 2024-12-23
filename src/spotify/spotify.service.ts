@@ -16,7 +16,7 @@ import { Track, TrackWithId } from "../music/music.types";
 export async function handleLoginCallback(
   code: string | null,
   user: UserWithId | null,
-  sessionId: string | null
+  sessionId: string | null,
 ): Promise<SpotifyAccessToken> {
   const spotifyApi = new SpotifyApi();
   const accessToken = await spotifyApi.getAccessTokenFromCode(code);
@@ -27,7 +27,7 @@ export async function handleLoginCallback(
       user,
       accessToken.token,
       accessToken.refreshToken,
-      accessToken.expiresAt
+      accessToken.expiresAt,
     );
   }
 
@@ -46,7 +46,7 @@ export async function handleLoginCallback(
  * @returns {Promise<AccessToken | null>} A promise that resolves to the access token for the user, or null if no access token is found.
  */
 export async function getAccessToken(
-  user: UserWithId
+  user: UserWithId,
 ): Promise<SpotifyAccessToken | null> {
   const currentToken = await SpotifyStorage.getSpotifyAccessTokenForUser(user);
 
@@ -62,7 +62,7 @@ export async function getAccessToken(
       user,
       refreshedAccessToken.token,
       refreshedAccessToken.refreshToken,
-      refreshedAccessToken.expiresAt
+      refreshedAccessToken.expiresAt,
     );
   }
 
@@ -79,7 +79,7 @@ export async function getAccessToken(
  */
 export async function refreshAccessToken(
   accessToken: SpotifyAccessToken,
-  user: UserWithId
+  user: UserWithId,
 ): Promise<SpotifyAccessToken> {
   const spotifyApi = new SpotifyApi(accessToken);
   const newAccessToken = await spotifyApi.refreshAccessToken();
@@ -87,7 +87,7 @@ export async function refreshAccessToken(
     user,
     newAccessToken.token,
     newAccessToken.refreshToken,
-    newAccessToken.expiresAt
+    newAccessToken.expiresAt,
   );
 }
 
@@ -103,7 +103,7 @@ export async function refreshAccessToken(
 export async function getTrack(
   accessToken: SpotifyAccessToken,
   trackName: string,
-  artistName: string
+  artistName: string,
 ): Promise<Track> {
   const spotifyApi = new SpotifyApi(accessToken);
 
@@ -112,7 +112,7 @@ export async function getTrack(
   if (!tracks.length) {
     throw new TypedError(
       `No tracks found for name: ${trackName} by: ${artistName}.`,
-      404
+      404,
     );
   }
 
@@ -129,22 +129,21 @@ export async function getTrack(
  */
 export async function addFeaturesToTracks(
   access_token: SpotifyAccessToken,
-  tracks: TrackWithId[]
+  tracks: TrackWithId[],
 ) {
   const spotifyApi = new SpotifyApi(access_token);
 
   const trackSpotifyIds = tracks.map((track) => track.spotifyId);
-  const trackFeaturesResponse = await spotifyApi.getTracksFeatures(
-    trackSpotifyIds
-  );
+  const trackFeaturesResponse =
+    await spotifyApi.getTracksFeatures(trackSpotifyIds);
 
   const trackFeatures = trackFeaturesResponse.audio_features.filter(
-    (f) => f !== null
+    (f) => f !== null,
   );
 
   const tracksWithFeatures = tracks.map((track) => {
     const featuresForTrack = trackFeatures.find(
-      (t) => t.id === track.spotifyId
+      (t) => t.id === track.spotifyId,
     );
 
     if (!featuresForTrack) {
@@ -152,7 +151,7 @@ export async function addFeaturesToTracks(
     } else {
       track.features =
         SpotifyStorage.convertSpotifyTrackFeaturesResponseToTrackFeatures(
-          featuresForTrack
+          featuresForTrack,
         );
     }
 
@@ -173,7 +172,7 @@ export async function addFeaturesToTracks(
 export async function playTracks(
   accessToken: SpotifyAccessToken,
   tracks: TrackWithId[],
-  offset: number = 0
+  offset: number = 0,
 ) {
   const spotifyApi = new SpotifyApi(accessToken);
 
@@ -194,14 +193,14 @@ export async function playTracks(
  */
 export async function transferPlaybackToUserDevice(
   deviceId: string,
-  user: UserWithId
+  user: UserWithId,
 ) {
   const accessToken = await getAccessToken(user);
 
   if (!accessToken) {
     throw new TypedError(
       "No access token found for user. Login with spotify to continue.",
-      400
+      400,
     );
   }
 

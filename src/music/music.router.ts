@@ -73,7 +73,7 @@ musicRouter.get("/playlists/", async (req: Request, res: Response) => {
     const playlist = await PlaylistService.getPlaylist(
       user1,
       user2,
-      preferenceType as PreferenceType
+      preferenceType as PreferenceType,
     );
 
     res.status(200).send(playlist);
@@ -97,7 +97,7 @@ musicRouter.get(
 
       const track = await MusicService.getTrackByNameAndArtistName(
         trackName,
-        artistName
+        artistName,
       );
 
       if (!track) {
@@ -110,7 +110,7 @@ musicRouter.get(
     } catch (e: any) {
       handleErrorResponse(e, res);
     }
-  }
+  },
 );
 
 // --- Identify Track from LastfmListen ---
@@ -131,14 +131,13 @@ musicRouter.get(
         throw new TypedError("Listen ID must be a number", 400);
       }
 
-      const track = await MusicService.getTrackFromLastfmListenId(
-        lastfmListenId
-      );
+      const track =
+        await MusicService.getTrackFromLastfmListenId(lastfmListenId);
 
       if (!track) {
         throw new TypedError(
           "Could not find track in database or spotify",
-          404
+          404,
         );
       }
 
@@ -146,7 +145,7 @@ musicRouter.get(
     } catch (e: any) {
       handleErrorResponse(e, res);
     }
-  }
+  },
 );
 
 musicRouter.get("/track-features/:trackId", checkApiToken, async (req, res) => {
@@ -175,7 +174,7 @@ musicRouter.get("/track-features/:trackId", checkApiToken, async (req, res) => {
 
     const track = MusicUtils.convertPrismaTrackAndArtistsToTrack(
       prismaTrack,
-      []
+      [],
     );
 
     const trackFeatures = await MusicService.addFeaturesToTracks([track]);

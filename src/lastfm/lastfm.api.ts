@@ -18,7 +18,7 @@ if (!LASTFM_API_KEY) {
  * @returns - the response from last.fm
  **/
 export async function getAccountInfo(
-  lastfmUsername: string
+  lastfmUsername: string,
 ): Promise<LastfmAccountInfoResponse> {
   try {
     // get user info from lastfm
@@ -36,18 +36,18 @@ export async function getAccountInfo(
     if (response.status === 404) {
       throw new TypedError(
         `User: ${lastfmUsername} not found in last.fm.`,
-        404
+        404,
       );
     }
 
     if (response.status !== 200) {
       console.error(
         `Response code ${response.status} from lastfm:`,
-        await response.json()
+        await response.json(),
       );
       throw new TypedError(
         `Could not get account info for user: ${lastfmUsername}`,
-        500
+        500,
       );
     }
 
@@ -59,7 +59,7 @@ export async function getAccountInfo(
     console.error(e);
     throw new TypedError(
       `Failed to get account info for user: ${lastfmUsername}`,
-      500
+      500,
     );
   }
 }
@@ -75,7 +75,7 @@ export async function getRecentTracks(
   pageNumber: number = 1,
   limit: number = 200,
   from?: Date,
-  attempts: number = 0
+  attempts: number = 0,
 ): Promise<LastfmGetRecentTracksResponse> {
   if (process.env.VERBOSE === "true") {
     console.log("getting recent tracks from lastfm");
@@ -125,7 +125,7 @@ export async function getRecentTracks(
       }
 
       throw new Error(
-        `Response code ${response.status} from lastfm: ${await response.json()}`
+        `Response code ${response.status} from lastfm: ${await response.json()}`,
       );
     }
 

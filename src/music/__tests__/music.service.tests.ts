@@ -26,7 +26,7 @@ describe("Music Service", () => {
       } catch (error) {
         if (error instanceof TypedError) {
           expect(error.message).toEqual(
-            "Cannot trigger update listens for user without lastfm account."
+            "Cannot trigger update listens for user without lastfm account.",
           );
           expect(error.status).toEqual(400);
         } else {

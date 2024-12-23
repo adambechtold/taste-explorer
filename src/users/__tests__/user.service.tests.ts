@@ -77,10 +77,10 @@ describe("User Service", () => {
 
   it("cannot create user with invalid lastfm username", async () => {
     await expect(
-      createUserByLastfmUsername("invalidUsername12")
+      createUserByLastfmUsername("invalidUsername12"),
     ).rejects.toThrow(TypedError);
     await expect(
-      createUserByLastfmUsername("invalidUsername12")
+      createUserByLastfmUsername("invalidUsername12"),
     ).rejects.toHaveProperty("status", 404);
 
     const newUser = await prisma.user.findMany({

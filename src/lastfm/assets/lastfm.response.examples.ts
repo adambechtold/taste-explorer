@@ -46,7 +46,7 @@ function createTestRecentTrackResponse(
   hasArtistMbid: boolean,
   hasAlbumMbid: boolean,
   isNowPlaying: boolean,
-  date?: number
+  date?: number,
 ): LastfmRecentTrackResponse {
   return {
     mbid: hasMbid ? "mbid-track-123456789" : undefined,
@@ -62,12 +62,12 @@ type TrackParams = Parameters<typeof createTestRecentTrackResponse>;
 
 export function createGetRecentTracksResponse(
   userNumber: 1 | 2,
-  tracksParams: TrackParams[]
+  tracksParams: TrackParams[],
 ): LastfmGetRecentTracksResponse {
   return {
     recenttracks: {
       track: tracksParams.map((params) =>
-        createTestRecentTrackResponse(...params)
+        createTestRecentTrackResponse(...params),
       ),
       "@attr": userNumber === 1 ? USER1 : USER2,
     },

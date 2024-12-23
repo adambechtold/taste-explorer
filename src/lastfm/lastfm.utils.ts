@@ -7,7 +7,7 @@ import {
 import { unixTimestampToDate } from "../utils/datetime.utils";
 
 export function createLastfmAccount(
-  response: LastfmAccountInfoResponse
+  response: LastfmAccountInfoResponse,
 ): LastfmAccount {
   return {
     username: response.user.name,
@@ -27,7 +27,7 @@ export function createLastfmAccount(
  */
 export function createLastfmListensFromRecentTracks(
   response: LastfmGetRecentTracksResponse,
-  lastFmAccount: LastfmAccount
+  lastFmAccount: LastfmAccount,
 ): LastfmListen[] {
   const tracks = response.recenttracks.track;
 

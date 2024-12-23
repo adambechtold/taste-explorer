@@ -51,7 +51,7 @@ authRouter.get(
         "/#" +
           querystring.stringify({
             error: "state_mismatch",
-          })
+          }),
       );
     } else {
       /**
@@ -69,7 +69,7 @@ authRouter.get(
 
         if (user1 && user2) {
           res.redirect(
-            `/taste-comparison?user1=${user1}&user2=${user2}&spotifyLogin=true`
+            `/taste-comparison?user1=${user1}&user2=${user2}&spotifyLogin=true`,
           );
         } else {
           res.redirect("/");
@@ -78,7 +78,7 @@ authRouter.get(
         res.redirect("/");
       }
     }
-  }
+  },
 );
 
 /**

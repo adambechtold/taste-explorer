@@ -42,11 +42,11 @@ main();
 function scheduleCreateListensTask() {
   const intervalInSeconds = process.env.CREATE_LISTENS_INTERVAL_IN_SECONDS || 5;
   createListenLogger.log(
-    `Research Next Lastfm Listen will run every ${intervalInSeconds} seconds`
+    `Research Next Lastfm Listen will run every ${intervalInSeconds} seconds`,
   );
   let researchListensTask: cron.ScheduledTask;
   researchListensTask = cron.schedule(`*/${intervalInSeconds} * * * * *`, () =>
-    createListensFromLastfmListens(researchListensTask)
+    createListensFromLastfmListens(researchListensTask),
   );
 }
 
@@ -54,13 +54,13 @@ function scheduleUpdateListeningHistory() {
   const intervalInSeconds =
     process.env.UPDATE_LISTENING_HISTORY_INTERVAL_IN_SECONDS || 5;
   updateListenHistoryLogger.log(
-    `Update Listening History will run every ${intervalInSeconds} seconds`
+    `Update Listening History will run every ${intervalInSeconds} seconds`,
   );
   markAllUsersAsNotUpdating();
   let updateListenHistoryTask: cron.ScheduledTask;
   updateListenHistoryTask = cron.schedule(
     `*/${intervalInSeconds} * * * * *`,
-    () => updateListenHistory(updateListenHistoryTask)
+    () => updateListenHistory(updateListenHistoryTask),
   );
 }
 
@@ -68,11 +68,11 @@ function scheduleAddFeaturesToTrack() {
   const intervalInMinutes =
     process.env.ADD_FEATURES_TO_TRACKS_INTERVAL_IN_MINUTES || 5;
   addFeaturesToTracksLogger.log(
-    `Add Features To Tracks will run every ${intervalInMinutes} minutes`
+    `Add Features To Tracks will run every ${intervalInMinutes} minutes`,
   );
   let addFeaturesToTracksTask: cron.ScheduledTask;
   addFeaturesToTracksTask = cron.schedule(
     `*/${intervalInMinutes} * * * *`,
-    () => addFeaturesToTracks(addFeaturesToTracksTask)
+    () => addFeaturesToTracks(addFeaturesToTracksTask),
   );
 }

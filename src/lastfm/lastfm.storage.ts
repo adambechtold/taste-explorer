@@ -14,11 +14,11 @@ const prisma = new PrismaClient();
  */
 export async function storeListenBatch(
   listens: LastfmListen[],
-  user: UserWithId
+  user: UserWithId,
 ): Promise<Prisma.BatchPayload> {
   if (!user.lastfmAccount) {
     throw new Error(
-      `Cannot store listens for user without lastfm account: ${user.id}`
+      `Cannot store listens for user without lastfm account: ${user.id}`,
     );
   }
   type UserWithLastfm = UserWithId & { lastfmAccount: { username: string } };
@@ -26,11 +26,11 @@ export async function storeListenBatch(
 
   if (
     listens.filter(
-      (l) => l.lastfmAccount.username !== userWithLastfm.lastfmAccount.username
+      (l) => l.lastfmAccount.username !== userWithLastfm.lastfmAccount.username,
     ).length
   ) {
     throw new Error(
-      `Cannot store listens for user ${user.lastfmAccount.username} with listens for other users.`
+      `Cannot store listens for user ${user.lastfmAccount.username} with listens for other users.`,
     );
   }
 
@@ -75,7 +75,7 @@ export async function getLastfmListenById(id: number): Promise<LastfmListen> {
 
   if (!lastfmAccount) {
     throw new Error(
-      `No lastfm account found for user with id ${prismaListen.userId}`
+      `No lastfm account found for user with id ${prismaListen.userId}`,
     );
   }
 

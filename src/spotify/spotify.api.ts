@@ -92,7 +92,7 @@ export default class SpotifyApi {
    * @throws {Error} Will throw an error if the request to the Spotify API fails.
    */
   async getAccessTokenFromCode(
-    code: string | null
+    code: string | null,
   ): Promise<SpotifyAccessToken> {
     const authOptions = {
       url: "https://accounts.spotify.com/api/token",
@@ -106,7 +106,7 @@ export default class SpotifyApi {
         Authorization:
           "Basic " +
           Buffer.from(this.clientId + ":" + this.clientSecret).toString(
-            "base64"
+            "base64",
           ),
       },
       json: true,
@@ -143,7 +143,7 @@ export default class SpotifyApi {
   }
 
   async getTracksFeatures(
-    spotifyIds: string[]
+    spotifyIds: string[],
   ): Promise<SpotifyAudioFeaturesBatchResponse> {
     if (!this.accessToken) {
       throw new Error("No access token set");
@@ -232,7 +232,7 @@ export default class SpotifyApi {
  * @throws {Error} Will throw an error if the request to the Spotify API fails, or if storing the new access token in the database fails.
  */
 async function refreshSpotifyToken(
-  accessToken: SpotifyAccessToken
+  accessToken: SpotifyAccessToken,
 ): Promise<SpotifyAccessToken> {
   const response = await fetch("https://accounts.spotify.com/api/token", {
     method: "POST",
@@ -296,7 +296,7 @@ function getClientSecret(): string {
 async function searchSpotifyTracks(
   trackName: string,
   artistName: string,
-  token: string
+  token: string,
 ): Promise<Track[]> {
   const searchOptions = {
     url: "https://api.spotify.com/v1/search",
@@ -320,7 +320,7 @@ async function searchSpotifyTracks(
     {
       method: "GET",
       headers: searchOptions.headers,
-    }
+    },
   );
 
   if (!searchResponse.ok) {
@@ -332,7 +332,7 @@ async function searchSpotifyTracks(
       }
       throw new TooManyRequestsError(
         "Too many requests to Spotify API",
-        retryAfter
+        retryAfter,
       );
     }
     throw new Error("Error searching tracks: " + searchResponse.statusText);
@@ -366,7 +366,7 @@ async function searchSpotifyTracks(
  */
 export async function getTracksFeatures(
   accessToken: SpotifyAccessToken,
-  ids: string[]
+  ids: string[],
 ): Promise<SpotifyAudioFeaturesBatchResponse> {
   const response = await fetch(
     `https://api.spotify.com/v1/audio-features?ids=${ids.join(",")}`,
@@ -375,7 +375,7 @@ export async function getTracksFeatures(
       headers: {
         Authorization: "Bearer " + accessToken.token,
       },
-    }
+    },
   );
 
   if (!response.ok) {
@@ -383,7 +383,7 @@ export async function getTracksFeatures(
       const retryAfterHeader = response.headers.get("Retry-After");
       throw new TooManyRequestsError(
         "Too many requests to Spotify API",
-        retryAfterHeader ? parseInt(retryAfterHeader) : undefined
+        retryAfterHeader ? parseInt(retryAfterHeader) : undefined,
       );
     }
 
@@ -406,7 +406,7 @@ export async function getTracksFeatures(
  */
 export async function startOrResumePlaybackState(
   accessToken: SpotifyAccessToken,
-  uris: string[]
+  uris: string[],
 ) {
   const response = await fetch("https://api.spotify.com/v1/me/player/play", {
     method: "PUT",
@@ -422,12 +422,12 @@ export async function startOrResumePlaybackState(
     if (response.statusText == "Not Found") {
       throw TypedError.create(
         "No active device found " + response.statusText,
-        response.status
+        response.status,
       );
     }
     throw TypedError.create(
       "Error modifying playback " + response.statusText,
-      response.status
+      response.status,
     );
   }
 
@@ -444,7 +444,7 @@ export async function startOrResumePlaybackState(
  */
 async function setShuffleState(
   accessToken: SpotifyAccessToken,
-  isShuffle: boolean
+  isShuffle: boolean,
 ) {
   const response = await fetch(
     "https://api.spotify.com/v1/me/player/shuffle?state=" + isShuffle,
@@ -453,13 +453,13 @@ async function setShuffleState(
       headers: {
         Authorization: "Bearer " + accessToken.token,
       },
-    }
+    },
   );
 
   if (response.status < 200 || response.status >= 300) {
     throw TypedError.create(
       "Error modifying playback " + response.statusText,
-      response.status
+      response.status,
     );
   }
 
@@ -476,7 +476,7 @@ async function setShuffleState(
  */
 async function transferPlayback(
   accessToken: SpotifyAccessToken,
-  deviceId: string
+  deviceId: string,
 ) {
   const response = await fetch("https://api.spotify.com/v1/me/player", {
     method: "PUT",
@@ -492,7 +492,7 @@ async function transferPlayback(
   if (response.status !== 204) {
     throw TypedError.create(
       "Error modifying playback " + response.statusText,
-      response.status
+      response.status,
     );
   }
 

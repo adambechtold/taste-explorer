@@ -24,7 +24,7 @@ export async function testEndpoint(): Promise<string> {
  * @throws {TypedError} If the user with the specified ID is not found or if there's an error in the retrieval process.
  */
 export async function getUserById(
-  userId: number
+  userId: number,
 ): Promise<UserWithLastfmAccountAndId> {
   try {
     const user = await prisma.user.findFirst({
@@ -40,13 +40,13 @@ export async function getUserById(
     if (!user.lastfmAccount) {
       throw new TypedError(
         `User with id:${userId} does not have a Last.fm account.`,
-        404
+        404,
       );
     }
 
     return createUserFromPrisma(
       user,
-      user.lastfmAccount
+      user.lastfmAccount,
     ) as UserWithLastfmAccountAndId;
   } catch (e: any) {
     console.error(e);
@@ -66,7 +66,7 @@ export async function getUserById(
  * @throws {TypedError} If the user with the specified Last.fm username already exists or if there's an error in the creation process.
  */
 export async function createUserByLastfmUsername(
-  lastfmUsername: string
+  lastfmUsername: string,
 ): Promise<UserWithLastfmAccountAndId> {
   try {
     const lastfmAccount = await getAccountInfo(lastfmUsername);
@@ -81,7 +81,7 @@ export async function createUserByLastfmUsername(
     if (existingUser) {
       const user = createUserFromPrisma(
         existingUser,
-        existingUser.lastfmAccount
+        existingUser.lastfmAccount,
       );
       return {
         ...user,
@@ -104,7 +104,7 @@ export async function createUserByLastfmUsername(
     }
     throw new TypedError(
       `Could not create user for lastfm username ${lastfmUsername}`,
-      500
+      500,
     );
   }
 }
@@ -118,7 +118,7 @@ export async function createUserByLastfmUsername(
  * @throws {TypedError<500>} If there's an error in the retrieval process.
  */
 export async function getUsersByLastfmUsername(
-  username: string
+  username: string,
 ): Promise<UserWithLastfmAccountAndId> {
   const user = await prisma.user.findFirst({
     where: { lastfmAccount: { username } },
@@ -133,7 +133,7 @@ export async function getUsersByLastfmUsername(
 
   return createUserFromPrisma(
     user,
-    user.lastfmAccount
+    user.lastfmAccount,
   ) as UserWithLastfmAccountAndId;
 }
 
@@ -154,7 +154,7 @@ export async function storeUser(user: User): Promise<UserWithId> {
     if (checkUserResponse) {
       throw new TypedError(
         `User with lastfm username: ${user.lastfmAccount?.username} already exists.`,
-        400
+        400,
       );
     }
 
@@ -193,7 +193,7 @@ export async function getAllUsers(): Promise<UserWithId[]> {
 
     // convert to User type
     return users.map((prismaUser) =>
-      createUserFromPrisma(prismaUser, prismaUser.lastfmAccount)
+      createUserFromPrisma(prismaUser, prismaUser.lastfmAccount),
     );
   } catch (error: any) {
     console.error("we got an error", error);

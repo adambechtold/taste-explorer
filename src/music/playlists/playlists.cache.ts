@@ -20,7 +20,7 @@ export class PlaylistCache {
 
   static createKey(
     userIds: [number, number],
-    preference: PreferenceType
+    preference: PreferenceType,
   ): string {
     return [...userIds, preference].join("-");
   }

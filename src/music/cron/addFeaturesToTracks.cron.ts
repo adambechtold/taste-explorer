@@ -41,7 +41,7 @@ export async function addFeaturesToTracks(task: cron.ScheduledTask) {
     if (error instanceof TooManyRequestsError) {
       const retryAfter = error.retryAfter ? error.retryAfter : 5 * 60;
       logger.log(
-        `...too many requests, pausing research task for ${retryAfter} seconds`
+        `...too many requests, pausing research task for ${retryAfter} seconds`,
       );
       pauseTask(task, retryAfter);
       return;
@@ -139,6 +139,6 @@ export async function getNextTracksToResearch(): Promise<TrackWithId[]> {
   });
 
   return prismaTracks.map((prismaTrack) =>
-    convertPrismaTrackAndArtistsToTrack(prismaTrack, [])
+    convertPrismaTrackAndArtistsToTrack(prismaTrack, []),
   );
 }

@@ -6,7 +6,7 @@ import { UserWithId } from "./users.types";
 
 export function createUser(
   prismaUser: PrismaUser,
-  prismaLastfm?: PrismaLastfmAccount | null
+  prismaLastfm?: PrismaLastfmAccount | null,
 ): UserWithId {
   const user: UserWithId = {
     id: prismaUser.id,

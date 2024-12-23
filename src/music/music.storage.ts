@@ -39,7 +39,7 @@ type PrismaTrackWithArtists = {
 } & PrismaTrack;
 
 export async function upsertTrack(
-  track: Track
+  track: Track,
 ): Promise<PrismaTrackWithArtists> {
   const savedArtists = await Promise.all(track.artists.map(upsertArtist));
 
@@ -84,7 +84,7 @@ export function createListen(
   trackId: number,
   userId: number,
   date: Date,
-  lastfmListenId?: number
+  lastfmListenId?: number,
 ): Promise<PrismaListen> {
   return prisma.listen.create({
     data: {
@@ -107,7 +107,7 @@ export function createListen(
  */
 export async function findTrackExactMatch(
   trackName: string,
-  artistName: string
+  artistName: string,
 ): Promise<TrackWithId | null> {
   const artists = await prisma.artist.findMany({
     select: {
@@ -140,7 +140,7 @@ export async function findTrackExactMatch(
 
   return MusicUtils.convertPrismaTrackAndArtistsToTrack(
     prismaTrack,
-    prismaTrack.artists
+    prismaTrack.artists,
   );
 }
 
@@ -155,7 +155,7 @@ export async function findTrackExactMatch(
  */
 export async function findTrackPreviousLastfmSearch(
   trackName: string,
-  artistName: string
+  artistName: string,
 ): Promise<TrackWithId | null> {
   // Are there any LastfmListens with this trackName and artistName that have been
   // successfully associated with a Track?
@@ -193,7 +193,7 @@ export async function findTrackPreviousLastfmSearch(
   if (prismaTrack) {
     return MusicUtils.convertPrismaTrackAndArtistsToTrack(
       prismaTrack,
-      prismaTrack.artists
+      prismaTrack.artists,
     );
   } else {
     // This should never happen. All Listens should have a Track.

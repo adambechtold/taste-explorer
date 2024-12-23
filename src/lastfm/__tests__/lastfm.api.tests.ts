@@ -10,7 +10,7 @@ describe("lastfm API", () => {
       expect(response.user.registered).toHaveProperty("unixtime");
       expect(response.user).toHaveProperty(
         "url",
-        "https://www.last.fm/user/atomicGravy"
+        "https://www.last.fm/user/atomicGravy",
       );
       expect(response.user).toHaveProperty("playcount");
       expect(response.user).toHaveProperty("track_count");
@@ -26,7 +26,7 @@ describe("lastfm API", () => {
       expect(response.recenttracks).toHaveProperty("@attr");
       expect(response.recenttracks["@attr"]).toHaveProperty(
         "user",
-        "atomicGravy"
+        "atomicGravy",
       );
       expect(response.recenttracks["@attr"]).toHaveProperty("page", "1");
       expect(response.recenttracks["@attr"]).toHaveProperty("perPage", "1");
