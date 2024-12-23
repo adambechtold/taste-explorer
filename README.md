@@ -2,6 +2,8 @@
 
 **Compare your music preferences to your friends** starting with the ability to create playlists that with just your music, just your friend's music, or music you've both loved.
 
+Test
+
 ## [Try it Now](https://music.adambechtold.xyz)
 
 You'll just need...
@@ -36,12 +38,12 @@ cp .env.example .env
 
 Update...
 
-- [ ] Spotify Client Id
-- [ ] Spotify Client Password
-- [ ] Last.fm API Key
-- [ ] Last.fm Shared Secret
-- [ ] Session Secret
-- [ ] Admin API Secret
+- [ ] Spotify Client Id - `SPOTIFY_CLIENT_ID`
+- [ ] Spotify Client Password - `SPOTIFY_CLIENT_SECRET`
+- [ ] Last.fm API Key - `LASTFM_API_KEY`
+- [ ] Last.fm Shared Secret - `LASTFM_SHARED_SECRET`
+- [ ] Session Secret - `SESSION_SECRET`
+- [ ] Admin API Secret - `API_SECRET`
 
 Update the `DATABASE_URL` if you want to connect to a remote database. The `DATABASE_URL` included in `.env.example` is configured to use the Dockerized database included in the `docker-compose.yml` file.
 
@@ -114,6 +116,38 @@ npm run test
 ```
 
 The Dockerized database for tests will start running and tests will be executed.
+
+# Grafana Dashboard
+
+## 1 | Create Granfana User in DB
+
+```sql
+CREATE USER 'grafana'@'%' IDENTIFIED BY 'grafana';
+GRANT SELECT ON taste_explorer.* TO 'grafana'@'%';
+```
+
+## 2 | Start Grafana
+
+```sh
+cd dashboard && docker compose up
+```
+
+## 3 | Access Grafana
+
+- [http://localhost:5001](http://localhost:5001)
+
+Your starting login information is:
+
+- Username: `admin`
+- Password: `admin`
+
+## 4 | Add Data Source
+
+Head to `Home` > `Connections` > `Data Sources` > `Add Data Source`
+
+## 5 | TODO: Import Dashboard Configuration
+
+Adam will update this after some initial work on the dashboard.
 
 # FAQ
 

@@ -42,3 +42,6 @@ remote/
 
 # Security
 security/
+
+# Grafana
+grafana-storage/
