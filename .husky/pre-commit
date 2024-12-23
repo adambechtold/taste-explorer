@@ -1,0 +1,10 @@
+if [ "$BYPASS_FORMATTING_CHECK" = "true" ]; then
+  echo ""
+  echo "⚠️ ======== WARNING ======== ⚠️"
+  echo "   Formatting Check Bypassed"  # This looks off-center but prints correctly
+  echo "⚠️ ========================= ⚠️"
+  echo ""
+  exit 0
+fi
+
+npm run lint-staged:check

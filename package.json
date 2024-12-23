@@ -16,7 +16,10 @@
     "debug:remote": "npx dotenv -e .env.development.remote -- ts-node-dev --inspect --transpile-only src/index.ts",
     "build": "rimraf ./build && tsc && npm run copy-views",
     "copy-views": "ncp ./src/views ./build/views && ncp ./src/public ./build/public",
-    "start": "npm run build && node build/index.js"
+    "start": "npm run build && node build/index.js",
+    "prepare": "husky install",
+    "lint-staged:check": "lint-staged --config .lintstagedrc-check.json",
+    "lint-staged:format": "lint-staged --allow-empty --config .lintstagedrc-format.json"
   },
   "author": "",
   "license": "ISC",
@@ -51,6 +54,8 @@
     "express": "^4.18.2",
     "express-session": "^1.17.3",
     "helmet": "^7.1.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.2.11",
     "lru-cache": "^10.2.0",
     "node-cron": "^3.0.3",
     "prettier": "^3.4.2",
