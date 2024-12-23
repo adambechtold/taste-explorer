@@ -22,12 +22,13 @@ node_modules/
 *.tgz
 
 # dotenv environment variable files
-.env
 .env.development.local
 .env.development.remote
 .env.test.local
 .env.production.local
 .env.local
+.env.remote
+.env
 
 # Stores VSCode versions used for testing VSCode extensions
 .vscode-test
