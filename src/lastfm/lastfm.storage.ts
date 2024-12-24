@@ -1,3 +1,4 @@
+import { LastfmListenNotFoundError } from "../errors/errors.types";
 import { UserWithId } from "../users/users.types";
 import { LastfmListen } from "./lastfm.types";
 import { Prisma, PrismaClient } from "@prisma/client";
@@ -57,14 +58,9 @@ export async function storeListenBatch(
  * @throws {Error} Will throw an error if no listen is found with the specified ID, or if no Last.fm account is found for the user who listened to the track.
  */
 export async function getLastfmListenById(id: number): Promise<LastfmListen> {
-  const prismaListen = await prisma.lastfmListen.findUnique({
-    where: {
-      id,
-    },
-  });
-
+  const prismaListen = await prisma.lastfmListen.findUnique({ where: { id } });
   if (!prismaListen) {
-    throw new Error(`No listen found with id ${id}`);
+    throw new LastfmListenNotFoundError(`No listen found with id ${id}`);
   }
 
   const lastfmAccount = await prisma.lastfmAccount.findUnique({
@@ -72,7 +68,6 @@ export async function getLastfmListenById(id: number): Promise<LastfmListen> {
       userId: prismaListen.userId,
     },
   });
-
   if (!lastfmAccount) {
     throw new Error(
       `No lastfm account found for user with id ${prismaListen.userId}`,

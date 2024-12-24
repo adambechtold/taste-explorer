@@ -1,6 +1,6 @@
 import { SpotifyAccessToken } from "../auth/auth.types";
 import { UserWithId } from "../users/users.types";
-import { TypedError } from "../errors/errors.types";
+import { TrackNotFoundError, TypedError } from "../errors/errors.types";
 
 import * as SpotifyStorage from "./spotify.storage";
 import SpotifyApi from "./spotify.api";
@@ -108,16 +108,13 @@ export async function getTrack(
   const spotifyApi = new SpotifyApi(accessToken);
 
   const tracks = await spotifyApi.searchTracks(trackName, artistName);
-
   if (!tracks.length) {
-    throw new TypedError(
+    throw new TrackNotFoundError(
       `No tracks found for name: ${trackName} by: ${artistName}.`,
-      404,
     );
   }
 
   const selectedTrack = tracks[0];
-
   return selectedTrack;
 }
 
@@ -125,12 +122,12 @@ export async function getTrack(
  * Add track features to the tracks provided.
  *
  * @param {TrackWithId[]} tracks - Tracks with or without features.
- * @returns {TrackWithId[]} - Tracks with features.
+ * @returns {Promise<TrackWithId[]>} - Tracks with features.
  */
 export async function addFeaturesToTracks(
   access_token: SpotifyAccessToken,
   tracks: TrackWithId[],
-) {
+): Promise<TrackWithId[]> {
   const spotifyApi = new SpotifyApi(access_token);
 
   const trackSpotifyIds = tracks.map((track) => track.spotifyId);

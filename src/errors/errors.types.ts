@@ -26,6 +26,24 @@ export class NotFoundError extends TypedError {
   }
 }
 
+export class LastfmListenNotFoundError extends NotFoundError {
+  constructor(message: string) {
+    super(message);
+  }
+}
+
+export class ListenNotFoundError extends NotFoundError {
+  constructor(message: string) {
+    super(message);
+  }
+}
+
+export class TrackNotFoundError extends NotFoundError {
+  constructor(message: string) {
+    super(message);
+  }
+}
+
 export class NotAuthorizedError extends TypedError {
   constructor(message: string) {
     super(message, 401);

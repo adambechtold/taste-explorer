@@ -12,9 +12,9 @@ import {
   dateToUnixTimestamp,
   unixTimestampToDate,
 } from "../utils/datetime.utils";
-import { TypedError } from "../errors/errors.types";
+import { LastfmListenNotFoundError, TypedError } from "../errors/errors.types";
 
-import { Prisma, PrismaClient } from "@prisma/client";
+import { Prisma, PrismaClient, LastfmListen } from "@prisma/client";
 const prisma = new PrismaClient();
 
 export async function getAccountInfo(
@@ -35,6 +35,20 @@ export async function getAccountInfo(
       500,
     );
   }
+}
+
+/**
+ * Get a LastfmAccount by its id
+ * @param {number} id - The id of the LastfmAccount to get
+ * @returns {Promise<LastfmAccount>} - A promise that resolves to the LastfmAccount
+ * @throws {LastfmAccountNotFoundError} - Throws an error if the LastfmAccount is not found
+ */
+export async function getLastfmListenById(id: number): Promise<LastfmListen> {
+  const listen = await prisma.lastfmListen.findUnique({ where: { id } });
+  if (!listen) {
+    throw new LastfmListenNotFoundError(`Could not find listen with id: ${id}`);
+  }
+  return listen;
 }
 
 /**
@@ -92,7 +106,7 @@ export async function getAllListens(
   lastfmAccount: LastfmAccount,
   updateTracker: LastfmListensEventEmitter,
   from?: Date,
-) {
+): Promise<void> {
   const pageSize = 200;
 
   // TODO: Implement error handling (TE-6 (https://adam-bechtold.atlassian.net/browse/TE-6?atlOrigin=eyJpIjoiYTQ5NzdkNjE2M2U3NDA0ZThhNGU3YWJkMDk5MWMxZDMiLCJwIjoiaiJ9))
@@ -157,6 +171,21 @@ export async function getAllListens(
 }
 
 /**
+ * Marks all LastfmListens that match the given where clause as analyzed.
+ * @param {Prisma.LastfmListenWhereInput} where - The where clause to match LastfmListens against.
+ * @returns {Promise<Prisma.BatchPayload>} - A promise that resolves to the number of LastfmListens marked as analyzed.
+ * @throws {Error} - Throws an error if the query fails.
+ */
+export async function markLastfmListensAsAnalyzed(
+  where: Prisma.LastfmListenWhereInput,
+): Promise<Prisma.BatchPayload> {
+  return await prisma.lastfmListen.updateMany({
+    where,
+    data: { analyzedAt: new Date() },
+  });
+}
+
+/**
  * Creates Listens to link each of the LastfmListens
  * that have the same trackName and artistName to the given Track id
  *
@@ -166,13 +195,15 @@ export async function getAllListens(
  * @param {boolean} overwrite - Whether to overwrite lastfm listens that are already linked to a track. (Default: false)
  * @returns {Promise<Prisma.BatchPayload>} - A promise that resolves to the number of listens linked.
  */
-export async function linkTrackIdToAllLastfmListensWithTrackNameAndArtistName(
-  trackId: number,
-  trackName: string,
-  artistName: string,
-  overwrite: boolean = false,
-): Promise<Prisma.BatchPayload> {
-  const matchingListens = await prisma.lastfmListen.findMany({
+export async function linkTrackIdToAllLastfmListensWithTrackNameAndArtistName(args: {
+  trackId: number;
+  trackName: string;
+  artistName: string;
+  overwrite: boolean;
+}): Promise<Prisma.BatchPayload> {
+  const { trackId, trackName, artistName, overwrite } = args;
+
+  const matchingLastfmListensNotAnalyzed = await prisma.lastfmListen.findMany({
     select: {
       id: true,
       listenedAt: true,
@@ -184,11 +215,10 @@ export async function linkTrackIdToAllLastfmListensWithTrackNameAndArtistName(
       analyzedAt: null,
     },
   });
-
   // create listens for each lastfm listen
-  const [result, markAsAnalyzedResult] = await prisma.$transaction([
+  const [result, _markAsAnalyzedResult] = await prisma.$transaction([
     prisma.listen.createMany({
-      data: matchingListens.map((lastfmListen) => ({
+      data: matchingLastfmListensNotAnalyzed.map((lastfmListen) => ({
         trackId,
         userId: lastfmListen.userId,
         lastfmListenId: lastfmListen.id,
@@ -198,7 +228,9 @@ export async function linkTrackIdToAllLastfmListensWithTrackNameAndArtistName(
     prisma.lastfmListen.updateMany({
       where: {
         id: {
-          in: matchingListens.map((lastfmListen) => lastfmListen.id),
+          in: matchingLastfmListensNotAnalyzed.map(
+            (lastfmListen) => lastfmListen.id,
+          ),
         },
       },
       data: {
@@ -221,13 +253,13 @@ export async function linkTrackIdToAllLastfmListensWithTrackNameAndArtistName(
         },
         id: {
           not: {
-            in: matchingListens.map((l) => l.id), // don't include the listens that were just analyzed
+            in: matchingLastfmListensNotAnalyzed.map((l) => l.id), // don't include the listens that were just analyzed
           },
         },
       },
     });
 
-    const [overwriteListensResult, updateAnalyzedTimeResult] =
+    const [overwriteListensResult, _updateAnalyzedTimeResult] =
       await prisma.$transaction([
         prisma.listen.updateMany({
           where: {

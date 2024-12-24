@@ -246,11 +246,11 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
-  /api/music/lastfm-listens/{id}/track:
-    get:
-      summary: Get Track from last.fm Listen
-      description: Get the Track for a given last.fm listen. If the track is not found in the database, it will be created by searching Spotify.
-      operationId: getTrackFromLastfmListen
+  /api/music/lastfm-listens/{id}/analyze:
+    post:
+      summary: Analyze Lastfm Listen
+      description: Analyze a last.fm listen and any other listens with the same track name and artist
+      operationId: analyzeLastfmListen
       tags:
         - music
       parameters:
@@ -264,11 +264,14 @@ paths:
         - ApiKeyAuth: []
       responses:
         "200":
-          description: A track object
+          description: A count of the number of last.fm listens with the same track name and artist that were analyzed
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Track"
+                type: object
+                properties:
+                  numberOfLastfmListensAnalyzed:
+                    type: integer
         "400":
           description: Invalid ID supplied
           content:

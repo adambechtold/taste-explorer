@@ -1,12 +1,11 @@
 import { PrismaClient } from "@prisma/client";
-import { TypedError } from "../errors/errors.types";
+import { TrackNotFoundError, TypedError } from "../errors/errors.types";
 import { UserWithId, UserWithLastfmAccountAndId } from "../users/users.types";
 import { LastfmListenBatchImportSize } from "../lastfm/lastfm.types";
 import { getSpotifyAccessTokenForSessionId } from "../spotify/spotify.storage";
-import { sleep } from "../utils/misc.utils";
 import { Logger } from "../utils/log.utils";
 
-import { Track, TrackWithId } from "./music.types";
+import { TrackWithId } from "./music.types";
 
 import * as LastfmService from "../lastfm/lastfm.service";
 import * as SpotifyService from "../spotify/spotify.service";
@@ -68,7 +67,7 @@ export async function triggerUpdateListensForUser(
  */
 export async function getTrackFromLastfmListenId(
   lastfmListenId: number,
-): Promise<Track | null> {
+): Promise<TrackWithId> {
   const logger = new Logger("createListens");
 
   // Find Existing Listen
@@ -81,12 +80,8 @@ export async function getTrackFromLastfmListenId(
   // If Found, Return Corresponding Track
   if (listen) {
     const prismaTrack = await prisma.track.findUnique({
-      where: {
-        id: listen.trackId,
-      },
-      include: {
-        artists: true,
-      },
+      where: { id: listen.trackId },
+      include: { artists: true },
     });
 
     if (prismaTrack) {
@@ -106,9 +101,7 @@ export async function getTrackFromLastfmListenId(
       trackName: true,
       artistName: true,
     },
-    where: {
-      id: lastfmListenId,
-    },
+    where: { id: lastfmListenId },
   });
 
   if (!lastfmListens) {
@@ -117,11 +110,12 @@ export async function getTrackFromLastfmListenId(
 
   // Use Search to Find the Track
   let track: TrackWithId | null = null;
+  const { trackName, artistName } = lastfmListens[0];
   try {
-    track = await getTrackByNameAndArtistName(
-      lastfmListens[0].trackName,
-      lastfmListens[0].artistName,
-    );
+    track = await getTrackByNameAndArtistName({
+      trackName,
+      artistName,
+    });
   } catch (error) {
     if (error instanceof TypedError) {
       if (error.status === 404) {
@@ -170,10 +164,12 @@ export async function getTrackFromLastfmListenId(
     // Link all last.fm listens with the same track name and artist name to this track
     const result =
       await LastfmService.linkTrackIdToAllLastfmListensWithTrackNameAndArtistName(
-        track.id,
-        lastfmListens[0].trackName,
-        lastfmListens[0].artistName,
-        true,
+        {
+          trackId: track.id,
+          trackName: lastfmListens[0].trackName,
+          artistName: lastfmListens[0].artistName,
+          overwrite: true,
+        },
       );
 
     logger.log(
@@ -194,18 +190,18 @@ export async function getTrackFromLastfmListenId(
  * @returns {Track | null} - The track, or null if not found in the database or spotify.
  * @throws {TypedError} - If the user does not have a spotify account.
  */
-export async function getTrackByNameAndArtistName(
-  trackName: string,
-  artistName: string,
-): Promise<TrackWithId | null> {
-  const logger = new Logger("createListens");
+export async function getTrackByNameAndArtistName(params: {
+  trackName: string;
+  artistName: string;
+}): Promise<TrackWithId> {
+  const logger = new Logger("createListens"); // TODO: Remove from the body of this function; It shouldn't have to know about the logger.
+  const { trackName, artistName } = params;
 
   // Find Track and Artist in Database
   const exactMatchTrack = await MusicStorage.findTrackExactMatch(
     trackName,
     artistName,
   );
-
   if (exactMatchTrack) {
     logger.log("Found exact match in database.");
     return exactMatchTrack;
@@ -216,7 +212,6 @@ export async function getTrackByNameAndArtistName(
     trackName,
     artistName,
   );
-
   if (previousMatchTrack) {
     logger.log("Found previous match in database.");
     return previousMatchTrack;
@@ -225,7 +220,6 @@ export async function getTrackByNameAndArtistName(
   // Track not found in the database. Search Spotify.
   try {
     const accessToken = await getSpotifyAccessToken();
-
     const track = await SpotifyService.getTrack(
       accessToken,
       trackName,
@@ -253,7 +247,9 @@ export async function getTrackByNameAndArtistName(
       `Track ${trackName} by ${artistName} not found in Spotify.\n`,
       error,
     );
-    return null;
+    throw new TrackNotFoundError(
+      `Track ${trackName} by ${artistName} not found`,
+    );
   }
 }
 

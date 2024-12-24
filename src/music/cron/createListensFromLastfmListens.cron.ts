@@ -1,14 +1,20 @@
 import cron from "node-cron";
-import { PrismaClient } from "@prisma/client";
+import {
+  PrismaClient,
+  LastfmListen as PrismaLastfmListen,
+} from "@prisma/client";
 import { PrismaTransactionClient } from "../../utils/prisma.types";
 import { Logger } from "../../utils/log.utils";
-
 import { pauseTask } from "../../utils/cron.utils";
-
 import * as MusicService from "../music.service";
-import { Track } from "../music.types";
-import { LastfmListen } from "@prisma/client";
-import { TooManyRequestsError } from "../../errors/errors.types";
+import * as LastfmService from "../../lastfm/lastfm.service";
+
+import {
+  LastfmListenNotFoundError,
+  TooManyRequestsError,
+  TrackNotFoundError,
+} from "../../errors/errors.types";
+import { isError } from "../../utils";
 
 const logger = new Logger("createListens");
 const prisma = new PrismaClient({ log: ["error"] });
@@ -37,51 +43,80 @@ export async function createListensFromLastfmListens(
     nextLastfmListen.id,
     `track: ${nextLastfmListen.trackName} by ${nextLastfmListen.artistName}`,
   );
-  let track: Track | null = null;
+
   try {
-    track = await MusicService.getTrackFromLastfmListenId(nextLastfmListen.id);
+    await analyzeLastfmListen(nextLastfmListen);
     await markAnalysisStatus(nextLastfmListen.id, false);
   } catch (error) {
-    if (error instanceof TooManyRequestsError) {
-      const retryAfter = error.retryAfter ? error.retryAfter : 5 * 60;
-      logger.log(
-        `...too many requests, pausing research task for ${retryAfter} seconds. It will run at ${new Date(
-          Date.now() + retryAfter * 1000,
-        ).toISOString()}}`,
-      );
-      markAnalysisStatus(nextLastfmListen.id, false);
-      if (task) pauseTask(task, retryAfter);
-      return;
+    if (isError(error)) {
+      await handleAnalysisError(error, nextLastfmListen, task);
+    } else {
+      console.error(error);
     }
-
-    markAnalysisStatus(nextLastfmListen.id, false);
-
+  } finally {
+    await markAnalysisStatus(nextLastfmListen.id, false);
     if (showProgress) {
       const progress = await getProgress();
-      console.log(`
-${separator}
-Something went wrong while researching lastfm listen id ${nextLastfmListen.id}, ${nextLastfmListen.trackName} by ${nextLastfmListen.artistName}
-${error}`);
-
+      console.log(separator);
       console.table(progress);
       console.log(separator);
     }
-
-    return;
   }
+}
 
-  if (showProgress) {
-    const progress = await getProgress();
-
-    console.log(`
-${separator}
-Completed Research for Lastfm Listen Id: ${nextLastfmListen.id}: ${
-      nextLastfmListen.trackName
-    } by ${nextLastfmListen.artistName}
-${track ? "Track Found" : "Track Not Found"}`);
-    console.table(progress);
-    console.log(separator);
+async function handleAnalysisError(
+  error: Error,
+  lastfmListen: PrismaLastfmListen,
+  task: cron.ScheduledTask | undefined = undefined,
+) {
+  if (error instanceof TooManyRequestsError) {
+    const retryAfter = error.retryAfter ? error.retryAfter : 5 * 60;
+    logger.log(
+      `...too many requests, pausing research task for ${retryAfter} seconds. It will run at ${new Date(
+        Date.now() + retryAfter * 1000,
+      ).toISOString()}}`,
+    );
+    if (task) pauseTask(task, retryAfter);
+  } else if (
+    error instanceof LastfmListenNotFoundError ||
+    error instanceof TrackNotFoundError
+  ) {
+    const source =
+      error instanceof LastfmListenNotFoundError ? "last.fm" : "spotify";
+    console.log(
+      `Lastfm listen id ${lastfmListen.id} not found in ${source}. Skipping.`,
+    );
+    await LastfmService.markLastfmListensAsAnalyzed({
+      id: lastfmListen.id,
+    });
+  } else {
+    console.log(
+      `Something went wrong while researching lastfm listen id ${lastfmListen.id}`,
+    );
+    console.error(error);
   }
+}
+
+export async function analyzeLastfmListen(lastfmListen: PrismaLastfmListen) {
+  const { trackName, artistName } = lastfmListen;
+  const track = await MusicService.getTrackByNameAndArtistName({
+    trackName,
+    artistName,
+  });
+
+  const result =
+    await LastfmService.linkTrackIdToAllLastfmListensWithTrackNameAndArtistName(
+      {
+        trackId: track.id,
+        trackName,
+        artistName,
+        overwrite: true,
+      },
+    );
+
+  return {
+    numberOfLastfmListensAnalyzied: result.count,
+  };
 }
 
 async function getProgress() {
@@ -148,7 +183,7 @@ export async function getNextLastfmListenToResearch() {
       ORDER BY 
         id ASC
       LIMIT 1
-      FOR UPDATE SKIP LOCKED`) as LastfmListen[];
+      FOR UPDATE SKIP LOCKED`) as PrismaLastfmListen[];
 
     if (nextLastfmListens.length === 0) {
       return null;
